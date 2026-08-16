@@ -141,27 +141,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </button>
 
-              {user.isGuest ? (
+              {user.isGuest && (
                 <button
-                  onClick={openAuthModal}
+                  onClick={() => openAuthModal('signin')}
                   className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black shadow-md shadow-brand-500/20 transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   Sign In
                 </button>
-              ) : (
-                <button
-                  onClick={signOut}
-                  title="Sign out"
-                  className="p-2 rounded-xl bg-cinema-card hover:bg-red-500/20 border border-cinema-border/60 text-slate-400 hover:text-red-400 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
               )}
+
+              <button
+                onClick={signOut}
+                title={user.isGuest ? "Exit to Login Page" : "Sign out"}
+                className="p-2 rounded-xl bg-cinema-card hover:bg-red-500/20 border border-cinema-border/60 text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1.5"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline text-xs font-semibold">{user.isGuest ? 'Exit' : 'Logout'}</span>
+              </button>
             </div>
           ) : (
             <button
-              onClick={openAuthModal}
+              onClick={() => openAuthModal('welcome')}
               className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 text-black shadow-lg shadow-brand-500/25 hover:brightness-110 transition-all"
             >
               <UserIcon className="w-4 h-4" />
@@ -196,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           ) : (
             <button
-              onClick={openAuthModal}
+              onClick={() => openAuthModal('welcome')}
               className="p-1.5 rounded-xl bg-brand-500 text-black font-bold text-xs"
             >
               <UserIcon className="w-4 h-4" />
@@ -245,28 +246,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              {user.isGuest ? (
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    openAuthModal();
-                  }}
-                  className="text-xs font-bold px-2.5 py-1 rounded-xl bg-brand-500 text-black shadow"
-                >
-                  Sign In
-                </button>
-              ) : (
+              <div className="flex items-center gap-1.5">
+                {user.isGuest && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      openAuthModal('signin');
+                    }}
+                    className="text-xs font-bold px-2.5 py-1 rounded-xl bg-brand-500 text-black shadow"
+                  >
+                    Sign In
+                  </button>
+                )}
+
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     signOut();
                   }}
-                  className="p-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-1"
+                  className="p-1.5 px-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-1 font-semibold"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Exit</span>
+                  <span>{user.isGuest ? 'Exit' : 'Logout'}</span>
                 </button>
-              )}
+              </div>
             </div>
           ) : (
             <button

@@ -15,6 +15,8 @@ import {
   User 
 } from 'firebase/auth';
 
+export type AuthModalMode = 'welcome' | 'signin' | 'signup' | 'guest';
+
 export interface AuthUser {
   uid: string;
   displayName: string;
@@ -26,9 +28,12 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  hasEntered: boolean;
   isAuthModalOpen: boolean;
-  openAuthModal: () => void;
+  authModalMode: AuthModalMode;
+  openAuthModal: (mode?: AuthModalMode) => void;
   closeAuthModal: () => void;
+  setAuthModalMode: (mode: AuthModalMode) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
@@ -42,11 +47,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [hasEntered, setHasEntered] = useState<boolean>(() => {
+    // Only registered users or users who entered in current browser tab stay entered
+    return sessionStorage.getItem('kollywood_session_entered') === 'true';
+  });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('signin');
 
   // Initialize or restore user
   useEffect(() => {
     const savedGuest = localStorage.getItem('kollywood_current_guest');
+    const sessionEntered = sessionStorage.getItem('kollywood_session_entered') === 'true';
 
     if (hasValidFirebaseConfig && auth) {
       const currentAuth = auth;
@@ -54,16 +65,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (firebaseUser) {
           const isAnon = firebaseUser.isAnonymous;
           const guestObj = savedGuest ? JSON.parse(savedGuest) : null;
-          setUser({
+          const authedUser: AuthUser = {
             uid: firebaseUser.uid,
             displayName: firebaseUser.displayName || guestObj?.displayName || `Player_${firebaseUser.uid.slice(-4)}`,
             email: firebaseUser.email || undefined,
             photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${firebaseUser.uid}`,
             isGuest: isAnon
-          });
+          };
+          setUser(authedUser);
+
+          // ONLY actual logged-in users (Google/Email) bypass the login page automatically!
+          // Anonymous/Guests must see the login page unless already entered in this tab session
+          if (!isAnon) {
+            setHasEntered(true);
+            sessionStorage.setItem('kollywood_session_entered', 'true');
+          } else if (sessionEntered) {
+            setHasEntered(true);
+          } else {
+            setHasEntered(false);
+          }
         } else if (savedGuest) {
           const parsed = JSON.parse(savedGuest);
           setUser(parsed);
+          setHasEntered(sessionEntered);
           try {
             await signInAnonymously(currentAuth);
           } catch (e) {
@@ -79,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           localStorage.setItem('kollywood_current_guest', JSON.stringify(defaultGuest));
           setUser(defaultGuest);
+          setHasEntered(sessionEntered);
 
           try {
             await signInAnonymously(currentAuth);
@@ -92,7 +117,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return () => unsubscribe();
     } else {
       if (savedGuest) {
-        setUser(JSON.parse(savedGuest));
+        const parsed = JSON.parse(savedGuest);
+        setUser(parsed);
+        // If not guest (e.g. mock registered account), auto-enter
+        if (!parsed.isGuest || sessionEntered) {
+          setHasEntered(true);
+        } else {
+          setHasEntered(false);
+        }
       } else {
         const guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
         const defaultGuest: AuthUser = {
@@ -103,10 +135,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         localStorage.setItem('kollywood_current_guest', JSON.stringify(defaultGuest));
         setUser(defaultGuest);
+        setHasEntered(sessionEntered);
       }
       setLoading(false);
     }
   }, []);
+
+  const openAuthModal = (mode: AuthModalMode = 'welcome') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    // If closing for the first time, mark as chosen so it doesn't loop
+    localStorage.setItem('kollywood_auth_chosen', 'true');
+    setIsAuthModalOpen(false);
+  };
 
   const signInWithGoogle = async () => {
     if (hasValidFirebaseConfig && auth) {
@@ -127,6 +171,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('kollywood_current_guest', JSON.stringify(mockUser));
       setUser(mockUser);
     }
+    localStorage.setItem('kollywood_auth_chosen', 'true');
+    sessionStorage.setItem('kollywood_session_entered', 'true');
+    setHasEntered(true);
     setIsAuthModalOpen(false);
   };
 
@@ -146,6 +193,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('kollywood_current_guest', JSON.stringify(mockUser));
       setUser(mockUser);
     }
+    localStorage.setItem('kollywood_auth_chosen', 'true');
+    sessionStorage.setItem('kollywood_session_entered', 'true');
+    setHasEntered(true);
     setIsAuthModalOpen(false);
   };
 
@@ -167,6 +217,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('kollywood_current_guest', JSON.stringify(mockUser));
       setUser(mockUser);
     }
+    localStorage.setItem('kollywood_auth_chosen', 'true');
+    sessionStorage.setItem('kollywood_session_entered', 'true');
+    setHasEntered(true);
     setIsAuthModalOpen(false);
   };
 
@@ -174,12 +227,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const guestId = user?.uid?.startsWith('guest_') ? user.uid : 'guest_' + Math.random().toString(36).substring(2, 9);
     const guestUser: AuthUser = {
       uid: guestId,
-      displayName: guestName?.trim() || `Player_${guestId.slice(-4)}`,
-      photoURL: `https://api.dicebear.com/7.x/bottts/svg?seed=${guestId}`,
+      displayName: guestName?.trim() || user?.displayName || `Player_${guestId.slice(-4)}`,
+      photoURL: user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${guestId}`,
       isGuest: true
     };
     localStorage.setItem('kollywood_current_guest', JSON.stringify(guestUser));
+    localStorage.setItem('kollywood_auth_chosen', 'true');
+    sessionStorage.setItem('kollywood_session_entered', 'true');
     setUser(guestUser);
+    setHasEntered(true);
 
     if (hasValidFirebaseConfig && auth) {
       try {
@@ -210,6 +266,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fbSignOut(auth);
     }
     localStorage.removeItem('kollywood_current_guest');
+    localStorage.removeItem('kollywood_auth_chosen');
+    sessionStorage.removeItem('kollywood_session_entered');
     const guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
     const defaultGuest: AuthUser = {
       uid: guestId,
@@ -219,6 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     localStorage.setItem('kollywood_current_guest', JSON.stringify(defaultGuest));
     setUser(defaultGuest);
+    setHasEntered(false);
   };
 
   return (
@@ -226,9 +285,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loading,
+        hasEntered,
         isAuthModalOpen,
-        openAuthModal: () => setIsAuthModalOpen(true),
-        closeAuthModal: () => setIsAuthModalOpen(false),
+        authModalMode,
+        openAuthModal,
+        closeAuthModal,
+        setAuthModalMode,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

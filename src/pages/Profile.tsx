@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Flame, Play, Award, ArrowLeft, Film, Shield, Sparkles, UserCheck, Edit3, Check, Zap, Target, Star, Crown } from 'lucide-react';
+import { Trophy, Flame, Play, Award, ArrowLeft, Film, Shield, Sparkles, UserCheck, Edit3, Check, Zap, Target, Star, Crown, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile } from '../services/firebase';
 import { UserProfile } from '../types/game';
@@ -16,7 +16,7 @@ const AVATAR_SEEDS = [
 ];
 
 export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdmin }) => {
-  const { user, openAuthModal, updateName } = useAuth();
+  const { user, openAuthModal, updateName, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(user?.displayName || '');
@@ -312,13 +312,30 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           Play Next Solo Round
         </button>
 
-        {user?.isGuest && (
+        {user?.isGuest ? (
+          <>
+            <button
+              onClick={() => openAuthModal('signup')}
+              className="py-3 px-6 rounded-2xl bg-cinema-cardHover hover:bg-cinema-border/60 border border-cinema-border text-white text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-brand-400" />
+              Upgrade to Registered Account
+            </button>
+            <button
+              onClick={signOut}
+              className="py-3 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Exit to Login Page
+            </button>
+          </>
+        ) : (
           <button
-            onClick={openAuthModal}
-            className="py-3 px-6 rounded-2xl bg-cinema-cardHover hover:bg-cinema-border/60 border border-cinema-border text-white text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+            onClick={signOut}
+            className="py-3 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-4 h-4 text-brand-400" />
-            Upgrade to Registered Account
+            <LogOut className="w-4 h-4" />
+            Sign Out
           </button>
         )}
       </div>

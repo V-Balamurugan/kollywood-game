@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
 import { HowToPlayModal } from './components/HowToPlayModal';
+import { WelcomeGate } from './pages/WelcomeGate';
 import { Home } from './pages/Home';
 import { SoloGame } from './pages/SoloGame';
 import { CreateRoom } from './pages/CreateRoom';
@@ -28,6 +29,7 @@ type AppView =
 import { Footer } from './components/Footer';
 
 export const AppContent: React.FC = () => {
+  const { hasEntered, loading } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
@@ -119,6 +121,11 @@ export const AppContent: React.FC = () => {
     setCurrentView('home');
     window.history.replaceState({}, document.title, '/');
   };
+
+  // If the user has not entered or chosen to play yet, show the full-screen Welcome & Login Landing Page
+  if (!hasEntered) {
+    return <WelcomeGate />;
+  }
 
   return (
     <div className="min-h-screen bg-cinema-dark text-slate-100 flex flex-col justify-between">
