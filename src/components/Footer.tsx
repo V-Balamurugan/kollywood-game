@@ -79,17 +79,6 @@ export const Footer: React.FC<FooterProps> = ({
                 <span>My Stats</span>
               </button>
             )}
-
-            {onOpenAdmin && (
-              <button
-                onClick={onOpenAdmin}
-                className="px-3 py-1.5 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 border border-cinema-border/50 hover:border-brand-500/40 text-slate-400 hover:text-brand-400 transition-colors flex items-center gap-1.5 text-[11px]"
-                title="Admin Control Center"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-                <span>Admin</span>
-              </button>
-            )}
           </div>
         </div>
       </div>

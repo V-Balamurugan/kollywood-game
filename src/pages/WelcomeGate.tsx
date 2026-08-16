@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Film, Zap, LogIn, UserPlus, Sparkles, Mail, Lock, User as UserIcon, 
+import {
+  Film, Zap, LogIn, UserPlus, Sparkles, Mail, Lock, User as UserIcon,
   ArrowRight, Dices, Trophy, Music, ShieldCheck, Flame, Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,18 +11,18 @@ const QUICK_NICKNAMES = [
 ];
 
 export const WelcomeGate: React.FC = () => {
-  const { 
-    signInWithGoogle, 
-    signInWithEmail, 
-    signUpWithEmail, 
+  const {
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     playAsGuest,
-    user 
+    user
   } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'guest'>('signin');
   const [guestName, setGuestName] = useState(
-    user?.displayName && !user.displayName.startsWith('Player_') 
-      ? user.displayName 
+    user?.displayName && !user.displayName.startsWith('Player_')
+      ? user.displayName
       : 'ThalapathyFan'
   );
   const [email, setEmail] = useState('');
@@ -108,7 +108,7 @@ export const WelcomeGate: React.FC = () => {
 
       {/* Main Login / Entry Gateway Box */}
       <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 justify-center my-auto">
-        
+
         {/* Left Side: Cinema Showcase / Pitch */}
         <div className="flex-1 text-center lg:text-left max-w-lg lg:max-w-none">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold uppercase tracking-wider mb-4 animate-pulse-glow">
@@ -156,11 +156,10 @@ export const WelcomeGate: React.FC = () => {
             <button
               type="button"
               onClick={() => { setActiveTab('signin'); setError(null); }}
-              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
-                activeTab === 'signin'
+              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'signin'
                   ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In</span>
@@ -168,11 +167,10 @@ export const WelcomeGate: React.FC = () => {
             <button
               type="button"
               onClick={() => { setActiveTab('signup'); setError(null); }}
-              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
-                activeTab === 'signup'
+              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'signup'
                   ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Sign Up</span>
@@ -180,11 +178,10 @@ export const WelcomeGate: React.FC = () => {
             <button
               type="button"
               onClick={() => { setActiveTab('guest'); setError(null); }}
-              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
-                activeTab === 'guest'
+              className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'guest'
                   ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <Zap className="w-3.5 h-3.5" />
               <span>Guest</span>

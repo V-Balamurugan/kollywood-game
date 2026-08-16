@@ -123,7 +123,8 @@ export const AppContent: React.FC = () => {
   };
 
   // If the user has not entered or chosen to play yet, show the full-screen Welcome & Login Landing Page
-  if (!hasEntered) {
+  // (Admin Dashboard is accessed directly via URL e.g. /admin)
+  if (!hasEntered && currentView !== 'admin') {
     return <WelcomeGate />;
   }
 
