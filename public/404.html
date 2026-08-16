@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting...</title>
+    <script>
+      // Single Page Application Fallback for static servers
+      const path = window.location.pathname;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      
+      // Store intended path in sessionStorage and redirect to root
+      sessionStorage.setItem('spa_redirect_path', path + search + hash);
+      window.location.replace('/' + (hash ? hash : (path.length > 1 ? '#' + path : '')));
+    </script>
+  </head>
+  <body>
+    <p>Loading application...</p>
+  </body>
+</html>

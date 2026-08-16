@@ -32,23 +32,46 @@ export const AppContent: React.FC = () => {
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
 
-  // Check URL parameters on mount for deep-linked room codes or /admin /library routes
+  // Check URL parameters and paths on mount for deep-linked room codes or /admin /library routes
   useEffect(() => {
     const handleUrlRouting = () => {
+      // Check stored SPA redirect if any from 404.html fallback
+      const spaRedirect = sessionStorage.getItem('spa_redirect_path');
+      if (spaRedirect) {
+        sessionStorage.removeItem('spa_redirect_path');
+      }
+
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view')?.toLowerCase() || params.get('page')?.toLowerCase();
 
-      if (path.includes('/admin') || hash === '#admin') {
+      // Check for Admin page via path, hash, query params or fallback redirect
+      if (
+        path.includes('/admin') ||
+        hash === '#admin' ||
+        hash === '#/admin' ||
+        hash.includes('admin') ||
+        viewParam === 'admin' ||
+        (spaRedirect && spaRedirect.toLowerCase().includes('admin'))
+      ) {
         setCurrentView('admin');
         return;
       }
 
-      if (path.includes('/library') || hash === '#library') {
+      // Check for Library page via path, hash, query params or fallback redirect
+      if (
+        path.includes('/library') ||
+        hash === '#library' ||
+        hash === '#/library' ||
+        hash.includes('library') ||
+        viewParam === 'library' ||
+        (spaRedirect && spaRedirect.toLowerCase().includes('library'))
+      ) {
         setCurrentView('library');
         return;
       }
 
-      const params = new URLSearchParams(window.location.search);
       const roomParam = params.get('room') || params.get('join');
       if (roomParam) {
         setActiveRoomCode(roomParam.toUpperCase());
@@ -175,6 +198,7 @@ export const AppContent: React.FC = () => {
         onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
         onOpenProfile={() => navigateTo('profile')}
         onOpenLibrary={() => navigateTo('library')}
+        onOpenAdmin={() => navigateTo('admin')}
       />
 
       {/* Global Modals */}
