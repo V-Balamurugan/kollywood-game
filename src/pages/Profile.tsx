@@ -80,12 +80,12 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   const progressPercent = Math.min(100, Math.round((totalScore / nextTierThreshold) * 100));
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Arena
@@ -103,22 +103,22 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       </div>
 
       {savedNotice && (
-        <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center animate-fade-in">
+        <div className="mb-4 p-2.5 sm:p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center animate-fade-in">
           ✓ Profile updated successfully!
         </div>
       )}
 
       {/* Main Profile Card */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-cinema-border shadow-2xl mb-8 relative overflow-hidden">
+      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl mb-6 sm:mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Avatar and Seed Picker */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center flex-shrink-0">
             <img
               src={selectedAvatar}
               alt={user?.displayName || 'Player'}
-              className="w-24 h-24 rounded-3xl bg-cinema-dark border-2 border-brand-500/70 object-cover shadow-xl shadow-brand-500/20 mb-3"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-cinema-dark border-2 border-brand-500/70 object-cover shadow-xl shadow-brand-500/20 mb-2 sm:mb-3"
             />
             <div className="flex items-center gap-1 bg-cinema-dark/80 p-1 rounded-xl border border-cinema-border/50 max-w-[200px] overflow-x-auto">
               {AVATAR_SEEDS.map((seed) => {
@@ -136,7 +136,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                       }
                     }}
                     title={seed}
-                    className={`w-6 h-6 rounded-lg overflow-hidden border transition-transform ${
+                    className={`w-6 h-6 rounded-lg overflow-hidden border transition-transform flex-shrink-0 ${
                       selectedAvatar === url ? 'border-brand-400 scale-110' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
@@ -148,7 +148,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           </div>
 
           {/* User Details & Rank */}
-          <div className="flex-1 text-center sm:text-left">
+          <div className="flex-1 text-center sm:text-left min-w-0">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
               {isEditingName ? (
                 <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSaveProfile()}
-                    className="bg-cinema-dark border border-brand-500 rounded-xl px-3 py-1 text-lg font-black text-white focus:outline-none"
+                    className="bg-cinema-dark border border-brand-500 rounded-xl px-3 py-1 text-base sm:text-lg font-black text-white focus:outline-none max-w-[160px] sm:max-w-xs"
                     autoFocus
                   />
                   <button
@@ -168,8 +168,8 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-display font-black text-white">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white truncate max-w-[200px] sm:max-w-none">
                     {user?.displayName || 'Player'}
                   </h1>
                   <button
@@ -177,29 +177,29 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                     className="text-cinema-muted hover:text-brand-400 p-1"
                     title="Edit Name"
                   >
-                    <Edit3 className="w-4 h-4" />
+                    <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               )}
 
-              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${tierColor}`}>
+              <span className={`text-[10px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 rounded-full border ${tierColor}`}>
                 {tierBadge} {tierName}
               </span>
             </div>
 
-            <p className="text-xs text-cinema-muted mb-4">
-              UID: <code className="text-slate-300 font-mono">{user?.uid || 'guest'}</code> • {user?.isGuest ? 'Guest Player' : 'Registered Cinephile'}
+            <p className="text-[11px] sm:text-xs text-cinema-muted mb-3 sm:mb-4">
+              UID: <code className="text-slate-300 font-mono">{user?.uid ? user.uid.slice(0, 10) + '...' : 'guest'}</code> • {user?.isGuest ? 'Guest' : 'Cinephile'}
             </p>
 
             {/* Rank Progress Bar */}
-            <div className="space-y-1.5 max-w-md">
-              <div className="flex justify-between text-xs font-semibold">
+            <div className="space-y-1.5 max-w-md mx-auto sm:mx-0">
+              <div className="flex justify-between text-[11px] sm:text-xs font-semibold">
                 <span className="text-cinema-muted">Tier Progress</span>
                 <span className="text-brand-400 font-mono font-bold">
                   {totalScore.toLocaleString()} / {nextTierThreshold.toLocaleString()} pts
                 </span>
               </div>
-              <div className="w-full h-2.5 rounded-full bg-cinema-dark border border-cinema-border/50 overflow-hidden">
+              <div className="w-full h-2 sm:h-2.5 rounded-full bg-cinema-dark border border-cinema-border/50 overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-brand-500 to-amber-400 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
@@ -211,47 +211,48 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       </div>
 
       {/* Stats Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 text-center">
-          <Trophy className="w-5 h-5 text-brand-400 mx-auto mb-2" />
-          <div className="text-2xl font-mono font-black text-white">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+        <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-mono font-black text-white">
             {totalScore.toLocaleString()}
           </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
             Total Points
           </span>
         </div>
 
-        <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 text-center">
-          <Flame className="w-5 h-5 text-orange-400 mx-auto mb-2" />
-          <div className="text-2xl font-mono font-black text-white">
+        <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+          <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-mono font-black text-white">
             {bestStreak}x
           </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
             Highest Streak
           </span>
         </div>
 
-        <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 text-center">
-          <Award className="w-5 h-5 text-emerald-400 mx-auto mb-2" />
-          <div className="text-2xl font-mono font-black text-white">
+        <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+          <Award className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-mono font-black text-white">
             {wins}
           </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
             Victories ({winRate}%)
           </span>
         </div>
 
-        <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 text-center">
-          <Film className="w-5 h-5 text-purple-400 mx-auto mb-2" />
-          <div className="text-2xl font-mono font-black text-white">
+        <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+          <Film className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1 sm:mb-2" />
+          <div className="text-lg sm:text-2xl font-mono font-black text-white">
             {totalGames}
           </div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-cinema-muted">
             Total Rounds
           </span>
         </div>
       </div>
+
 
       {/* Cinephile Achievements */}
       <div className="glass-panel rounded-3xl p-6 border border-cinema-border/70 mb-8">

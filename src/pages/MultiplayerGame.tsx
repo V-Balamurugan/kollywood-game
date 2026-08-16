@@ -221,13 +221,13 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
       {/* Top Notice: Live Shared Board / Custom Creator */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-xs">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-[11px] sm:text-xs">
         <div className="flex items-center gap-2 text-brand-300">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+          <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
           <span>
-            <strong>Live Shared Board:</strong> Any clue solved by ANY contestant immediately updates and unlocks for everyone in real time!
+            <strong>Live Shared Board:</strong> Any clue solved by ANY contestant immediately updates for everyone!
           </span>
         </div>
         {currentPuzzle.createdBy && (
@@ -248,9 +248,9 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         year={currentPuzzle.year || 2024}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Board Area (3 Columns) */}
-        <div className="lg:col-span-3 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Main Board Area (3 Columns on Desktop, Full Width on Mobile) */}
+        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
           {/* If current user is the Director, show Director Console */}
           {isCreatorOfMovie && !isRoundEnded && !isFinal && (
             <DirectorConsole
@@ -275,8 +275,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           />
         </div>
 
-        {/* Live Scoreboard Sidebar (1 Column) */}
-        <div className="lg:col-span-1 space-y-4">
+        {/* Live Scoreboard Sidebar (1 Column on Desktop, Full Width on Mobile) */}
+        <div className="lg:col-span-1 space-y-3 sm:space-y-4">
           <LiveScoreboard
             players={room.players || {}}
             answers={room.answers || {}}
@@ -328,3 +328,4 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     </div>
   );
 };
+

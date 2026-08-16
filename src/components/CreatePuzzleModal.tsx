@@ -147,28 +147,29 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-cinema-card border border-cinema-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-brand-500/20 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-cinema-card border border-cinema-border rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl shadow-brand-500/20 my-auto max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-cinema-cardHover text-slate-400 hover:text-white"
+          className="absolute top-4 sm:top-5 right-4 sm:top-5 p-2 rounded-xl bg-cinema-cardHover text-slate-400 hover:text-white"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/25">
-            <Clapperboard className="w-6 h-6" />
+        <div className="flex items-center gap-3 mb-5 sm:mb-6 pr-8">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/25 flex-shrink-0">
+            <Clapperboard className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-display font-black text-white">
-              Director's Custom Movie Crafting
+            <h3 className="text-lg sm:text-xl font-display font-black text-white">
+              Director's Movie Crafting
             </h3>
-            <p className="text-xs text-cinema-muted">
-              Choose a movie from our database to customize or create your own brand new Kollywood puzzle!
+            <p className="text-[11px] sm:text-xs text-cinema-muted">
+              Choose a movie from database to customize or create your own brand new Kollywood puzzle!
             </p>
           </div>
         </div>
+
 
         <form onSubmit={handleFormSubmit} className="space-y-4">
           {/* Quick Database Selector / Preset Loader */}

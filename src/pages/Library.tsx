@@ -47,9 +47,9 @@ export const Library: React.FC<LibraryProps> = ({ onBack, onSelectMovieForMatch 
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
           <button
             onClick={onBack}
@@ -59,50 +59,50 @@ export const Library: React.FC<LibraryProps> = ({ onBack, onSelectMovieForMatch 
             Back to Arena
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/20">
-              <BookOpen className="w-6 h-6" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/20 flex-shrink-0">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-display font-black text-white tracking-tight flex items-center gap-2">
-                Kollywood Movie Library & Clue Archive
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-tight flex items-center gap-2">
+                Movie Library & Clues
               </h1>
-              <p className="text-xs text-cinema-muted">
-                Explore the complete catalogue of {puzzles.length} Tamil cinema films stored in the database (View-Only).
+              <p className="text-[11px] sm:text-xs text-cinema-muted">
+                Complete catalogue of {puzzles.length} Tamil cinema films stored in the database.
               </p>
             </div>
           </div>
         </div>
 
         {/* View-Only Badge */}
-        <div className="flex items-center gap-2 bg-cinema-dark/80 border border-cinema-border/70 px-3.5 py-2 rounded-2xl text-xs text-cinema-muted">
+        <div className="flex items-center gap-2 bg-cinema-dark/80 border border-cinema-border/70 px-3 py-1.5 rounded-2xl text-xs text-cinema-muted self-start md:self-auto">
           <Database className="w-4 h-4 text-brand-400" />
-          <span>View-Only Mode • {filteredPuzzles.length} Films Listed</span>
+          <span>{filteredPuzzles.length} Films Listed</span>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="glass-card p-4 rounded-3xl border border-cinema-border/70 mb-8 space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="glass-card p-3.5 sm:p-4 rounded-3xl border border-cinema-border/70 mb-6 sm:mb-8 space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-cinema-muted absolute left-3.5 top-3" />
             <input
               type="text"
-              placeholder="Search by Movie Name, Actor, Actress, Director, Music, or Song..."
+              placeholder="Search by Movie, Actor, Actress, Director, Music, or Song..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-cinema-muted/60 focus:outline-none"
+              className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder:text-cinema-muted/60 focus:outline-none"
             />
           </div>
 
           {/* Filter Dropdowns */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 md:flex items-center gap-2">
             {/* Difficulty Filter */}
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="bg-cinema-dark border border-cinema-border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+              className="bg-cinema-dark border border-cinema-border rounded-xl px-2.5 sm:px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
             >
               <option value="all">All Difficulties</option>
               <option value="easy">Easy (Blockbusters)</option>
@@ -114,11 +114,11 @@ export const Library: React.FC<LibraryProps> = ({ onBack, onSelectMovieForMatch 
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value as any)}
-              className="bg-cinema-dark border border-cinema-border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+              className="bg-cinema-dark border border-cinema-border rounded-xl px-2.5 sm:px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
             >
               <option value="all">All Collections</option>
-              <option value="curated">🎬 Official Curated Movies</option>
-              <option value="community">🎨 Player Created Movies</option>
+              <option value="curated">🎬 Official Curated</option>
+              <option value="community">🎨 Player Created</option>
             </select>
           </div>
         </div>
@@ -126,13 +126,14 @@ export const Library: React.FC<LibraryProps> = ({ onBack, onSelectMovieForMatch 
 
       {/* Movies Grid Showcase */}
       {filteredPuzzles.length === 0 ? (
-        <div className="text-center py-16 glass-card rounded-3xl border border-cinema-border/50">
-          <Film className="w-12 h-12 text-cinema-muted mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white mb-1">No movies matched your search</h3>
+        <div className="text-center py-12 sm:py-16 glass-card rounded-3xl border border-cinema-border/50">
+          <Film className="w-10 h-10 sm:w-12 sm:h-12 text-cinema-muted mx-auto mb-3" />
+          <h3 className="text-base sm:text-lg font-bold text-white mb-1">No movies matched your search</h3>
           <p className="text-xs text-cinema-muted">Try a different search term or reset the filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+
           {filteredPuzzles.map((p) => (
             <div
               key={p.id}

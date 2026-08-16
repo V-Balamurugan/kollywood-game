@@ -111,34 +111,34 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
       {/* Top Bar */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
         <button
           onClick={handleLeaveLobby}
-          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Leave Lobby
         </button>
 
-        <div className="flex items-center gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/30 px-3 py-1 rounded-full text-xs font-bold">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/30 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold">
           <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-          <span>Custom Movie Match • Live Shared Board</span>
+          <span>Shared Match Lobby</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column: Room Code & Settings */}
-        <div className="md:col-span-1 space-y-4">
-          <div className="glass-card rounded-3xl p-6 border border-cinema-border shadow-xl text-center">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-cinema-muted block mb-2">
+        <div className="md:col-span-1 space-y-3 sm:space-y-4">
+          <div className="glass-card rounded-3xl p-4 sm:p-6 border border-cinema-border shadow-xl text-center">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-cinema-muted block mb-2">
               Shareable Room Code
             </span>
             
             {/* Big Monospace Code */}
-            <div className="py-3 px-4 rounded-2xl bg-cinema-dark border-2 border-brand-500/50 shadow-inner mb-4">
-              <span className="font-mono font-black text-3xl sm:text-4xl tracking-widest text-brand-400 select-all">
+            <div className="py-2.5 sm:py-3 px-3 sm:px-4 rounded-2xl bg-cinema-dark border-2 border-brand-500/50 shadow-inner mb-3 sm:mb-4">
+              <span className="font-mono font-black text-2xl xs:text-3xl sm:text-4xl tracking-widest text-brand-400 select-all">
                 {roomCode}
               </span>
             </div>
@@ -163,7 +163,7 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
           </div>
 
           {/* Match Settings Summary */}
-          <div className="glass-panel rounded-2xl p-4 border border-cinema-border/60 text-xs space-y-2">
+          <div className="glass-panel rounded-2xl p-3.5 sm:p-4 border border-cinema-border/60 text-[11px] sm:text-xs space-y-1.5 sm:space-y-2">
             <span className="font-bold text-slate-300 block mb-1">Arena Rules</span>
             <div className="flex justify-between text-cinema-muted">
               <span>Game Mode:</span>
@@ -176,43 +176,43 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
             <div className="flex justify-between text-cinema-muted">
               <span>Timer / Round:</span>
               <strong className="text-white">
-                {room.settings.roundTimeSeconds ? `${room.settings.roundTimeSeconds}s` : '♾️ No Timer (Chill)'}
+                {room.settings.roundTimeSeconds ? `${room.settings.roundTimeSeconds}s` : '♾️ No Timer'}
               </strong>
             </div>
           </div>
         </div>
 
         {/* Right Column: Player Roster & Launch */}
-        <div className="md:col-span-2 space-y-4">
-          <div className="glass-card rounded-3xl p-6 border border-cinema-border shadow-xl space-y-6">
+        <div className="md:col-span-2 space-y-3 sm:space-y-4">
+          <div className="glass-card rounded-3xl p-4 sm:p-6 border border-cinema-border shadow-xl space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-cinema-border/50 pb-4">
-              <div className="flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-brand-400" />
-                <h3 className="font-display font-black text-lg text-white">
-                  Contestants in Lobby ({playersList.length})
+            <div className="flex items-center justify-between border-b border-cinema-border/50 pb-3 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400" />
+                <h3 className="font-display font-black text-base sm:text-lg text-white">
+                  Contestants ({playersList.length})
                 </h3>
               </div>
-              <span className="text-xs text-cinema-muted">
+              <span className="text-[11px] sm:text-xs text-cinema-muted">
                 {playersList.filter(p => p.ready).length} / {playersList.length} ready
               </span>
             </div>
 
             {/* Custom Movie Highlight Banner */}
-            <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
-                <Film className="w-5 h-5" />
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center gap-2.5 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex-shrink-0">
+                <Film className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="text-xs">
                 <span className="font-bold text-white block">Custom Match Arena</span>
-                <p className="text-cinema-muted text-[11px]">
-                  Custom matches are played with player-created movies! Anyone in the room can create a movie clue to start the round.
+                <p className="text-cinema-muted text-[10px] sm:text-[11px]">
+                  Custom matches are played with player-created movies! Anyone in the room can create a movie clue to start.
                 </p>
               </div>
             </div>
 
             {/* Players Grid with Kick Buttons for Host */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
               {playersList.map((player) => {
                 const isCurrent = player.uid === user.uid;
                 const isRoomHost = player.uid === room.hostUid;
@@ -220,44 +220,44 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
                 return (
                   <div
                     key={player.uid}
-                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all ${
                       isCurrent
                         ? 'bg-brand-500/10 border-brand-500/40'
                         : 'bg-cinema-cardHover border-cinema-border/50'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       <img
                         src={player.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${player.uid}`}
                         alt={player.name}
-                        className="w-10 h-10 rounded-xl bg-cinema-dark border border-cinema-border object-cover"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-cinema-dark border border-cinema-border object-cover flex-shrink-0"
                       />
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white max-w-[110px] truncate">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-bold text-white truncate max-w-[85px] sm:max-w-[110px]">
                             {player.name}
                           </span>
                           {isRoomHost && (
                             <span title="Host">
-                              <Crown className="w-3.5 h-3.5 text-brand-400 fill-brand-400" />
+                              <Crown className="w-3 h-3 text-brand-400 fill-brand-400 flex-shrink-0" />
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-cinema-muted">
+                        <span className="text-[9px] sm:text-[10px] text-cinema-muted block">
                           {isCurrent ? '(You)' : isRoomHost ? 'Host' : 'Challenger'}
                         </span>
                       </div>
                     </div>
 
                     {/* Status & Kick Action */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                       {player.ready ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
                           <Check className="w-3 h-3" />
                           Ready
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-cardHover px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-cinema-muted bg-cinema-cardHover px-1.5 sm:px-2 py-0.5 rounded-full">
                           Waiting
                         </span>
                       )}
@@ -267,9 +267,9 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
                         <button
                           onClick={() => handleKickPlayer(player.uid, player.name)}
                           title={`Kick ${player.name} from room`}
-                          className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 transition-colors"
+                          className="p-1 sm:p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 transition-colors"
                         >
-                          <UserX className="w-3.5 h-3.5" />
+                          <UserX className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         </button>
                       )}
                     </div>
@@ -279,11 +279,11 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
             </div>
 
             {/* Ready & Launch Custom Movie Actions */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 sm:space-y-3 pt-1 sm:pt-2">
               {!isHost && (
                 <button
                   onClick={handleToggleReady}
-                  className={`w-full py-3 rounded-2xl font-bold text-sm transition-all shadow-lg ${
+                  className={`w-full py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-lg ${
                     isReady
                       ? 'bg-emerald-500 text-black shadow-emerald-500/25 hover:bg-emerald-400'
                       : 'bg-cinema-cardHover border border-cinema-border text-white hover:border-brand-500/50'
@@ -293,13 +293,13 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
                 </button>
               )}
 
-              {/* Primary Action: Create Custom Movie to Launch Match (Open to ALL Players in Room!) */}
+              {/* Primary Action: Create Custom Movie to Launch Match */}
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 disabled={loadingStart}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-xs sm:text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <PlusCircle className="w-5 h-5 fill-black text-brand-400" />
+                <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-black text-brand-400" />
                 <span>🎨 Create Custom Movie & Launch Match</span>
               </button>
             </div>
@@ -318,3 +318,4 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
     </div>
   );
 };
+

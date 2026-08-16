@@ -25,6 +25,8 @@ type AppView =
   | 'library'
   | 'admin';
 
+import { Footer } from './components/Footer';
+
 export const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
@@ -168,6 +170,13 @@ export const AppContent: React.FC = () => {
         )}
       </main>
 
+      {/* Global Footer */}
+      <Footer
+        onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+        onOpenProfile={() => navigateTo('profile')}
+        onOpenLibrary={() => navigateTo('library')}
+      />
+
       {/* Global Modals */}
       <AuthModal />
       <HowToPlayModal
@@ -177,6 +186,7 @@ export const AppContent: React.FC = () => {
     </div>
   );
 };
+
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 

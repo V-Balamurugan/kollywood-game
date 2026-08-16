@@ -167,40 +167,40 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-4xl mx-auto space-y-3 sm:space-y-4">
       {/* 👑 MOVIE CREATOR / SPECTATOR BANNER */}
       {isSpectator && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-cinema-card border border-amber-500/50 flex items-center justify-between gap-3 shadow-lg animate-pop">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500 text-black shadow-md">
-              <Crown className="w-4 h-4 fill-black" />
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-cinema-card border border-amber-500/50 flex items-center justify-between gap-2.5 shadow-lg animate-pop">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-amber-500 text-black shadow-md flex-shrink-0">
+              <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black" />
             </div>
             <div>
-              <span className="text-xs font-display font-black text-amber-300 block">
+              <span className="text-[11px] sm:text-xs font-display font-black text-amber-300 block">
                 Director's Chair (Spectating)
               </span>
-              <p className="text-[11px] text-cinema-muted">
-                You created this movie! All clues start locked for contestants. Send hints to help them and earn +50 pts bounty!
+              <p className="text-[10px] sm:text-[11px] text-cinema-muted">
+                You created this movie! All clues start locked for contestants.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cinema-dark/80 border border-cinema-border text-amber-400 text-xs font-bold">
-            <Eye className="w-3.5 h-3.5" />
-            <span>Director Mode</span>
+          <div className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-cinema-dark/80 border border-cinema-border text-amber-400 text-[10px] sm:text-xs font-bold flex-shrink-0">
+            <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden xs:inline sm:inline">Director Mode</span>
           </div>
         </div>
       )}
 
       {/* 🎬 DIRECTOR'S BROADCAST CLUES (If Director has sent any hint!) */}
       {directorHints.length > 0 && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/25 via-yellow-500/15 to-cinema-dark border-2 border-brand-500 shadow-xl shadow-brand-500/15 space-y-2 animate-pop">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-display font-black text-amber-300">
-              <Megaphone className="w-4 h-4 text-amber-400 animate-bounce" />
+        <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/25 via-yellow-500/15 to-cinema-dark border-2 border-brand-500 shadow-xl shadow-brand-500/15 space-y-2 animate-pop">
+          <div className="flex items-center justify-between flex-wrap gap-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-display font-black text-amber-300">
+              <Megaphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 animate-bounce" />
               <span>DIRECTOR'S LIVE CLUE BROADCAST</span>
             </div>
-            <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">
-              From Director {directorHints[directorHints.length - 1]?.fromName || ''}
+            <span className="text-[9px] sm:text-[10px] text-brand-400 font-bold uppercase tracking-wider">
+              From {directorHints[directorHints.length - 1]?.fromName || 'Director'}
             </span>
           </div>
 
@@ -208,7 +208,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {directorHints.map((dh) => (
               <div
                 key={dh.id}
-                className="p-2.5 rounded-xl bg-cinema-dark/80 border border-brand-500/40 text-xs text-white font-semibold flex items-start gap-2 shadow-sm"
+                className="p-2 sm:p-2.5 rounded-xl bg-cinema-dark/80 border border-brand-500/40 text-xs text-white font-semibold flex items-start gap-2 shadow-sm"
               >
                 <span className="text-amber-400 font-bold">🎬</span>
                 <span>"{dh.message}"</span>
@@ -219,32 +219,32 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* 🎬 CINEMA CLUES STATION */}
-      <div className="glass-card rounded-2xl p-4 border border-cinema-border/80 shadow-lg relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-cinema-border/50">
+      <div className="glass-card rounded-2xl p-3 sm:p-4 border border-cinema-border/80 shadow-lg relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-cinema-border/50">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
+            <div className="p-1.5 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex-shrink-0">
               <Clapperboard className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-display font-black text-white uppercase tracking-wider">
+              <h4 className="text-[11px] sm:text-xs font-display font-black text-white uppercase tracking-wider">
                 Cinema Clues Station
               </h4>
-              <span className="text-[10px] text-cinema-muted">
-                {clueLevel === 0 && '🔒 All cinema clues locked • Guess with 1st letters or unlock clues'}
-                {clueLevel === 1 && 'Release Year & Genre clue unlocked (+50 pts to creator)'}
-                {clueLevel === 2 && 'Director & Music Director clues unlocked (+50 pts to creator)'}
-                {clueLevel >= 3 && 'Full Plot & Trivia clue unlocked! (+50 pts to creator)'}
+              <span className="text-[9px] sm:text-[10px] text-cinema-muted block">
+                {clueLevel === 0 && '🔒 Clues locked • Guess with 1st letters or unlock'}
+                {clueLevel === 1 && 'Release Year & Genre unlocked (+50 pts bounty)'}
+                {clueLevel === 2 && 'Director & Music unlocked (+50 pts bounty)'}
+                {clueLevel >= 3 && 'Full Plot & Trivia unlocked! (+50 pts bounty)'}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {/* Contestant: Ask Director for Hint */}
             {onRequestDirectorHint && !disabled && !revealAll && !isSpectator && (
               <button
                 onClick={handleAskDirector}
                 disabled={hasRequestedDirector}
-                className={`py-1.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${
+                className={`flex-1 sm:flex-initial py-1.5 px-2.5 sm:px-3 rounded-xl border text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${
                   hasRequestedDirector
                     ? 'bg-cinema-cardHover text-emerald-400 border-emerald-500/40'
                     : 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border-pink-500/40 text-pink-300'
@@ -252,7 +252,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 title="Ask the movie creator / director to provide a hint"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>{hasRequestedDirector ? '✓ Hint Requested from Director' : '🙋‍♂️ Ask Director for Hint'}</span>
+                <span>{hasRequestedDirector ? '✓ Hint Requested' : '🙋‍♂️ Ask Director'}</span>
               </button>
             )}
 
@@ -260,14 +260,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {clueLevel < 3 && !disabled && !revealAll && !isSpectator && (
               <button
                 onClick={handleUnlockNextCinemaClue}
-                className="py-1.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                className="flex-1 sm:flex-initial py-1.5 px-2.5 sm:px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-400 text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
                 title="Unlock next cinema clue (-50 pts deducted, given to movie creator)"
               >
                 <Lightbulb className="w-3.5 h-3.5" />
                 <span>
-                  {clueLevel === 0 && 'Unlock Clue 1: Year & Genre (-50 pts)'}
-                  {clueLevel === 1 && 'Unlock Clue 2: Director & Music (-50 pts)'}
-                  {clueLevel === 2 && 'Unlock Clue 3: Plot Clue (-50 pts)'}
+                  {clueLevel === 0 && 'Unlock Year & Genre (-50 pts)'}
+                  {clueLevel === 1 && 'Unlock Dir & Music (-50 pts)'}
+                  {clueLevel === 2 && 'Unlock Plot Clue (-50 pts)'}
                 </span>
               </button>
             )}
@@ -275,9 +275,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
         {/* Revealed / Locked Clue Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-2.5 sm:pt-3">
           {/* Clue 1: Year & Genre */}
-          <div className={`p-2.5 rounded-xl border transition-all ${
+          <div className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
             clueLevel >= 1 || revealAll
               ? 'bg-cinema-dark/70 border-cinema-border/60'
               : 'bg-cinema-dark/30 border-cinema-border/30 opacity-70'
@@ -294,13 +294,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             ) : (
               <div className="text-xs text-cinema-muted italic flex items-center gap-1">
                 <Lock className="w-3 h-3 text-amber-400/70" />
-                <span>Locked Clue (Click unlock above)</span>
+                <span>Locked Clue</span>
               </div>
             )}
           </div>
 
           {/* Clue 2: Director & Music */}
-          <div className={`p-2.5 rounded-xl border transition-all ${
+          <div className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
             clueLevel >= 2 || revealAll
               ? 'bg-cinema-dark/70 border-cinema-border/60' 
               : 'bg-cinema-dark/30 border-cinema-border/30 opacity-70'
@@ -316,13 +316,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             ) : (
               <div className="text-xs text-cinema-muted italic flex items-center gap-1">
                 <Lock className="w-3 h-3 text-amber-400/70" />
-                <span>Locked Clue (Click unlock above)</span>
+                <span>Locked Clue</span>
               </div>
             )}
           </div>
 
           {/* Clue 3: Plot / Trivia Clue */}
-          <div className={`p-2.5 rounded-xl border transition-all ${
+          <div className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
             clueLevel >= 3 || revealAll
               ? 'bg-cinema-dark/70 border-cinema-border/60' 
               : 'bg-cinema-dark/30 border-cinema-border/30 opacity-70'
@@ -337,7 +337,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             ) : (
               <div className="text-xs text-cinema-muted italic flex items-center gap-1">
                 <Lock className="w-3 h-3 text-amber-400/70" />
-                <span>Locked Clue (Click unlock above)</span>
+                <span>Locked Clue</span>
               </div>
             )}
           </div>
@@ -345,7 +345,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       {/* 2x2 CINEMA GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
         {CATEGORIES.map(category => {
           const key = category.key;
           const entity = (puzzle && puzzle[key]) || {
@@ -379,7 +379,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             >
               {/* Card Container */}
               <div
-                className={`relative min-h-[300px] sm:min-h-[320px] rounded-3xl p-5 border flex flex-col justify-between overflow-hidden transition-all duration-500 ${
+                className={`relative min-h-[260px] sm:min-h-[300px] rounded-3xl p-4 sm:p-5 border flex flex-col justify-between overflow-hidden transition-all duration-500 ${
                   shouldReveal
                     ? isSolved
                       ? 'glass-card correct-border-glow bg-emerald-950/20'
@@ -393,21 +393,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 {/* Top Category Header */}
                 <div className="flex items-center justify-between z-10">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-xl bg-cinema-cardHover border border-cinema-border/50 text-slate-300">
+                    <div className="p-1 sm:p-1.5 rounded-xl bg-cinema-cardHover border border-cinema-border/50 text-slate-300 flex-shrink-0">
                       {category.icon}
                     </div>
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
                         {category.label}
                       </span>
-                      <p className="text-[10px] text-cinema-muted -mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] text-cinema-muted -mt-0.5">
                         {category.sublabel}
                       </p>
                     </div>
                   </div>
 
                   {shouldReveal ? (
-                    <div className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full animate-pop border ${
+                    <div className={`flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full animate-pop border ${
                       isSolved 
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
                         : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
@@ -415,7 +415,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       {isSolved ? (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{sharedAnswer ? `Solved by ${sharedAnswer.solvedByName}` : 'Solved'}</span>
+                          <span>{sharedAnswer ? `${sharedAnswer.solvedByName}` : 'Solved'}</span>
                         </>
                       ) : (
                         <>
@@ -426,17 +426,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </div>
                   ) : (
                     <span className="text-[10px] font-bold uppercase tracking-wider text-cinema-muted bg-cinema-dark/80 px-2 py-0.5 rounded-md border border-cinema-border/40">
-                      1st Letter: {entity.firstLetter || entity.name.charAt(0) || '?'}
+                      Starts: {entity.firstLetter || entity.name.charAt(0) || '?'}
                     </span>
                   )}
                 </div>
 
                 {/* Middle Content: Solved Image OR Giant First Letter Badge */}
-                <div className="my-auto py-3 text-center z-10">
+                <div className="my-auto py-2 sm:py-3 text-center z-10">
                   {shouldReveal ? (
                     <div className="flex flex-col items-center animate-pop">
                       {/* Revealed Photo */}
-                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-brand-500/60 shadow-lg shadow-brand-500/20 mb-3 group">
+                      <div className="relative w-24 h-24 sm:w-30 sm:h-30 rounded-2xl overflow-hidden border-2 border-brand-500/60 shadow-lg shadow-brand-500/20 mb-2 sm:mb-3 group">
                         <img
                           src={imageUrl}
                           alt={entity.name}
@@ -453,19 +453,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                             className="absolute inset-0 bg-black/40 hover:bg-black/20 flex items-center justify-center transition-colors"
                             title="Play Song on YouTube"
                           >
-                            <div className="w-9 h-9 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg">
-                              <Play className="w-4 h-4 fill-white ml-0.5" />
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg">
+                              <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white ml-0.5" />
                             </div>
                           </a>
                         )}
                       </div>
 
                       {/* Full Name */}
-                      <h3 className="font-display font-black text-lg sm:text-xl text-white tracking-tight">
+                      <h3 className="font-display font-black text-base sm:text-xl text-white tracking-tight">
                         {entity.name}
                       </h3>
                       {entity.aliases && entity.aliases.length > 0 && (
-                        <p className="text-[11px] text-cinema-muted">
+                        <p className="text-[10px] sm:text-[11px] text-cinema-muted">
                           aka {entity.aliases[0]}
                         </p>
                       )}
@@ -473,12 +473,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   ) : (
                     <div className="flex flex-col items-center">
                       {/* Giant First Letter Badge */}
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-cinema-cardHover to-cinema-card border-2 border-brand-500/40 flex items-center justify-center shadow-xl shadow-brand-500/10 mb-2 group hover:border-brand-500 transition-colors">
-                        <span className="font-display font-black text-5xl sm:text-6xl bg-gradient-to-b from-brand-300 via-brand-400 to-amber-500 bg-clip-text text-transparent">
+                      <div className="w-20 h-20 sm:w-26 sm:h-26 rounded-3xl bg-gradient-to-br from-cinema-cardHover to-cinema-card border-2 border-brand-500/40 flex items-center justify-center shadow-xl shadow-brand-500/10 mb-1.5 sm:mb-2 group hover:border-brand-500 transition-colors">
+                        <span className="font-display font-black text-4xl sm:text-5xl bg-gradient-to-b from-brand-300 via-brand-400 to-amber-500 bg-clip-text text-transparent">
                           {entity.firstLetter || entity.name.charAt(0) || '?'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-cinema-muted uppercase font-bold tracking-wider">
+                      <span className="text-[10px] sm:text-[11px] text-cinema-muted uppercase font-bold tracking-wider">
                         Starts with "{entity.firstLetter || entity.name.charAt(0)}"
                       </span>
                     </div>
@@ -486,12 +486,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 </div>
 
                 {/* Bottom Input Area or Spectator / Solver State */}
-                <div className="z-10 mt-2">
+                <div className="z-10 mt-1 sm:mt-2">
                   {!shouldReveal ? (
                     isSpectator ? (
-                      <div className="text-center py-2 bg-cinema-dark/60 rounded-xl border border-cinema-border/50 text-xs font-semibold text-cinema-muted flex items-center justify-center gap-1.5">
+                      <div className="text-center py-2 bg-cinema-dark/60 rounded-xl border border-cinema-border/50 text-[11px] sm:text-xs font-semibold text-cinema-muted flex items-center justify-center gap-1.5">
                         <Eye className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Director Mode — Watching contestants guess</span>
+                        <span>Director Mode — Watching contestants</span>
                       </div>
                     ) : (
                       <form
@@ -501,26 +501,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         }}
                         className="space-y-1.5"
                       >
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 sm:gap-2">
                           <input
                             type="text"
                             disabled={isLocked}
                             value={inputs[key] || ''}
                             onChange={(e) => handleInputChange(key, e.target.value)}
                             placeholder={`Guess the ${category.label.toLowerCase()}...`}
-                            className="w-full bg-cinema-dark/90 border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors disabled:opacity-50"
+                            className="w-full bg-cinema-dark/90 border border-cinema-border focus:border-brand-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition-colors disabled:opacity-50"
                           />
                           <button
                             type="submit"
                             disabled={isLocked || !inputs[key]?.trim()}
-                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-xs shadow-md shadow-brand-500/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-40"
+                            className="px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-xs shadow-md shadow-brand-500/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 flex-shrink-0"
                           >
                             Guess
                           </button>
                         </div>
 
                         {lastFeedback[key] && (
-                          <div className="text-[11px] font-semibold text-red-400 flex items-center gap-1 pl-1">
+                          <div className="text-[10px] sm:text-[11px] font-semibold text-red-400 flex items-center gap-1 pl-1">
                             <AlertCircle className="w-3 h-3" />
                             <span>{lastFeedback[key]}</span>
                           </div>
@@ -530,20 +530,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   ) : (
                     <div className="text-center py-1 flex items-center justify-center gap-2 text-xs font-semibold">
                       {isSolved ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {sharedAnswer?.solvedByAvatar && (
                             <img
                               src={sharedAnswer.solvedByAvatar}
                               alt={sharedAnswer.solvedByName}
-                              className="w-5 h-5 rounded-full border border-emerald-400"
+                              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-emerald-400"
                             />
                           )}
-                          <span className="text-emerald-400">
-                            {sharedAnswer ? `⚡ Solved by ${sharedAnswer.solvedByName} (+250 pts)` : '✨ Solved!'}
+                          <span className="text-emerald-400 text-[11px] sm:text-xs">
+                            {sharedAnswer ? `⚡ Solved by ${sharedAnswer.solvedByName}` : '✨ Solved!'}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-amber-400/90">
+                        <span className="text-amber-400/90 text-[11px]">
                           🔒 Round Finished — Answer Locked
                         </span>
                       )}

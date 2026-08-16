@@ -10,24 +10,25 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-cinema-card border border-cinema-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-brand-500/10 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-cinema-card border border-cinema-border rounded-3xl p-5 sm:p-8 shadow-2xl shadow-brand-500/10 my-auto max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-cinema-cardHover text-slate-400 hover:text-white border border-cinema-border/50 transition-colors"
+          className="absolute top-4 sm:top-5 right-4 sm:top-5 p-2 rounded-xl bg-cinema-cardHover text-slate-400 hover:text-white border border-cinema-border/50 transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/20">
-            <Film className="w-5 h-5" />
+        <div className="flex items-center gap-3 mb-5 sm:mb-6 pr-8">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/20 flex-shrink-0">
+            <Film className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-display font-black text-white">How to Play</h2>
-            <p className="text-xs text-cinema-muted">The ultimate 2x2 Tamil cinema trivia challenge</p>
+            <h2 className="text-lg sm:text-xl font-display font-black text-white">How to Play</h2>
+            <p className="text-[11px] sm:text-xs text-cinema-muted">The ultimate 2x2 Tamil cinema trivia challenge</p>
           </div>
         </div>
+
 
         <div className="space-y-4 text-xs sm:text-sm text-slate-300">
           <div className="p-3.5 rounded-2xl bg-cinema-cardHover/60 border border-cinema-border/50 flex gap-3">

@@ -85,21 +85,21 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-cinema-card border border-cinema-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-brand-500/20 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-cinema-card border border-cinema-border rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl shadow-brand-500/20 my-auto max-h-[92vh] overflow-y-auto">
         {/* Background Ambient Lights */}
         <div className="absolute -top-20 -right-20 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-xl shadow-brand-500/30 mb-3 animate-pop">
-            {isFinal ? <Crown className="w-8 h-8" /> : <Trophy className="w-8 h-8" />}
+        <div className="text-center mb-4 sm:mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-xl shadow-brand-500/30 mb-2 sm:mb-3 animate-pop">
+            {isFinal ? <Crown className="w-6 h-6 sm:w-8 sm:h-8" /> : <Trophy className="w-6 h-6 sm:w-8 sm:h-8" />}
           </div>
-          <h2 className="text-2xl sm:text-3xl font-display font-black text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-tight">
             {isFinal ? '🏆 Match Finished — Final Winner!' : `Movie #${roundNumber} Complete!`}
           </h2>
-          <p className="text-xs sm:text-sm text-cinema-muted mt-1">
+          <p className="text-[11px] sm:text-xs md:text-sm text-cinema-muted mt-0.5 sm:mt-1">
             {isFinal
               ? winner
                 ? `${winner.name} scored highest with ${(winner.score || 0).toLocaleString()} points and won the game!`
@@ -110,7 +110,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
         {/* FINAL WINNER HERO CARD (If Game is Stopped) */}
         {isFinal && winner && (
-          <div className="mb-6 p-4 rounded-3xl bg-gradient-to-b from-amber-500/25 via-amber-500/10 to-cinema-dark border-2 border-brand-500 shadow-xl shadow-brand-500/20 text-center relative overflow-hidden animate-pop">
+          <div className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-3xl bg-gradient-to-b from-amber-500/25 via-amber-500/10 to-cinema-dark border-2 border-brand-500 shadow-xl shadow-brand-500/20 text-center relative overflow-hidden animate-pop">
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-[10px] uppercase tracking-widest px-4 py-1 rounded-full shadow flex items-center gap-1">
               <Crown className="w-3.5 h-3.5 fill-black" />
               <span>Match Winner</span>
@@ -121,14 +121,14 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 <img
                   src={winner.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${winner.uid}`}
                   alt={winner.name}
-                  className="w-16 h-16 rounded-2xl bg-cinema-dark border-2 border-brand-400 shadow-lg object-cover"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-cinema-dark border-2 border-brand-400 shadow-lg object-cover"
                 />
                 <div className="absolute -bottom-2 -right-2 p-1 rounded-full bg-amber-400 text-black shadow">
                   <Medal className="w-3.5 h-3.5 fill-black" />
                 </div>
               </div>
 
-              <h3 className="text-lg font-display font-black text-white">
+              <h3 className="text-base sm:text-lg font-display font-black text-white">
                 {winner.name} {isCurrentWinner && '(You)'}
               </h3>
               
@@ -137,7 +137,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               </span>
 
               {isCurrentWinner && (
-                <div className="mt-2 text-xs font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 rounded-full">
+                <div className="mt-2 text-[11px] sm:text-xs font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 rounded-full">
                   🎉 Congratulations! You won this Kollywood showdown!
                 </div>
               )}
@@ -147,36 +147,37 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
         {/* Film Card Solution Recap (During round recap) */}
         {!isFinal && (
-          <div className="glass-panel rounded-2xl p-4 border border-cinema-border/80 mb-5 space-y-3">
+          <div className="glass-panel rounded-2xl p-3 sm:p-4 border border-cinema-border/80 mb-4 sm:mb-5 space-y-2 sm:space-y-3">
             <div className="flex items-center justify-between border-b border-cinema-border/50 pb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-brand-400">
                 Movie Solution Recap
               </span>
-              <span className="text-xs text-cinema-muted">
+              <span className="text-[11px] sm:text-xs text-cinema-muted">
                 Dir: {puzzle?.director || 'Kollywood'}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs">
               <div className="p-2 rounded-xl bg-cinema-cardHover/60 border border-cinema-border/40">
-                <span className="text-[10px] text-cinema-muted uppercase font-bold block">Hero</span>
-                <span className="font-semibold text-white truncate block">{puzzle?.hero?.name}</span>
+                <span className="text-[9px] sm:text-[10px] text-cinema-muted uppercase font-bold block">Hero</span>
+                <span className="font-semibold text-white truncate block text-[11px] sm:text-xs">{puzzle?.hero?.name}</span>
               </div>
               <div className="p-2 rounded-xl bg-cinema-cardHover/60 border border-cinema-border/40">
-                <span className="text-[10px] text-cinema-muted uppercase font-bold block">Heroine</span>
-                <span className="font-semibold text-white truncate block">{puzzle?.heroine?.name}</span>
+                <span className="text-[9px] sm:text-[10px] text-cinema-muted uppercase font-bold block">Heroine</span>
+                <span className="font-semibold text-white truncate block text-[11px] sm:text-xs">{puzzle?.heroine?.name}</span>
               </div>
               <div className="p-2 rounded-xl bg-cinema-cardHover/60 border border-cinema-border/40">
-                <span className="text-[10px] text-cinema-muted uppercase font-bold block">Movie</span>
-                <span className="font-semibold text-white truncate block">{puzzle?.movie?.name}</span>
+                <span className="text-[9px] sm:text-[10px] text-cinema-muted uppercase font-bold block">Movie</span>
+                <span className="font-semibold text-white truncate block text-[11px] sm:text-xs">{puzzle?.movie?.name}</span>
               </div>
               <div className="p-2 rounded-xl bg-cinema-cardHover/60 border border-cinema-border/40">
-                <span className="text-[10px] text-cinema-muted uppercase font-bold block">Song</span>
-                <span className="font-semibold text-white truncate block">{puzzle?.song?.name}</span>
+                <span className="text-[9px] sm:text-[10px] text-cinema-muted uppercase font-bold block">Song</span>
+                <span className="font-semibold text-white truncate block text-[11px] sm:text-xs">{puzzle?.song?.name}</span>
               </div>
             </div>
           </div>
         )}
+
 
         {/* Multiplayer Standings Table with Live "Next Vote" Status */}
         {sortedPlayers.length > 0 && (

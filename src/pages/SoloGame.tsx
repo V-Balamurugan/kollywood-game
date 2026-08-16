@@ -138,33 +138,33 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
   // If not in game, render Settings & Start Screen
   if (!isPlaying || !currentPuzzle) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-8">
+      <div className="max-w-xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
         <button
           onClick={onExit}
-          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </button>
 
-        <div className="glass-card rounded-3xl p-6 sm:p-8 border border-cinema-border shadow-2xl">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/50">
-            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center">
-              <Sliders className="w-5 h-5" />
+        <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl">
+          <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-cinema-border/50">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
+              <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-display font-black text-white">Solo Cinema Challenge</h2>
-              <p className="text-xs text-cinema-muted">Play continuously & decide when to stop</p>
+              <h2 className="text-lg sm:text-xl font-display font-black text-white">Solo Cinema Challenge</h2>
+              <p className="text-[11px] sm:text-xs text-cinema-muted">Play continuously & decide when to stop</p>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             {/* Time per Round */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Time Per Round
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                 {[
                   { sec: 0, label: '♾️ No Timer' },
                   { sec: 30, label: '30s' },
@@ -176,7 +176,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
                     key={opt.sec}
                     type="button"
                     onClick={() => setSettings(s => ({ ...s, roundTimeSeconds: opt.sec }))}
-                    className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border transition-all ${
                       settings.roundTimeSeconds === opt.sec
                         ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
                         : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
@@ -190,10 +190,10 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
 
             {/* Difficulty */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Difficulty Pool
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
                 {([
                   { id: 'all', label: '🎲 Mixed (All)' },
                   { id: 'easy', label: '⚡ Easy' },
@@ -204,7 +204,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
                     key={diff.id}
                     type="button"
                     onClick={() => setSettings(s => ({ ...s, difficulty: diff.id }))}
-                    className={`py-2.5 rounded-xl text-xs font-bold border tracking-wider transition-all ${
+                    className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border tracking-wider transition-all ${
                       settings.difficulty === diff.id
                         ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
                         : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
@@ -230,7 +230,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
       {/* Top HUD */}
       <ScoreHUD
         score={score}
@@ -267,3 +267,4 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
     </div>
   );
 };
+

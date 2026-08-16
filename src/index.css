@@ -7,6 +7,11 @@
     --color-gold-glow: rgba(245, 158, 11, 0.35);
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: #08090C;
     background-image: 
@@ -15,6 +20,12 @@
       radial-gradient(at 50% 50%, rgba(18, 20, 26, 0.8) 0px, transparent 100%);
     background-attachment: fixed;
     color: #F1F5F9;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent mobile input auto-zoom by ensuring minimum 16px font on small screens if needed */
+  input, select, textarea, button {
+    touch-action: manipulation;
   }
 }
 
@@ -63,8 +74,8 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -79,3 +90,13 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #f59e0b;
 }
+
+/* Mobile Safe Areas */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
