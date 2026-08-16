@@ -1,0 +1,320 @@
+import React, { useState, useEffect } from 'react';
+import { Copy, Check, Users, Play, Crown, ArrowLeft, Share2, Sparkles, PlusCircle, Film, UserX } from 'lucide-react';
+import { Room, Puzzle, Player } from '../types/game';
+import { subscribeToRoom, setPlayerReady, setCustomPuzzleAndStart, kickPlayerFromRoom, leaveRoom } from '../services/firebase';
+import { useAuth } from '../context/AuthContext';
+import { CreatePuzzleModal } from '../components/CreatePuzzleModal';
+
+interface RoomLobbyProps {
+  roomCode: string;
+  onGameStarted: (room?: any) => void;
+  onLeaveRoom: () => void;
+}
+
+export const RoomLobby: React.FC<RoomLobbyProps> = ({
+  roomCode,
+  onGameStarted,
+  onLeaveRoom
+}) => {
+  const { user } = useAuth();
+  const [room, setRoom] = useState<Room | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loadingStart, setLoadingStart] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToRoom(roomCode, (updatedRoom) => {
+      if (!updatedRoom) {
+        onLeaveRoom();
+        return;
+      }
+
+      // Check if current user was kicked/removed from room
+      if (user && updatedRoom.players && !updatedRoom.players[user.uid]) {
+        alert('You were removed from the room by the host.');
+        onLeaveRoom();
+        return;
+      }
+
+      setRoom(updatedRoom);
+
+      // If game has started, navigate to MultiplayerGame
+      if (updatedRoom.status === 'in-progress') {
+        onGameStarted(updatedRoom);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [roomCode, user?.uid, onGameStarted, onLeaveRoom]);
+
+  if (!room || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-cinema-muted">Loading custom match lobby...</p>
+      </div>
+    );
+  }
+
+  const isHost = user.uid === room.hostUid;
+  const playersList = Object.values(room.players || {});
+  const isReady = room.players[user.uid]?.ready || false;
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareLink = () => {
+    const shareUrl = `${window.location.origin}/?join=${roomCode}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join my Kollywood Custom Cinema Match!',
+        text: `Join room code ${roomCode} for a Kollywood movie guessing challenge!`,
+        url: shareUrl
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleToggleReady = async () => {
+    if (!user) return;
+    await setPlayerReady(roomCode, user.uid, !isReady);
+  };
+
+  const handleKickPlayer = async (targetUid: string, targetName: string) => {
+    if (!isHost || targetUid === user.uid) return;
+    if (window.confirm(`Are you sure you want to kick "${targetName}" from this room?`)) {
+      await kickPlayerFromRoom(roomCode, targetUid);
+    }
+  };
+
+  const handleCustomPuzzleCreated = async (puzzle: Puzzle) => {
+    setIsCreateModalOpen(false);
+    setLoadingStart(true);
+    try {
+      await setCustomPuzzleAndStart(roomCode, puzzle);
+    } finally {
+      setLoadingStart(false);
+    }
+  };
+
+  const handleLeaveLobby = async () => {
+    if (user) {
+      await leaveRoom(roomCode, user.uid);
+    }
+    onLeaveRoom();
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={handleLeaveLobby}
+          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Leave Lobby
+        </button>
+
+        <div className="flex items-center gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/30 px-3 py-1 rounded-full text-xs font-bold">
+          <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+          <span>Custom Movie Match • Live Shared Board</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Column: Room Code & Settings */}
+        <div className="md:col-span-1 space-y-4">
+          <div className="glass-card rounded-3xl p-6 border border-cinema-border shadow-xl text-center">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cinema-muted block mb-2">
+              Shareable Room Code
+            </span>
+            
+            {/* Big Monospace Code */}
+            <div className="py-3 px-4 rounded-2xl bg-cinema-dark border-2 border-brand-500/50 shadow-inner mb-4">
+              <span className="font-mono font-black text-3xl sm:text-4xl tracking-widest text-brand-400 select-all">
+                {roomCode}
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyCode}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-colors"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? 'Copied!' : 'Copy Code'}</span>
+              </button>
+
+              <button
+                onClick={handleShareLink}
+                title="Share link"
+                className="p-2.5 rounded-xl bg-cinema-cardHover hover:bg-cinema-border/80 border border-cinema-border text-slate-200 text-xs font-semibold flex items-center justify-center transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Match Settings Summary */}
+          <div className="glass-panel rounded-2xl p-4 border border-cinema-border/60 text-xs space-y-2">
+            <span className="font-bold text-slate-300 block mb-1">Arena Rules</span>
+            <div className="flex justify-between text-cinema-muted">
+              <span>Game Mode:</span>
+              <strong className="text-emerald-400">⚡ Live Shared Board</strong>
+            </div>
+            <div className="flex justify-between text-cinema-muted">
+              <span>Puzzles:</span>
+              <strong className="text-brand-400">🎨 Custom Movies Only</strong>
+            </div>
+            <div className="flex justify-between text-cinema-muted">
+              <span>Timer / Round:</span>
+              <strong className="text-white">
+                {room.settings.roundTimeSeconds ? `${room.settings.roundTimeSeconds}s` : '♾️ No Timer (Chill)'}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Player Roster & Launch */}
+        <div className="md:col-span-2 space-y-4">
+          <div className="glass-card rounded-3xl p-6 border border-cinema-border shadow-xl space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-cinema-border/50 pb-4">
+              <div className="flex items-center gap-2.5">
+                <Users className="w-5 h-5 text-brand-400" />
+                <h3 className="font-display font-black text-lg text-white">
+                  Contestants in Lobby ({playersList.length})
+                </h3>
+              </div>
+              <span className="text-xs text-cinema-muted">
+                {playersList.filter(p => p.ready).length} / {playersList.length} ready
+              </span>
+            </div>
+
+            {/* Custom Movie Highlight Banner */}
+            <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                <Film className="w-5 h-5" />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-white block">Custom Match Arena</span>
+                <p className="text-cinema-muted text-[11px]">
+                  Custom matches are played with player-created movies! Anyone in the room can create a movie clue to start the round.
+                </p>
+              </div>
+            </div>
+
+            {/* Players Grid with Kick Buttons for Host */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
+              {playersList.map((player) => {
+                const isCurrent = player.uid === user.uid;
+                const isRoomHost = player.uid === room.hostUid;
+
+                return (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                      isCurrent
+                        ? 'bg-brand-500/10 border-brand-500/40'
+                        : 'bg-cinema-cardHover border-cinema-border/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={player.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${player.uid}`}
+                        alt={player.name}
+                        className="w-10 h-10 rounded-xl bg-cinema-dark border border-cinema-border object-cover"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-white max-w-[110px] truncate">
+                            {player.name}
+                          </span>
+                          {isRoomHost && (
+                            <span title="Host">
+                              <Crown className="w-3.5 h-3.5 text-brand-400 fill-brand-400" />
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-cinema-muted">
+                          {isCurrent ? '(You)' : isRoomHost ? 'Host' : 'Challenger'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status & Kick Action */}
+                    <div className="flex items-center gap-2">
+                      {player.ready ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                          <Check className="w-3 h-3" />
+                          Ready
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-cardHover px-2 py-0.5 rounded-full">
+                          Waiting
+                        </span>
+                      )}
+
+                      {/* Host Kick Authority */}
+                      {isHost && !isCurrent && (
+                        <button
+                          onClick={() => handleKickPlayer(player.uid, player.name)}
+                          title={`Kick ${player.name} from room`}
+                          className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          <UserX className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Ready & Launch Custom Movie Actions */}
+            <div className="space-y-3 pt-2">
+              {!isHost && (
+                <button
+                  onClick={handleToggleReady}
+                  className={`w-full py-3 rounded-2xl font-bold text-sm transition-all shadow-lg ${
+                    isReady
+                      ? 'bg-emerald-500 text-black shadow-emerald-500/25 hover:bg-emerald-400'
+                      : 'bg-cinema-cardHover border border-cinema-border text-white hover:border-brand-500/50'
+                  }`}
+                >
+                  {isReady ? '✓ You are Ready! (Click to cancel)' : 'Click to Ready Up'}
+                </button>
+              )}
+
+              {/* Primary Action: Create Custom Movie to Launch Match (Open to ALL Players in Room!) */}
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                disabled={loadingStart}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <PlusCircle className="w-5 h-5 fill-black text-brand-400" />
+                <span>🎨 Create Custom Movie & Launch Match</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* In-Room Custom Puzzle Creator Modal */}
+      <CreatePuzzleModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCustomPuzzleCreated}
+        creatorName={user?.displayName || 'Host'}
+        creatorUid={user?.uid}
+      />
+    </div>
+  );
+};

@@ -1,0 +1,269 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ScoreHUD } from '../components/ScoreHUD';
+import { GameBoard } from '../components/GameBoard';
+import { GameResultModal } from '../components/GameResultModal';
+import { CellCategory, Puzzle, CellAnswer, GameSettings } from '../types/game';
+import { updateUserStats } from '../services/firebase';
+import { useAuth } from '../context/AuthContext';
+import { getSelectedPuzzles } from '../utils/puzzleSelector';
+import { getAllPuzzles, syncGlobalCustomPuzzles } from '../services/puzzleManager';
+import { ArrowLeft, Play, Sparkles, Sliders } from 'lucide-react';
+
+interface SoloGameProps {
+  onExit: () => void;
+}
+
+export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
+  const { user } = useAuth();
+  
+  // Game Setup State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [settings, setSettings] = useState<GameSettings>({
+    roundTimeSeconds: 60,
+    difficulty: 'all',
+    gameMode: 'individual-race',
+    allowPlayerCustomPuzzles: false
+  });
+
+  // Active Session State
+  const [roundPuzzles, setRoundPuzzles] = useState<Puzzle[]>([]);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [answers, setAnswers] = useState<Record<string, CellAnswer>>({});
+  const [isRoundEnded, setIsRoundEnded] = useState(false);
+  const [isGameFinished, setIsGameFinished] = useState(false);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync latest community-created movies so they appear in Solo Game
+  useEffect(() => {
+    syncGlobalCustomPuzzles();
+  }, []);
+
+  // Initialize Game Session with infinite/continuous stream of movies
+  const startGame = () => {
+    const allAvailable = getAllPuzzles();
+    const shuffled = getSelectedPuzzles(Math.max(20, allAvailable.length), settings.difficulty);
+
+    setRoundPuzzles(shuffled);
+    setCurrentRoundIndex(0);
+    setScore(0);
+    setStreak(0);
+    setAnswers({});
+    setTimeLeft(settings.roundTimeSeconds);
+    setIsRoundEnded(false);
+    setIsGameFinished(false);
+    setIsPlaying(true);
+  };
+
+  // Timer Countdown (Skipped if roundTimeSeconds === 0)
+  useEffect(() => {
+    if (!isPlaying || isRoundEnded || isGameFinished || settings.roundTimeSeconds === 0) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          handleRoundTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPlaying, isRoundEnded, isGameFinished, currentRoundIndex, settings.roundTimeSeconds]);
+
+  // Check if all 4 cells solved
+  useEffect(() => {
+    if (!isPlaying || isRoundEnded || isGameFinished) return;
+    const solvedCount = Object.values(answers).filter(a => a.correct).length;
+    if (solvedCount === 4) {
+      handleAllSolved();
+    }
+  }, [answers, isPlaying, isRoundEnded, isGameFinished]);
+
+  const handleAllSolved = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const speedBonus = settings.roundTimeSeconds > 0 ? Math.floor((timeLeft / settings.roundTimeSeconds) * 150) : 0;
+    const streakBonus = streak * 50;
+    const roundPoints = 1000 + speedBonus + streakBonus;
+
+    setScore(prev => prev + roundPoints);
+    setStreak(prev => prev + 1);
+    setIsRoundEnded(true);
+  };
+
+  const handleRoundTimeout = () => {
+    const solvedCount = Object.values(answers).filter(a => a.correct).length;
+    if (solvedCount < 4) {
+      setStreak(0); // Reset streak on timeout
+    }
+    setIsRoundEnded(true);
+  };
+
+  const handleCellSolved = (category: CellCategory, answer: CellAnswer) => {
+    setAnswers(prev => ({ ...prev, [category]: answer }));
+    const points = Math.max(50, 250 - answer.hintsUsed * 50);
+    setScore(prev => prev + points);
+  };
+
+  const handleNextRound = () => {
+    const nextIdx = currentRoundIndex + 1;
+    if (nextIdx >= roundPuzzles.length) {
+      // Refresh with more shuffled movies
+      const allAvailable = getAllPuzzles();
+      const more = getSelectedPuzzles(Math.max(20, allAvailable.length), settings.difficulty);
+      setRoundPuzzles(prev => [...prev, ...more]);
+    }
+    setCurrentRoundIndex(nextIdx);
+    setAnswers({});
+    setTimeLeft(settings.roundTimeSeconds);
+    setIsRoundEnded(false);
+  };
+
+  const handleStopGame = () => {
+    setIsGameFinished(true);
+    if (user) {
+      updateUserStats(user.uid, user.displayName, score, true, streak);
+    }
+  };
+
+  const currentPuzzle = roundPuzzles[currentRoundIndex] || roundPuzzles[0];
+
+  // If not in game, render Settings & Start Screen
+  if (!isPlaying || !currentPuzzle) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-8">
+        <button
+          onClick={onExit}
+          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </button>
+
+        <div className="glass-card rounded-3xl p-6 sm:p-8 border border-cinema-border shadow-2xl">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/50">
+            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-black text-white">Solo Cinema Challenge</h2>
+              <p className="text-xs text-cinema-muted">Play continuously & decide when to stop</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Time per Round */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                Time Per Round
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {[
+                  { sec: 0, label: '♾️ No Timer' },
+                  { sec: 30, label: '30s' },
+                  { sec: 45, label: '45s' },
+                  { sec: 60, label: '60s' },
+                  { sec: 90, label: '90s' }
+                ].map(opt => (
+                  <button
+                    key={opt.sec}
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, roundTimeSeconds: opt.sec }))}
+                    className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                      settings.roundTimeSeconds === opt.sec
+                        ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
+                        : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Difficulty */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                Difficulty Pool
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {([
+                  { id: 'all', label: '🎲 Mixed (All)' },
+                  { id: 'easy', label: '⚡ Easy' },
+                  { id: 'medium', label: '🔥 Medium' },
+                  { id: 'hard', label: '💀 Hard' }
+                ] as const).map(diff => (
+                  <button
+                    key={diff.id}
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, difficulty: diff.id }))}
+                    className={`py-2.5 rounded-xl text-xs font-bold border tracking-wider transition-all ${
+                      settings.difficulty === diff.id
+                        ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
+                        : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
+                    }`}
+                  >
+                    {diff.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={startGame}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+            >
+              <Play className="w-4 h-4 fill-black" />
+              <span>Start Cinema Challenge</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* Top HUD */}
+      <ScoreHUD
+        score={score}
+        streak={streak}
+        currentRound={currentRoundIndex + 1}
+        timeLeft={timeLeft}
+        maxTime={settings.roundTimeSeconds}
+        difficulty={currentPuzzle.difficulty}
+        year={currentPuzzle.year}
+      />
+
+      {/* 2x2 Board */}
+      <GameBoard
+        puzzle={currentPuzzle}
+        answers={answers}
+        onCellSolved={handleCellSolved}
+        disabled={isRoundEnded || isGameFinished}
+        revealAll={isRoundEnded}
+      />
+
+      {/* Round / Game Over Modal with Stop or Continue */}
+      {(isRoundEnded || isGameFinished) && (
+        <GameResultModal
+          isFinal={isGameFinished}
+          roundNumber={currentRoundIndex + 1}
+          puzzle={currentPuzzle}
+          userAnswers={answers}
+          onNextRound={handleNextRound}
+          onStopGame={handleStopGame}
+          onPlayAgain={startGame}
+          onExit={onExit}
+        />
+      )}
+    </div>
+  );
+};

@@ -1,0 +1,1283 @@
+[
+  {
+    "id": "leo-2023",
+    "difficulty": "easy",
+    "year": 2023,
+    "director": "Lokesh Kanagaraj",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Part of the Lokesh Cinematic Universe (LCU).",
+    "movie": {
+      "name": "Leo",
+      "firstLetter": "L",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMDk5ODNjNzMtYzI5Yy00NmI3LWIwYzctMTFjZjcwN2I2Yzk2XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Leo Das",
+        "Bloody Sweet"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Thalapathy",
+        "Joseph Vijay"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Trisha Krishnan"
+      ]
+    },
+    "song": {
+      "name": "Naa Ready",
+      "firstLetter": "N",
+      "youtubeId": "szvt1vD0Uug",
+      "aliases": [
+        "Na Ready",
+        "Naa Ready Dhaan"
+      ]
+    }
+  },
+  {
+    "id": "jailer-2023",
+    "difficulty": "easy",
+    "year": 2023,
+    "director": "Nelson Dilipkumar",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Rajinikanth's blockbuster comeback as Tiger Muthuvel Pandian.",
+    "movie": {
+      "name": "Jailer",
+      "firstLetter": "J",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZTVjZDlhYWUtYzk1NS00ZTViLThkNzAtYzc1NDFhNjA1YjU2XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Hukum"
+      ]
+    },
+    "hero": {
+      "name": "Rajinikanth",
+      "firstLetter": "R",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3h0wA8jA4V97VfBqFv9fP8iJ4Vw.jpg",
+      "aliases": [
+        "Superstar Rajinikanth",
+        "Superstar",
+        "Rajini"
+      ]
+    },
+    "heroine": {
+      "name": "Ramya Krishnan",
+      "firstLetter": "R",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/961rEw0u0rE7q2W0y6vT3s6M4p8.jpg",
+      "aliases": [
+        "Ramya Krishna"
+      ]
+    },
+    "song": {
+      "name": "Kaavaalaa",
+      "firstLetter": "K",
+      "youtubeId": "lZ3bPUKo5zc",
+      "aliases": [
+        "Kaavaala",
+        "Kavala",
+        "Kaavalaa"
+      ]
+    }
+  },
+  {
+    "id": "vikram-2022",
+    "difficulty": "easy",
+    "year": 2022,
+    "director": "Lokesh Kanagaraj",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Kamal Haasan's monstrous all-time blockbuster featuring Agent Vikram.",
+    "movie": {
+      "name": "Vikram",
+      "firstLetter": "V",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMmViYjExY2UtMzZjOS00OGQ2LWEzNWYtNGYxY2NkY2RmMDE3XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Vikram Hitlist"
+      ]
+    },
+    "hero": {
+      "name": "Kamal Haasan",
+      "firstLetter": "K",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/4G6gY21jF6O5zE1P4X5P7oYg1iA.jpg",
+      "aliases": [
+        "Kamal Hasan",
+        "Ulaganayagan",
+        "Kamal"
+      ]
+    },
+    "heroine": {
+      "name": "Swathishta",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/aP3P7n2d0m8s1r5W4e8u2p0s3aA.jpg",
+      "aliases": [
+        "Swathishta Krishnan",
+        "Maya S Krishnan"
+      ]
+    },
+    "song": {
+      "name": "Pathala Pathala",
+      "firstLetter": "P",
+      "youtubeId": "dZ0fw4rL5bQ",
+      "aliases": [
+        "Porkanda Singam",
+        "Pathala",
+        "Wasted"
+      ]
+    }
+  },
+  {
+    "id": "master-2021",
+    "difficulty": "easy",
+    "year": 2021,
+    "director": "Lokesh Kanagaraj",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Professor JD takes on Bhavani in a juvenile school.",
+    "movie": {
+      "name": "Master",
+      "firstLetter": "M",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMjFhM2JhM2MtYmMwNC00M2M1LWExMzUtOGI3MmQxNWRiZGI3XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Master JD"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Thalapathy"
+      ]
+    },
+    "heroine": {
+      "name": "Malavika Mohanan",
+      "firstLetter": "M",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/v0w6s3b1f5k8q3k9n7m2y8p4z6A.jpg",
+      "aliases": [
+        "Malavika"
+      ]
+    },
+    "song": {
+      "name": "Vaathi Coming",
+      "firstLetter": "V",
+      "youtubeId": "fRD_3vJagxk",
+      "aliases": [
+        "Vaathi Raid",
+        "Kutti Story",
+        "Andha Kanna Paathaakaa"
+      ]
+    }
+  },
+  {
+    "id": "96-2018",
+    "difficulty": "easy",
+    "year": 2018,
+    "director": "C. Prem Kumar",
+    "musicDirector": "Govind Vasantha",
+    "trivia": "Ram and Jaanu reunite at their high school reunion after 22 years.",
+    "movie": {
+      "name": "96",
+      "firstLetter": "9",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BODFiZDk5MDgtMWMzNy00MTZmLTk2YTQtYjg1NzNmYzJlODJkXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Ninety Six",
+        "96 The Movie"
+      ]
+    },
+    "hero": {
+      "name": "Vijay Sethupathi",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/m0Q4G9zE9gU6A8nF4V2q8Z1b3vC.jpg",
+      "aliases": [
+        "VJS",
+        "Makkal Selvan",
+        "Vijay Sethupathy"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Trisha Krishnan",
+        "Jaanu"
+      ]
+    },
+    "song": {
+      "name": "Kaathalae Kaathalae",
+      "firstLetter": "K",
+      "youtubeId": "z49U1d_59B4",
+      "aliases": [
+        "Kathale Kathale",
+        "The Life of Ram",
+        "Vasantha Kaalangal"
+      ]
+    }
+  },
+  {
+    "id": "ghilli-2004",
+    "difficulty": "easy",
+    "year": 2004,
+    "director": "Dharani",
+    "musicDirector": "Vidyasagar",
+    "trivia": "Saravanavelu rescues Dhanalakshmi in Madurai in this historic trendsetter.",
+    "movie": {
+      "name": "Ghilli",
+      "firstLetter": "G",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMTFiODU5NjEtOTNjMy00MzUzLWEzYTMtZGU0NTdmYjkwNTM4XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Gilli"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Velu"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Dhanalakshmi",
+        "Trisha Krishnan"
+      ]
+    },
+    "song": {
+      "name": "Appadi Podu",
+      "firstLetter": "A",
+      "youtubeId": "e3Tj5d3cZ50",
+      "aliases": [
+        "Arjunar Villu",
+        "Kokkarakko",
+        "Gilli Song"
+      ]
+    }
+  },
+  {
+    "id": "sivaji-2007",
+    "difficulty": "easy",
+    "year": 2007,
+    "director": "S. Shankar",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Software engineer Sivaji returns to build free universities and hospitals.",
+    "movie": {
+      "name": "Sivaji",
+      "firstLetter": "S",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMmVlOTZmNWYtMDNlNC00MzE2LWFkN2MtYjJhOGNhNGUwMjk3XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Sivaji The Boss",
+        "Sivaji: The Boss"
+      ]
+    },
+    "hero": {
+      "name": "Rajinikanth",
+      "firstLetter": "R",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3h0wA8jA4V97VfBqFv9fP8iJ4Vw.jpg",
+      "aliases": [
+        "Superstar Rajinikanth",
+        "Rajini",
+        "Motta Sivaji"
+      ]
+    },
+    "heroine": {
+      "name": "Shriya Saran",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/shriyaSaranTamilHeroinePoster.jpg",
+      "aliases": [
+        "Shriya",
+        "Tamizhselvi"
+      ]
+    },
+    "song": {
+      "name": "Sahana",
+      "firstLetter": "S",
+      "youtubeId": "g2bWlXn4o3Y",
+      "aliases": [
+        "Vaaji Vaaji",
+        "Style",
+        "Balleilakka",
+        "Athiradee"
+      ]
+    }
+  },
+  {
+    "id": "anniyan-2005",
+    "difficulty": "easy",
+    "year": 2005,
+    "director": "S. Shankar",
+    "musicDirector": "Harris Jayaraj",
+    "trivia": "A lawyer with multiple personality disorder exacts garuda purana punishments.",
+    "movie": {
+      "name": "Anniyan",
+      "firstLetter": "A",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BNTRlM2Y1MjQtNzkyMS00YTI4LWIzMDktMTMyY2U4NmI2N2U2XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Aparichit"
+      ]
+    },
+    "hero": {
+      "name": "Vikram",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/vikramChiyaanTamilActorPoster.jpg",
+      "aliases": [
+        "Chiyaan Vikram",
+        "Ambi",
+        "Remo"
+      ]
+    },
+    "heroine": {
+      "name": "Sadha",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/sadhaNandhiniActressPosterTamil.jpg",
+      "aliases": [
+        "Sada",
+        "Nandhini"
+      ]
+    },
+    "song": {
+      "name": "Randakka",
+      "firstLetter": "R",
+      "youtubeId": "Fp_g_jA9Yv0",
+      "aliases": [
+        "Kannum Kannum Nokia",
+        "Andangkaka",
+        "Iyengaru Veetu"
+      ]
+    }
+  },
+  {
+    "id": "mankatha-2011",
+    "difficulty": "easy",
+    "year": 2011,
+    "director": "Venkat Prabhu",
+    "musicDirector": "Yuvan Shankar Raja",
+    "trivia": "Ajith's landmark 50th film featuring suspenseful IPL betting heist.",
+    "movie": {
+      "name": "Mankatha",
+      "firstLetter": "M",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMzZmZTIxZmMtODJjNC00ZTQ5LWE0N2MtZGZlNWQ3MjYzNzIxXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Mangatha"
+      ]
+    },
+    "hero": {
+      "name": "Ajith Kumar",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/ajithKumarThalaKollywoodPoster.jpg",
+      "aliases": [
+        "Ajith",
+        "Thala",
+        "Vinayak Mahadev"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Trisha Krishnan",
+        "Sanjana"
+      ]
+    },
+    "song": {
+      "name": "Vilaiyaadu Mankatha",
+      "firstLetter": "V",
+      "youtubeId": "z34iF1PzS9A",
+      "aliases": [
+        "Machi Open The Bottle",
+        "Vaada Bin Lada",
+        "Balle Lakka"
+      ]
+    }
+  },
+  {
+    "id": "billa-2007",
+    "difficulty": "medium",
+    "year": 2007,
+    "director": "Vishnuvardhan",
+    "musicDirector": "Yuvan Shankar Raja",
+    "trivia": "Stylish underworld Don remake setting new visual standards for Kollywood.",
+    "movie": {
+      "name": "Billa",
+      "firstLetter": "B",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BMTczZDQwMmEtODJlMC00MTY2LTkzMjQtYmNlNWMzN2I3YjE5XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Billa 2007",
+        "David Billa"
+      ]
+    },
+    "hero": {
+      "name": "Ajith Kumar",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/ajithKumarThalaKollywoodPoster.jpg",
+      "aliases": [
+        "Ajith",
+        "Thala",
+        "David Billa",
+        "Saravana Velu"
+      ]
+    },
+    "heroine": {
+      "name": "Nayanthara",
+      "firstLetter": "N",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/nayantharaLadySuperstarKollywood.jpg",
+      "aliases": [
+        "Lady Superstar",
+        "Nayan",
+        "Sasha"
+      ]
+    },
+    "song": {
+      "name": "My Name Is Billa",
+      "firstLetter": "M",
+      "youtubeId": "Y3s_A2N9uL8",
+      "aliases": [
+        "Seval Kodi",
+        "Vethalaiya Pottendi",
+        "Naan Adicha"
+      ]
+    }
+  },
+  {
+    "id": "enthiran-2010",
+    "difficulty": "easy",
+    "year": 2010,
+    "director": "S. Shankar",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Scientist Vaseegaran builds the humanoid robot Chitti.",
+    "movie": {
+      "name": "Enthiran",
+      "firstLetter": "E",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BNDUxOGQ5NzItYmM0ZC00YTg3LWFmZjEtOTEwZDBmMTE5Mzc1XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Robot",
+        "Endhiran"
+      ]
+    },
+    "hero": {
+      "name": "Rajinikanth",
+      "firstLetter": "R",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3h0wA8jA4V97VfBqFv9fP8iJ4Vw.jpg",
+      "aliases": [
+        "Superstar",
+        "Chitti",
+        "Dr Vaseegaran"
+      ]
+    },
+    "heroine": {
+      "name": "Aishwarya Rai",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/aishwaryaRaiBachchanPosterTamil.jpg",
+      "aliases": [
+        "Aishwarya Rai Bachchan",
+        "Sana"
+      ]
+    },
+    "song": {
+      "name": "Kilimanjaro",
+      "firstLetter": "K",
+      "youtubeId": "a9Z0Fk5H_1U",
+      "aliases": [
+        "Irumbile Oru Idhaiyam",
+        "Kadhal Anukkal",
+        "Arima Arima",
+        "Boom Boom Robo Da"
+      ]
+    }
+  },
+  {
+    "id": "alaipayuthey-2000",
+    "difficulty": "medium",
+    "year": 2000,
+    "director": "Mani Ratnam",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Mani Ratnam's cult romance about Karthik and Shakthi's marriage.",
+    "movie": {
+      "name": "Alaipayuthey",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/alaipayutheyManiRatnamARRPoster.jpg",
+      "aliases": [
+        "Alai Payuthey"
+      ]
+    },
+    "hero": {
+      "name": "Madhavan",
+      "firstLetter": "M",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/rMadhavanActorTamilPoster2000.jpg",
+      "aliases": [
+        "R. Madhavan",
+        "Maddy",
+        "Karthik"
+      ]
+    },
+    "heroine": {
+      "name": "Shalini",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/shaliniAjithActressTamilPoster.jpg",
+      "aliases": [
+        "Baby Shalini",
+        "Shakthi"
+      ]
+    },
+    "song": {
+      "name": "Pachai Nirame",
+      "firstLetter": "P",
+      "youtubeId": "3Y_z1rM3mN8",
+      "aliases": [
+        "Snehidhane",
+        "Endhendrum Punnagai",
+        "Evano Oruvan",
+        "Kadhal Sadugudu"
+      ]
+    }
+  },
+  {
+    "id": "vinnaithaandi-varuvaayaa-2010",
+    "difficulty": "medium",
+    "year": 2010,
+    "director": "Gautham Vasudev Menon",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Aspiring filmmaker Karthik falls for Malayali Christian girl Jessie.",
+    "movie": {
+      "name": "Vinnaithaandi Varuvaayaa",
+      "firstLetter": "V",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BODdkZWU1NjgtYmFjZS00MGU3LTk4YzEtOGY4ZDM5YTc4NDIyXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "VTV",
+        "Vinnaithaandi Varuvaaya",
+        "Vinnaithandi Varuvaya"
+      ]
+    },
+    "hero": {
+      "name": "Silambarasan",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/silambarasanTRSimbuActorPoster.jpg",
+      "aliases": [
+        "STR",
+        "Simbu",
+        "Karthik"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Trisha Krishnan",
+        "Jessie"
+      ]
+    },
+    "song": {
+      "name": "Hosanna",
+      "firstLetter": "H",
+      "youtubeId": "k3fV_2F8bJ4",
+      "aliases": [
+        "Aaromale",
+        "Mannipaaya",
+        "Anbil Avan",
+        "Omana Penne"
+      ]
+    }
+  },
+  {
+    "id": "kaththi-2014",
+    "difficulty": "easy",
+    "year": 2014,
+    "director": "A.R. Murugadoss",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Kathiresan impersonates Jeevanandham to fight for farmers against a water giant.",
+    "movie": {
+      "name": "Kaththi",
+      "firstLetter": "K",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZDFhNjI3M2ItYjRmMS00MzQ1LTgzYjktNjg1OGMzN2FkZGM1XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Kathi"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Kathiresan",
+        "Jeevanandham"
+      ]
+    },
+    "heroine": {
+      "name": "Samantha",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/samanthaRuthPrabhuActressPoster.jpg",
+      "aliases": [
+        "Samantha Ruth Prabhu",
+        "Ankitha"
+      ]
+    },
+    "song": {
+      "name": "Selfie Pulla",
+      "firstLetter": "S",
+      "youtubeId": "fRj3f4m2l10",
+      "aliases": [
+        "Aathi",
+        "Pakkam Vanthu",
+        "Sword of Kaththi"
+      ]
+    }
+  },
+  {
+    "id": "vaaranam-aayiram-2008",
+    "difficulty": "medium",
+    "year": 2008,
+    "director": "Gautham Vasudev Menon",
+    "musicDirector": "Harris Jayaraj",
+    "trivia": "Surya reminisces about his father Krishnan and love Meghna after his passing.",
+    "movie": {
+      "name": "Vaaranam Aayiram",
+      "firstLetter": "V",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZTViZTUxNzQtNzMxMi00NWY2LTkxZDctNGE5NzcxN2M5M2M2XkEyXkFqcGdeQXVyMTEzNzg0Mjkx._V1_SX300.jpg",
+      "aliases": [
+        "Vaaranam Ayiram",
+        "Varanam Aayiram"
+      ]
+    },
+    "hero": {
+      "name": "Suriya",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/suriyaSivakumarActorTamilPoster.jpg",
+      "aliases": [
+        "Surya",
+        "Surya Sivakumar"
+      ]
+    },
+    "heroine": {
+      "name": "Sameera Reddy",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/sameeraReddyActressTamilPoster.jpg",
+      "aliases": [
+        "Meghna",
+        "Divya Spandana",
+        "Ramya"
+      ]
+    },
+    "song": {
+      "name": "Mundhinam Paarthene",
+      "firstLetter": "M",
+      "youtubeId": "8z_4Y3K0vM1",
+      "aliases": [
+        "Adiye Kolluthey",
+        "Nenjukkul Peidhidum",
+        "Ava Enna Enna Thedi Vandha Anjala"
+      ]
+    }
+  },
+  {
+    "id": "asuran-2019",
+    "difficulty": "easy",
+    "year": 2019,
+    "director": "Vetrimaaran",
+    "musicDirector": "G. V. Prakash Kumar",
+    "trivia": "Sivasamy goes on the run with his young son after an act of retaliation.",
+    "movie": {
+      "name": "Asuran",
+      "firstLetter": "A",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BYjgyMGFlNmMtYzkzNy00ZjgyLTljNTItMTg4MmNjYWE5NDM4XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Asuran 2019"
+      ]
+    },
+    "hero": {
+      "name": "Dhanush",
+      "firstLetter": "D",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/dhanushKollywoodActorPoster.jpg",
+      "aliases": [
+        "D",
+        "Sivasamy"
+      ]
+    },
+    "heroine": {
+      "name": "Manju Warrier",
+      "firstLetter": "M",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/manjuWarrierActressTamilPoster.jpg",
+      "aliases": [
+        "Pachaiyammal"
+      ]
+    },
+    "song": {
+      "name": "Kathari Poovazhagi",
+      "firstLetter": "K",
+      "youtubeId": "PqF5u_B9K5U",
+      "aliases": [
+        "Ellu Vaya Pookalaye",
+        "Polladha Boomi",
+        "Blood Bath"
+      ]
+    }
+  },
+  {
+    "id": "vip-2014",
+    "difficulty": "easy",
+    "year": 2014,
+    "director": "Soundarya Rajinikanth Vishagan",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Unemployed civil engineer Raghuvaran rises against corporate odds.",
+    "movie": {
+      "name": "Velaiilla Pattadhari",
+      "firstLetter": "V",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZjliYTEzYjItZmY2Ny00YTFkLTkwMGQtZGVmMTA4NTkyZjExXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "VIP",
+        "Velaiyilla Pattathari",
+        "Velai Illa Pattadhaari"
+      ]
+    },
+    "hero": {
+      "name": "Dhanush",
+      "firstLetter": "D",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/dhanushKollywoodActorPoster.jpg",
+      "aliases": [
+        "D",
+        "Raghuvaran"
+      ]
+    },
+    "heroine": {
+      "name": "Amala Paul",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/amalaPaulActressTamilPoster.jpg",
+      "aliases": [
+        "Shalini",
+        "Amala"
+      ]
+    },
+    "song": {
+      "name": "What A Karuvad",
+      "firstLetter": "W",
+      "youtubeId": "7lY6k7F_mE4",
+      "aliases": [
+        "Udhungada Sangu",
+        "Amma Amma",
+        "Ey Inga Paaru"
+      ]
+    }
+  },
+  {
+    "id": "doctor-2021",
+    "difficulty": "medium",
+    "year": 2021,
+    "director": "Nelson Dilipkumar",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Military doctor Varun tracks down a child trafficking cartel in Goa.",
+    "movie": {
+      "name": "Doctor",
+      "firstLetter": "D",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZjAwOWU1OWItMmM1My00MmQ5LWE4YjQtYzRiOWEzOTA4NmNiXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Doctor Varun"
+      ]
+    },
+    "hero": {
+      "name": "Sivakarthikeyan",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/sivakarthikeyanSKActorPoster.jpg",
+      "aliases": [
+        "SK",
+        "Dr. Varun"
+      ]
+    },
+    "heroine": {
+      "name": "Priyanka Mohan",
+      "firstLetter": "P",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/priyankaArulMohanActressPoster.jpg",
+      "aliases": [
+        "Priyanka Arul Mohan",
+        "Padmini"
+      ]
+    },
+    "song": {
+      "name": "Chemma Chemma",
+      "firstLetter": "C",
+      "youtubeId": "9bT_4vN3Z0s",
+      "aliases": [
+        "So Baby",
+        "Chellama",
+        "Nenjame"
+      ]
+    }
+  },
+  {
+    "id": "naanum-rowdy-dhaan-2015",
+    "difficulty": "easy",
+    "year": 2015,
+    "director": "Vignesh Shivan",
+    "musicDirector": "Anirudh Ravichander",
+    "trivia": "Pandi wants to be a ruthless rowdy and helps hearing-impaired Kadhambari take revenge.",
+    "movie": {
+      "name": "Naanum Rowdy Dhaan",
+      "firstLetter": "N",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/naanumRowdyDhaanAnirudhPoster.jpg",
+      "aliases": [
+        "NRD",
+        "Naanum Rowdy Dhan"
+      ]
+    },
+    "hero": {
+      "name": "Vijay Sethupathi",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/m0Q4G9zE9gU6A8nF4V2q8Z1b3vC.jpg",
+      "aliases": [
+        "VJS",
+        "Pandi",
+        "Pondy Pandi"
+      ]
+    },
+    "heroine": {
+      "name": "Nayanthara",
+      "firstLetter": "N",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/nayantharaLadySuperstarKollywood.jpg",
+      "aliases": [
+        "Lady Superstar",
+        "Kadhambari"
+      ]
+    },
+    "song": {
+      "name": "Thangamey",
+      "firstLetter": "T",
+      "youtubeId": "0zP2x_w6n3k",
+      "aliases": [
+        "Neeyum Naanum",
+        "Yennai Maatrum Kadhale",
+        "Varavaa Varavaa"
+      ]
+    }
+  },
+  {
+    "id": "ayan-2009",
+    "difficulty": "medium",
+    "year": 2009,
+    "director": "K.V. Anand",
+    "musicDirector": "Harris Jayaraj",
+    "trivia": "Deva is a brilliant smuggler working for Arumuga Dass facing rivalry with Kamalesh.",
+    "movie": {
+      "name": "Ayan",
+      "firstLetter": "A",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BODk2NTJlZmQtN2QyZC00OTBjLWEzY2YtYjM0NGQ3Y2M4Y2UzXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Veedokkade"
+      ]
+    },
+    "hero": {
+      "name": "Suriya",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/suriyaSivakumarActorTamilPoster.jpg",
+      "aliases": [
+        "Surya",
+        "Deva"
+      ]
+    },
+    "heroine": {
+      "name": "Tamannaah",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/tamannaahBhatiaActressTamilPoster.jpg",
+      "aliases": [
+        "Tamannaah Bhatia",
+        "Tamanna",
+        "Yamuna"
+      ]
+    },
+    "song": {
+      "name": "Vizhi Moodi",
+      "firstLetter": "V",
+      "youtubeId": "Xz2vY1m5R8k",
+      "aliases": [
+        "Pala Pala",
+        "Nenje Nenje",
+        "Honey Honey",
+        "Oyaayiye"
+      ]
+    }
+  },
+  {
+    "id": "raja-rani-2013",
+    "difficulty": "easy",
+    "year": 2013,
+    "director": "Atlee",
+    "musicDirector": "G. V. Prakash Kumar",
+    "trivia": "John and Regina enter an arranged marriage with painful past heartbreaks.",
+    "movie": {
+      "name": "Raja Rani",
+      "firstLetter": "R",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BNTBmM2U2ZDYtYzQ2Ny00N2ZiLWIzODItOGFiMTA0ODM2NDA1XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Rajarani"
+      ]
+    },
+    "hero": {
+      "name": "Arya",
+      "firstLetter": "A",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/aryaKollywoodActorTamilPoster.jpg",
+      "aliases": [
+        "John",
+        "Jammy"
+      ]
+    },
+    "heroine": {
+      "name": "Nayanthara",
+      "firstLetter": "N",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/nayantharaLadySuperstarKollywood.jpg",
+      "aliases": [
+        "Lady Superstar",
+        "Regina",
+        "Nazriya"
+      ]
+    },
+    "song": {
+      "name": "Hey Brother",
+      "firstLetter": "H",
+      "youtubeId": "Vw3qX6vK1e8",
+      "aliases": [
+        "Chillena",
+        "Angnyaade",
+        "Oday Oday",
+        "Imaye Imaye"
+      ]
+    }
+  },
+  {
+    "id": "theri-2016",
+    "difficulty": "easy",
+    "year": 2016,
+    "director": "Atlee",
+    "musicDirector": "G. V. Prakash Kumar",
+    "trivia": "DCP Vijay Kumar assumes a quiet bakery identity in Kerala to protect his daughter.",
+    "movie": {
+      "name": "Theri",
+      "firstLetter": "T",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BZDBlNGEyZDAtZjFhYS00YWU2LWFkYzEtNTlmYTIxZjJhNzI3XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Theri Baby"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Vijay Kumar",
+        "Joseph Kuruvilla"
+      ]
+    },
+    "heroine": {
+      "name": "Samantha",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/samanthaRuthPrabhuActressPoster.jpg",
+      "aliases": [
+        "Samantha Ruth Prabhu",
+        "Mithra",
+        "Amy Jackson"
+      ]
+    },
+    "song": {
+      "name": "En Jeevan",
+      "firstLetter": "E",
+      "youtubeId": "zP9sQp6_F60",
+      "aliases": [
+        "Jithu Jilladi",
+        "Chella Kutti",
+        "Raangu"
+      ]
+    }
+  },
+  {
+    "id": "mersal-2017",
+    "difficulty": "easy",
+    "year": 2017,
+    "director": "Atlee",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Magician Vetri and Doctor Maaran seek justice for medical corruption.",
+    "movie": {
+      "name": "Mersal",
+      "firstLetter": "M",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BNjk2NGQwNmYtMDViZS00NjE5LWI4MzMtZWJjZmIwNmI5ODk2XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Aalaporan Thamizhan"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Thalapathy",
+        "Vetri",
+        "Maaran"
+      ]
+    },
+    "heroine": {
+      "name": "Samantha",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/samanthaRuthPrabhuActressPoster.jpg",
+      "aliases": [
+        "Samantha Ruth Prabhu",
+        "Tara",
+        "Kajal Aggarwal",
+        "Nithya Menen"
+      ]
+    },
+    "song": {
+      "name": "Aalaporan Thamizhan",
+      "firstLetter": "A",
+      "youtubeId": "fRj3f4m2l10",
+      "aliases": [
+        "Neethanae",
+        "Macho",
+        "Mersal Arasan"
+      ]
+    }
+  },
+  {
+    "id": "padayappa-1999",
+    "difficulty": "medium",
+    "year": 1999,
+    "director": "K. S. Ravikumar",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Padayappa faces the relentless vengeance of haughty Neelambari.",
+    "movie": {
+      "name": "Padayappa",
+      "firstLetter": "P",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/padayappaRajiniKSRavikumarPoster.jpg",
+      "aliases": [
+        "Padaiyappa"
+      ]
+    },
+    "hero": {
+      "name": "Rajinikanth",
+      "firstLetter": "R",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3h0wA8jA4V97VfBqFv9fP8iJ4Vw.jpg",
+      "aliases": [
+        "Superstar Rajinikanth",
+        "Aarupadayappa"
+      ]
+    },
+    "heroine": {
+      "name": "Soundarya",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/soundaryaActressTamilPoster.jpg",
+      "aliases": [
+        "Vasundhara",
+        "Ramya Krishnan",
+        "Neelambari"
+      ]
+    },
+    "song": {
+      "name": "Minsara Poove",
+      "firstLetter": "M",
+      "youtubeId": "u82n8Zp9M7E",
+      "aliases": [
+        "En Peru Padayappa",
+        "Kikku Yerudhey",
+        "Suthi Suthi"
+      ]
+    }
+  },
+  {
+    "id": "paiyaa-2010",
+    "difficulty": "medium",
+    "year": 2010,
+    "director": "N. Linguswamy",
+    "musicDirector": "Yuvan Shankar Raja",
+    "trivia": "A road trip from Bangalore to Mumbai turning into a pursuit by gangsters.",
+    "movie": {
+      "name": "Paiyaa",
+      "firstLetter": "P",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BNzAzMmUyOWQtYTI1Zi00ZjJjLWE2ZjktNDE2MzU4OTgzM2I5XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Paiya"
+      ]
+    },
+    "hero": {
+      "name": "Karthi",
+      "firstLetter": "K",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/karthiSivakumarActorTamilPoster.jpg",
+      "aliases": [
+        "Karthi Sivakumar",
+        "Shiva"
+      ]
+    },
+    "heroine": {
+      "name": "Tamannaah",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/tamannaahBhatiaActressTamilPoster.jpg",
+      "aliases": [
+        "Tamannaah Bhatia",
+        "Charulatha"
+      ]
+    },
+    "song": {
+      "name": "En Kadhal Solla",
+      "firstLetter": "E",
+      "youtubeId": "zXk3A_p9Q8U",
+      "aliases": [
+        "Thuli Thuli",
+        "Adada Mazhaida",
+        "Poongatre Poongatre"
+      ]
+    }
+  },
+  {
+    "id": "thani-oruvan-2015",
+    "difficulty": "easy",
+    "year": 2015,
+    "director": "Mohan Raja",
+    "musicDirector": "Hiphop Tamizha",
+    "trivia": "IPS officer Mithran takes down insidious medical scientist Siddharth Abhimanyu.",
+    "movie": {
+      "name": "Thani Oruvan",
+      "firstLetter": "T",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BY2Q3ZDc0MjItOTIxZi00NzUyLWIwY2EtYzUwZmZjYmU1NDllXkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "Thani Oruvan"
+      ]
+    },
+    "hero": {
+      "name": "Jayam Ravi",
+      "firstLetter": "J",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/jayamRaviActorKollywoodPoster.jpg",
+      "aliases": [
+        "Mithran",
+        "Ravi"
+      ]
+    },
+    "heroine": {
+      "name": "Nayanthara",
+      "firstLetter": "N",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/nayantharaLadySuperstarKollywood.jpg",
+      "aliases": [
+        "Lady Superstar",
+        "Mahima"
+      ]
+    },
+    "song": {
+      "name": "Kannala Kannala",
+      "firstLetter": "K",
+      "youtubeId": "xV3_K9m4B5w",
+      "aliases": [
+        "Theemai Dhaan Vellum",
+        "Thani Oruvan The Promo",
+        "Kadhal Cricket"
+      ]
+    }
+  },
+  {
+    "id": "ponniyin-selvan-2022",
+    "difficulty": "medium",
+    "year": 2022,
+    "director": "Mani Ratnam, Sruti Harihara Subramanian",
+    "musicDirector": "A. R. Rahman",
+    "trivia": "Mani Ratnam's magnum opus based on Kalki Krishnamurthy's epic Chola novel.",
+    "movie": {
+      "name": "Ponniyin Selvan",
+      "firstLetter": "P",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BYjI2ZmRmODEtZmEyYS00OWY3LTlhNWEtODhlZjQyNjVlMWU0XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "PS1",
+        "PS-1",
+        "Ponniyin Selvan Part 1",
+        "PS2"
+      ]
+    },
+    "hero": {
+      "name": "Karthi",
+      "firstLetter": "K",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/karthiSivakumarActorTamilPoster.jpg",
+      "aliases": [
+        "Vanthiyathevan",
+        "Vikram",
+        "Aditha Karikalan",
+        "Jayam Ravi",
+        "Arulmozhi Varman"
+      ]
+    },
+    "heroine": {
+      "name": "Trisha",
+      "firstLetter": "T",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/c74i5w696yY7y0w49M2GzZ4Z1o8.jpg",
+      "aliases": [
+        "Kundavai",
+        "Trisha Krishnan",
+        "Aishwarya Rai",
+        "Nandini"
+      ]
+    },
+    "song": {
+      "name": "Ponni Nadhi",
+      "firstLetter": "P",
+      "youtubeId": "NfO6h5_4rW4",
+      "aliases": [
+        "Chola Chola",
+        "Aga Naga",
+        "Alaikadal",
+        "Devaralan Aattam"
+      ]
+    }
+  },
+  {
+    "id": "goat-2024",
+    "difficulty": "easy",
+    "year": 2024,
+    "director": "Venkat Prabhu",
+    "musicDirector": "Yuvan Shankar Raja",
+    "trivia": "SATS field agent Gandhi faces off against his estranged clone son Jeevan.",
+    "movie": {
+      "name": "The Greatest of All Time",
+      "firstLetter": "G",
+      "imageUrl": "https://m.media-amazon.com/images/M/MV5BYjc1NDJmMjAtMTJmYi00ZGJmLWFhZTItNThmOTQyMzU4MGM3XkEyXkFqcGc@._V1_SX300.jpg",
+      "aliases": [
+        "GOAT",
+        "The GOAT"
+      ]
+    },
+    "hero": {
+      "name": "Vijay",
+      "firstLetter": "V",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/3Uf4U2q27uO1W9kI52V5a842K5Z.jpg",
+      "aliases": [
+        "Thalapathy Vijay",
+        "Gandhi",
+        "Jeevan"
+      ]
+    },
+    "heroine": {
+      "name": "Sneha",
+      "firstLetter": "S",
+      "imageUrl": "https://image.tmdb.org/t/p/w500/snehaActressKollywoodPoster.jpg",
+      "aliases": [
+        "Anuradha",
+        "Meenakshi Chaudhary",
+        "Meenakshi"
+      ]
+    },
+    "song": {
+      "name": "Whistle Podu",
+      "firstLetter": "W",
+      "youtubeId": "V_7vXg6R3L8",
+      "aliases": [
+        "Chinna Chinna Kangal",
+        "Spark",
+        "Matta"
+      ]
+    }
+  }
+]
