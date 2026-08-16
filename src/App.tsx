@@ -180,7 +180,7 @@ export const AppContent: React.FC = () => {
         {currentView === 'multiplayer-game' && activeRoomCode && (
           <MultiplayerGame
             roomCode={activeRoomCode}
-            onExitToLobby={() => setCurrentView('room-lobby')}
+            onExitHome={handleLeaveRoom}
           />
         )}
 

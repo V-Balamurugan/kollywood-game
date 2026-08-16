@@ -89,9 +89,25 @@ export interface Room {
   hintRequests?: HintRequest[];
   // Synchronized round transition votes (uid -> boolean)
   nextRoundVotes?: Record<string, boolean>;
+  lastLeftPlayer?: { uid: string; name: string; timestamp: number };
+  closedReason?: 'player-left' | 'host-left' | 'finished';
   createdAt: number;
   roundStartTime?: number;
   settings: GameSettings;
+}
+
+export interface GameHistoryItem {
+  id: string;
+  timestamp: number;
+  mode: 'solo' | 'multiplayer';
+  score: number;
+  streak: number;
+  roundsPlayed: number;
+  movieNames?: string[];
+  isWinner?: boolean;
+  rank?: number;
+  totalPlayers?: number;
+  roomCode?: string;
 }
 
 export interface UserProfile {
@@ -105,6 +121,7 @@ export interface UserProfile {
   soloHighScore: number;
   wins: number;
   isGuest?: boolean;
+  gameHistory?: GameHistoryItem[];
 }
 
 export interface RoundResult {

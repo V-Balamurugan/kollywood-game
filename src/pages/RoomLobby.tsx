@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Copy, Check, Users, Play, Crown, ArrowLeft, Share2, Sparkles, PlusCircle, Film, UserX } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Copy, Check, Users, Play, Crown, ArrowLeft, Share2, Sparkles, PlusCircle, Film, UserX, UserMinus, LogOut, Home } from 'lucide-react';
 import { Room, Puzzle, Player } from '../types/game';
 import { subscribeToRoom, setPlayerReady, setCustomPuzzleAndStart, kickPlayerFromRoom, leaveRoom } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +22,16 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
   const [loadingStart, setLoadingStart] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const [playerLeftToast, setPlayerLeftToast] = useState<string | null>(null);
+  const [autoExitModal, setAutoExitModal] = useState<{
+    title: string;
+    message: string;
+    countdown: number;
+  } | null>(null);
+
+  const lastNotifiedLeftTimestamp = useRef<number>(0);
+  const hasHandledExit = useRef(false);
+
   useEffect(() => {
     const unsubscribe = subscribeToRoom(roomCode, (updatedRoom) => {
       if (!updatedRoom) {
@@ -31,9 +41,48 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
 
       // Check if current user was kicked/removed from room
       if (user && updatedRoom.players && !updatedRoom.players[user.uid]) {
-        alert('You were removed from the room by the host.');
-        onLeaveRoom();
+        if (!hasHandledExit.current) {
+          hasHandledExit.current = true;
+          setAutoExitModal({
+            title: 'Removed from Room',
+            message: 'You were removed from the room by the host.',
+            countdown: 3
+          });
+        }
         return;
+      }
+
+      // Check if room was closed because host left or other player in 2-player match left
+      if (updatedRoom.status === 'finished') {
+        if (!hasHandledExit.current) {
+          hasHandledExit.current = true;
+          if (updatedRoom.closedReason === 'player-left') {
+            const leftName = updatedRoom.lastLeftPlayer?.name || 'The other contestant';
+            setAutoExitModal({
+              title: '🎮 Lobby Closed',
+              message: `${leftName} left the room. Since there were only 2 players, the match lobby has ended.`,
+              countdown: 3
+            });
+          } else if (updatedRoom.closedReason === 'host-left') {
+            setAutoExitModal({
+              title: '👑 Host Left',
+              message: 'The room host has left. Returning to Home...',
+              countdown: 3
+            });
+          } else {
+            onLeaveRoom();
+          }
+        }
+        return;
+      }
+
+      // Notification for 3+ players: show toast to Host / other players
+      if (updatedRoom.lastLeftPlayer && user && updatedRoom.lastLeftPlayer.uid !== user.uid) {
+        if (updatedRoom.lastLeftPlayer.timestamp !== lastNotifiedLeftTimestamp.current) {
+          lastNotifiedLeftTimestamp.current = updatedRoom.lastLeftPlayer.timestamp;
+          setPlayerLeftToast(`👋 ${updatedRoom.lastLeftPlayer.name} has left the lobby.`);
+          const t = setTimeout(() => setPlayerLeftToast(null), 4000);
+        }
       }
 
       setRoom(updatedRoom);
@@ -46,6 +95,19 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
 
     return () => unsubscribe();
   }, [roomCode, user?.uid, onGameStarted, onLeaveRoom]);
+
+  // Auto exit countdown ticker
+  useEffect(() => {
+    if (!autoExitModal) return;
+    if (autoExitModal.countdown <= 0) {
+      onLeaveRoom();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAutoExitModal(prev => prev ? { ...prev, countdown: prev.countdown - 1 } : null);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [autoExitModal, onLeaveRoom]);
 
   if (!room || !user) {
     return (
@@ -111,7 +173,14 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
+    <div className="max-w-3xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 relative">
+      {/* Toast Alert for 3+ players when someone leaves lobby */}
+      {playerLeftToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-cinema-card border-2 border-amber-500/60 shadow-2xl shadow-amber-500/20 text-white text-xs sm:text-sm font-bold">
+          <UserMinus className="w-4 h-4 text-amber-400 flex-shrink-0 animate-bounce" />
+          <span>{playerLeftToast}</span>
+        </div>
+      )}
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
         <button
@@ -315,6 +384,32 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
         creatorName={user?.displayName || 'Host'}
         creatorUid={user?.uid}
       />
+
+      {/* Single Clean Auto-Exit Modal */}
+      {autoExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md bg-cinema-card border-2 border-brand-500/50 rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div className="w-14 h-14 rounded-3xl bg-brand-500/15 border border-brand-500/30 text-brand-400 flex items-center justify-center mx-auto animate-pulse">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-lg font-display font-black text-white">{autoExitModal.title}</h3>
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                {autoExitModal.message}
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={onLeaveRoom}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-sm shadow-lg shadow-brand-500/25 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+              >
+                <Home className="w-4 h-4" />
+                <span>Return to Home ({autoExitModal.countdown}s)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

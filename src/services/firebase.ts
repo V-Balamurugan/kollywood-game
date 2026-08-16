@@ -21,7 +21,7 @@ import {
   getDoc, 
   Firestore 
 } from 'firebase/firestore';
-import { Room, UserProfile, Player, CellAnswer, SharedCellAnswer, GameSettings, Puzzle, DirectorHint, HintRequest } from '../types/game';
+import { Room, UserProfile, Player, CellAnswer, SharedCellAnswer, GameSettings, Puzzle, DirectorHint, HintRequest, GameHistoryItem } from '../types/game';
 import puzzlesData from '../data/puzzles.json';
 import { getSelectedPuzzles } from '../utils/puzzleSelector';
 import { addPuzzleIfNotExists } from './puzzleManager';
@@ -314,21 +314,57 @@ export async function kickPlayerFromRoom(code: string, targetUid: string): Promi
 export async function leaveRoom(code: string, uid: string): Promise<void> {
   const roomCode = code.toUpperCase().trim();
   
+  let leavingPlayerName = 'A contestant';
+  let previousCount = 0;
+  let remainingCount = 0;
+  let isHostLeaving = false;
+
   const room = localFallback.getRoom(roomCode);
   if (room && room.players) {
+    leavingPlayerName = room.players[uid]?.name || 'A contestant';
+    previousCount = Object.keys(room.players).length;
+    isHostLeaving = room.hostUid === uid;
+
     delete room.players[uid];
-    if (Object.keys(room.players).length === 0 || room.hostUid === uid) {
-      room.status = 'finished';
+    if (room.nextRoundVotes && room.nextRoundVotes[uid]) {
+      delete room.nextRoundVotes[uid];
     }
+    remainingCount = Object.keys(room.players).length;
+
+    room.lastLeftPlayer = {
+      uid,
+      name: leavingPlayerName,
+      timestamp: Date.now()
+    };
+
+    // If 2-player game and 1 exits, or if host leaves, or no players left -> finish room
+    if (previousCount <= 2 || remainingCount <= 1 || isHostLeaving) {
+      room.status = 'finished';
+      room.closedReason = isHostLeaving ? 'host-left' : 'player-left';
+    }
+
     localFallback.setRoom(roomCode, room);
   }
 
   if (hasValidFirebaseConfig && db) {
     try {
       await remove(ref(db, `rooms/${roomCode}/players/${uid}`));
-      if (room && (Object.keys(room.players).length === 0 || room.hostUid === uid)) {
-        await update(ref(db, `rooms/${roomCode}`), { status: 'finished' });
+      await remove(ref(db, `rooms/${roomCode}/nextRoundVotes/${uid}`));
+
+      const updates: any = {
+        lastLeftPlayer: {
+          uid,
+          name: leavingPlayerName,
+          timestamp: Date.now()
+        }
+      };
+
+      if (previousCount <= 2 || remainingCount <= 1 || isHostLeaving) {
+        updates.status = 'finished';
+        updates.closedReason = isHostLeaving ? 'host-left' : 'player-left';
       }
+
+      await update(ref(db, `rooms/${roomCode}`), updates);
     } catch (err: any) {
       console.warn('Firebase leaveRoom notice:', err?.message);
     }
@@ -703,7 +739,15 @@ export async function updateUserStats(
   displayName: string,
   scoreEarned: number,
   isWin: boolean,
-  streak: number
+  streak: number,
+  historyData?: {
+    mode: 'solo' | 'multiplayer';
+    roundsPlayed: number;
+    movieNames?: string[];
+    rank?: number;
+    totalPlayers?: number;
+    roomCode?: string;
+  }
 ): Promise<void> {
   let existing = await getUserProfile(uid);
   if (!existing) {
@@ -714,8 +758,30 @@ export async function updateUserStats(
       totalScore: 0,
       bestStreak: 0,
       soloHighScore: 0,
-      wins: 0
+      wins: 0,
+      gameHistory: []
     };
+  }
+
+  const existingHistory = Array.isArray(existing.gameHistory) ? existing.gameHistory : [];
+  
+  let newHistory = existingHistory;
+  if (historyData) {
+    const historyItem: GameHistoryItem = {
+      id: `gh-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: Date.now(),
+      mode: historyData.mode,
+      score: scoreEarned,
+      streak: streak,
+      roundsPlayed: historyData.roundsPlayed || 1,
+      movieNames: historyData.movieNames || [],
+      isWinner: isWin,
+      rank: historyData.rank,
+      totalPlayers: historyData.totalPlayers,
+      roomCode: historyData.roomCode
+    };
+    // Keep latest 50 match history entries
+    newHistory = [historyItem, ...existingHistory].slice(0, 50);
   }
 
   const updated: UserProfile = {
@@ -724,7 +790,8 @@ export async function updateUserStats(
     totalGamesPlayed: existing.totalGamesPlayed + 1,
     totalScore: existing.totalScore + scoreEarned,
     bestStreak: Math.max(existing.bestStreak, streak),
-    wins: isWin ? existing.wins + 1 : existing.wins
+    wins: isWin ? existing.wins + 1 : existing.wins,
+    gameHistory: newHistory
   };
 
   localStorage.setItem(`kollywood_user_${uid}`, JSON.stringify(updated));
@@ -734,6 +801,26 @@ export async function updateUserStats(
       await setDoc(doc(firestore, 'users', uid), updated, { merge: true });
     } catch (e) {
       console.warn('Error updating firestore stats:', e);
+    }
+  }
+}
+
+export async function clearUserHistory(uid: string): Promise<void> {
+  let existing = await getUserProfile(uid);
+  if (!existing) return;
+
+  const updated: UserProfile = {
+    ...existing,
+    gameHistory: []
+  };
+
+  localStorage.setItem(`kollywood_user_${uid}`, JSON.stringify(updated));
+
+  if (hasValidFirebaseConfig && firestore) {
+    try {
+      await setDoc(doc(firestore, 'users', uid), updated, { merge: true });
+    } catch (e) {
+      console.warn('Error clearing history in firestore:', e);
     }
   }
 }

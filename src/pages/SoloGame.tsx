@@ -128,9 +128,26 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
 
   const handleStopGame = () => {
     setIsGameFinished(true);
-    if (user) {
-      updateUserStats(user.uid, user.displayName, score, true, streak);
+    if (user && score > 0) {
+      const movieNames = roundPuzzles.slice(0, currentRoundIndex + 1).map(p => p?.movie?.name).filter(Boolean) as string[];
+      updateUserStats(user.uid, user.displayName || 'Player', score, true, streak, {
+        mode: 'solo',
+        roundsPlayed: currentRoundIndex + 1,
+        movieNames
+      });
     }
+  };
+
+  const handleExitGame = () => {
+    if (isPlaying && user && score > 0 && !isGameFinished) {
+      const movieNames = roundPuzzles.slice(0, currentRoundIndex + 1).map(p => p?.movie?.name).filter(Boolean) as string[];
+      updateUserStats(user.uid, user.displayName || 'Player', score, true, streak, {
+        mode: 'solo',
+        roundsPlayed: currentRoundIndex + 1,
+        movieNames
+      });
+    }
+    onExit();
   };
 
   const currentPuzzle = roundPuzzles[currentRoundIndex] || roundPuzzles[0];
@@ -261,7 +278,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
           onNextRound={handleNextRound}
           onStopGame={handleStopGame}
           onPlayAgain={startGame}
-          onExit={onExit}
+          onExit={handleExitGame}
         />
       )}
     </div>
