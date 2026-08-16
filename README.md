@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![Kollywood Connect Banner](https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80)
 
 # 🍿 KOLLYWOOD CONNECT 🌟
 ### The Ultimate Real-Time Multiplayer Tamil Cinema Trivia & Guessing Game
