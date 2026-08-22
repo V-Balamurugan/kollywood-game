@@ -98,6 +98,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   // Load initial data and sync global community movies
   useEffect(() => {
     if (isAdminAuth) {
+      setPuzzles(getAllPuzzles());
       syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
       setUsers(getAllStoredUsers());
     }
@@ -113,6 +114,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     if (emailTrim === ADMIN_EMAIL.toLowerCase() && passTrim === ADMIN_PASS) {
       setIsAdminAuth(true);
       sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+      setPuzzles(getAllPuzzles());
       syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
       setUsers(getAllStoredUsers());
     } else {
@@ -128,6 +130,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   };
 
   const refreshData = () => {
+    setPuzzles(getAllPuzzles());
     syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
     setUsers(getAllStoredUsers());
   };
@@ -314,26 +317,30 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
       }
     };
 
+    let updatedList: Puzzle[];
     if (editingId) {
-      updatePuzzle(editingId, puzzleData);
+      updatedList = updatePuzzle(editingId, puzzleData);
     } else {
-      addPuzzle(puzzleData);
+      updatedList = addPuzzle(puzzleData);
     }
 
+    setPuzzles(updatedList);
     setIsModalOpen(false);
     refreshData();
   };
 
   const handleDeleteMovie = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete "${name}" from the database?`)) {
-      deletePuzzle(id);
+      const updated = deletePuzzle(id);
+      setPuzzles(updated);
       refreshData();
     }
   };
 
   const handleResetPuzzles = () => {
     if (window.confirm('Reset movie database back to default curated films?')) {
-      resetPuzzlesToDefault();
+      const resetList = resetPuzzlesToDefault();
+      setPuzzles(resetList);
       refreshData();
     }
   };

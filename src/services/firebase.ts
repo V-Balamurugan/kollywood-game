@@ -737,6 +737,16 @@ export async function saveCustomPuzzleToCloud(puzzle: Puzzle): Promise<void> {
   }
 }
 
+export async function deleteCustomPuzzleFromCloud(id: string): Promise<void> {
+  if (hasValidFirebaseConfig && db) {
+    try {
+      await remove(ref(db, `customPuzzles/${id}`));
+    } catch (e) {
+      console.warn('Could not delete custom puzzle from cloud:', e);
+    }
+  }
+}
+
 // ==========================================
 // USER STATS & PROFILES (FIRESTORE / LOCAL)
 // ==========================================
