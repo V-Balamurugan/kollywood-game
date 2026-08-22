@@ -22,6 +22,9 @@ interface CreatePuzzleModalProps {
   onSubmit: (puzzle: Puzzle) => void;
   creatorName: string;
   creatorUid?: string;
+  initialPuzzle?: Puzzle | null;
+  modalTitle?: string;
+  modalSubtitle?: string;
 }
 
 export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
@@ -29,7 +32,10 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
   onClose,
   onSubmit,
   creatorName,
-  creatorUid
+  creatorUid,
+  initialPuzzle,
+  modalTitle,
+  modalSubtitle
 }) => {
   const [existingDbPuzzles, setExistingDbPuzzles] = useState<Puzzle[]>([]);
   const [selectedDbMovieId, setSelectedDbMovieId] = useState<string>('');
@@ -79,8 +85,49 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       setStatusNotice(null);
       setCandidates([]);
       setLoadingStep(null);
+
+      if (initialPuzzle) {
+        setMovieTitle(initialPuzzle.movie.displayName || initialPuzzle.movie.name);
+        setMovieYear(initialPuzzle.year || 2024);
+        setMoviePoster(initialPuzzle.posterUrl || initialPuzzle.movie.imageUrl || '');
+        setDirector(initialPuzzle.director || '');
+        setMusicDirector(initialPuzzle.musicDirector || '');
+        setGenre(initialPuzzle.genre || 'Action / Drama');
+        setOverview(initialPuzzle.trivia || '');
+        setDifficulty(initialPuzzle.difficulty || 'medium');
+        setHeroCanonicalName(initialPuzzle.hero.canonicalName || initialPuzzle.hero.name);
+        setHeroDisplayName(initialPuzzle.hero.displayName || initialPuzzle.hero.name);
+        setHeroImageUrl(initialPuzzle.hero.imageUrl || '');
+        setHeroQid(initialPuzzle.hero.wikidataId || '');
+        setHeroineCanonicalName(initialPuzzle.heroine.canonicalName || initialPuzzle.heroine.name);
+        setHeroineDisplayName(initialPuzzle.heroine.displayName || initialPuzzle.heroine.name);
+        setHeroineImageUrl(initialPuzzle.heroine.imageUrl || '');
+        setHeroineQid(initialPuzzle.heroine.wikidataId || '');
+        setSongTitle(initialPuzzle.song.displayName || initialPuzzle.song.name);
+        setYoutubeId(initialPuzzle.song.youtubeId || '');
+      } else {
+        setMovieTitle('');
+        setMovieYear(2024);
+        setMoviePoster('');
+        setDirector('');
+        setMusicDirector('');
+        setGenre('Action / Drama');
+        setOverview('');
+        setDifficulty('medium');
+        setHeroCanonicalName('');
+        setHeroDisplayName('');
+        setHeroImageUrl('');
+        setHeroQid('');
+        setHeroineCanonicalName('');
+        setHeroineDisplayName('');
+        setHeroineImageUrl('');
+        setHeroineQid('');
+        setSongTitle('');
+        setYoutubeId('');
+        setFetchedDetails(null);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialPuzzle]);
 
   if (!isOpen) return null;
 
@@ -284,7 +331,9 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       return;
     }
 
-    const cleanId = 'custom-' + movieTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
+    const cleanId =
+      initialPuzzle?.id ||
+      ('custom-' + movieTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now());
 
     const puzzle: Puzzle = {
       id: cleanId,
@@ -294,15 +343,15 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       musicDirector: musicDirector.trim() || 'Tamil Music',
       genre: genre.trim() || 'Kollywood Blockbuster',
       trivia: overview.trim() || `Iconic Tamil film crafted by ${creatorName}`,
-      wikidataId: fetchedDetails?.qid,
+      wikidataId: fetchedDetails?.qid || initialPuzzle?.wikidataId,
       posterUrl: moviePoster.trim() || undefined,
       createdBy: creatorName,
       creatorUid: creatorUid,
       movie: {
         name: movieTitle.trim(),
         displayName: movieTitle.trim(),
-        canonicalName: fetchedDetails?.movieTitle || movieTitle.trim(),
-        wikidataId: fetchedDetails?.qid,
+        canonicalName: fetchedDetails?.movieTitle || initialPuzzle?.movie.canonicalName || movieTitle.trim(),
+        wikidataId: fetchedDetails?.qid || initialPuzzle?.movie.wikidataId,
         firstLetter: movieTitle.trim().charAt(0).toUpperCase(),
         imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${movieTitle.trim()}`,
         aliases: [movieTitle.trim(), fetchedDetails?.movieTitle].filter(Boolean) as string[]
@@ -357,14 +406,14 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight">
-                Director's Movie Crafting
+                {modalTitle || "Director's Movie Crafting"}
               </h3>
               <span className="text-[10px] bg-brand-500/15 text-brand-300 border border-brand-500/30 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                 Auto-Fetch
               </span>
             </div>
             <p className="text-xs text-cinema-muted mt-0.5">
-              Enter movie title to auto-fetch info & photos. You control the exact display names!
+              {modalSubtitle || "Enter movie title to auto-fetch info & photos. You control the exact display names!"}
             </p>
           </div>
         </div>

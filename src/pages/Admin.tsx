@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ArrowLeft, Film, Search, Plus, Trash2, Edit, Check, X,
-  Users, RefreshCw, Sparkles, Play, ExternalLink, ShieldCheck,
-  Trophy, Flame, Award, AlertCircle, Database, Lock, Key, LogOut, ShieldAlert
+  ArrowLeft, Film, Search, Plus, Trash2, Edit,
+  Users, RefreshCw, Sparkles, ShieldCheck,
+  Trophy, Flame, Lock, LogOut, ShieldAlert,
+  Play, BarChart3, Database, Star,
+  Clapperboard, Music, UserCircle2,
+  TrendingUp, Crown, Settings
 } from 'lucide-react';
 import { Puzzle, UserProfile } from '../types/game';
-import { getAllPuzzles, addPuzzle, updatePuzzle, deletePuzzle, resetPuzzlesToDefault, syncGlobalCustomPuzzles } from '../services/puzzleManager';
+import { getAllPuzzles, deletePuzzle, resetPuzzlesToDefault, syncGlobalCustomPuzzles, addOrUpdatePuzzle } from '../services/puzzleManager';
 import { getAllStoredUsers, deleteStoredUser, resetUserStats } from '../services/userManager';
 import { useAuth } from '../context/AuthContext';
-import {
-  searchMovieCandidates,
-  fetchFullMovieDetailsByQid,
-  MovieCandidate,
-  FullMovieDetails,
-  FullCastPerson
-} from '../services/wikidataCast';
+import { CreatePuzzleModal } from '../components/CreatePuzzleModal';
 
 const ADMIN_EMAIL = 'admin@gmail.com';
 const ADMIN_PASS = 'admin@02072006';
@@ -50,40 +47,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   // Modal State for Add / Edit Movie
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isFetchingData, setIsFetchingData] = useState(false);
-  const [fetchNotice, setFetchNotice] = useState<string | null>(null);
-
-  // Form Fields & Auto-Fetch State
-  const [movieName, setMovieName] = useState('');
-  const [movieYear, setMovieYear] = useState<number>(2024);
-  const [moviePoster, setMoviePoster] = useState('');
-  const [director, setDirector] = useState('');
-  const [musicDirector, setMusicDirector] = useState('');
-  const [genre, setGenre] = useState('Action / Drama');
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
-  const [trivia, setTrivia] = useState('');
-
-  // Hero Fields
-  const [heroName, setHeroName] = useState(''); // Director display name
-  const [heroCanonicalName, setHeroCanonicalName] = useState('');
-  const [heroPhoto, setHeroPhoto] = useState('');
-  const [heroQid, setHeroQid] = useState('');
-
-  // Heroine Fields
-  const [heroineName, setHeroineName] = useState(''); // Director display name
-  const [heroineCanonicalName, setHeroineCanonicalName] = useState('');
-  const [heroinePhoto, setHeroinePhoto] = useState('');
-  const [heroineQid, setHeroineQid] = useState('');
-
-  // Song Fields
-  const [songName, setSongName] = useState('');
-  const [youtubeId, setYoutubeId] = useState('');
-
-  // Disambiguation & Cast State
-  const [candidates, setCandidates] = useState<MovieCandidate[]>([]);
-  const [fetchedDetails, setFetchedDetails] = useState<FullMovieDetails | null>(null);
-  const [loadingStep, setLoadingStep] = useState<string | null>(null);
+  const [editingPuzzle, setEditingPuzzle] = useState<Puzzle | null>(null);
 
   // User Management State
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -140,197 +104,21 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     setUsers(getAllStoredUsers());
   };
 
-  // Step 1: Search movie candidates for disambiguation
-  const handleAutoFetchMovie = async () => {
-    if (!movieName.trim()) return;
-    setIsFetchingData(true);
-    setCandidates([]);
-    setLoadingStep('🎬 Searching Wikidata for Tamil cinema matches...');
-
-    try {
-      const results = await searchMovieCandidates(movieName.trim());
-
-      if (results.length === 0) {
-        setLoadingStep(null);
-        setFetchNotice(`No exact Wikidata matches found for "${movieName}". Please enter details manually.`);
-      } else if (results.length === 1) {
-        await handleSelectCandidate(results[0]);
-      } else {
-        setCandidates(results);
-        setLoadingStep(null);
-        setFetchNotice(`Found ${results.length} film versions. Please select the specific movie below:`);
-      }
-    } catch (e: any) {
-      setLoadingStep(null);
-      setFetchNotice(e?.message ? `Lookup notice: ${e.message}` : 'Lookup notice.');
-    } finally {
-      setIsFetchingData(false);
-    }
-  };
-
-  // Step 2: Fetch full details for a chosen candidate
-  const handleSelectCandidate = async (candidate: MovieCandidate) => {
-    setIsFetchingData(true);
-    setCandidates([]);
-    setLoadingStep('🔎 Resolving film metadata, director & music composer...');
-
-    try {
-      setLoadingStep('👥 Finding main cast & extracting character roles...');
-      const details = await fetchFullMovieDetailsByQid(candidate.qid, candidate.cleanTitle);
-      setLoadingStep('🖼️ Retrieving Wikimedia Commons profile pictures...');
-
-      if (details) {
-        setFetchedDetails(details);
-        setMovieName(details.movieTitle);
-        setMovieYear(details.year || candidate.year || 2024);
-        if (details.director) setDirector(details.director);
-        if (details.musicDirector) setMusicDirector(details.musicDirector);
-        if (details.genre) setGenre(details.genre);
-        if (details.overview || candidate.snippet) setTrivia(details.overview || candidate.snippet);
-        if (details.posterUrl) setMoviePoster(details.posterUrl);
-
-        if (details.hero) {
-          setHeroCanonicalName(details.hero.canonicalName);
-          setHeroName(details.hero.suggestedDisplayName);
-          setHeroPhoto(details.hero.imageUrl || '');
-          setHeroQid(details.hero.id);
-        }
-
-        if (details.heroine) {
-          setHeroineCanonicalName(details.heroine.canonicalName);
-          setHeroineName(details.heroine.suggestedDisplayName);
-          setHeroinePhoto(details.heroine.imageUrl || '');
-          setHeroineQid(details.heroine.id);
-        }
-
-        setFetchNotice(`✨ Auto-filled "${details.movieTitle}" (${details.year}) from Wikidata! You can adjust display names below.`);
-      }
-    } catch (err) {
-      setFetchNotice('Failed to fetch detailed cast. Please input names manually.');
-    } finally {
-      setLoadingStep(null);
-      setIsFetchingData(false);
-    }
-  };
-
   const handleOpenAddModal = () => {
-    setEditingId(null);
-    setMovieName('');
-    setMovieYear(2024);
-    setMoviePoster('');
-    setDirector('');
-    setMusicDirector('');
-    setGenre('Action / Drama');
-    setHeroName('');
-    setHeroCanonicalName('');
-    setHeroPhoto('');
-    setHeroQid('');
-    setHeroineName('');
-    setHeroineCanonicalName('');
-    setHeroinePhoto('');
-    setHeroineQid('');
-    setSongName('');
-    setYoutubeId('');
-    setDifficulty('easy');
-    setTrivia('');
-    setCandidates([]);
-    setFetchedDetails(null);
-    setFetchNotice(null);
-    setLoadingStep(null);
+    setEditingPuzzle(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (p: Puzzle) => {
-    setEditingId(p.id);
-    setMovieName(p.movie.name);
-    setMovieYear(p.year || 2024);
-    setMoviePoster(p.movie.imageUrl || '');
-    setDirector(p.director || '');
-    setMusicDirector(p.musicDirector || '');
-    setGenre(p.genre || 'Action / Drama');
-    setHeroName(p.hero.displayName || p.hero.name);
-    setHeroCanonicalName(p.hero.canonicalName || p.hero.name);
-    setHeroPhoto(p.hero.imageUrl || '');
-    setHeroQid(p.hero.wikidataId || '');
-    setHeroineName(p.heroine.displayName || p.heroine.name);
-    setHeroineCanonicalName(p.heroine.canonicalName || p.heroine.name);
-    setHeroinePhoto(p.heroine.imageUrl || '');
-    setHeroineQid(p.heroine.wikidataId || '');
-    setSongName(p.song.name);
-    setYoutubeId(p.song.youtubeId || '');
-    setDifficulty(p.difficulty);
-    setTrivia(p.trivia || '');
-    setCandidates([]);
-    setFetchedDetails(null);
-    setFetchNotice(null);
-    setLoadingStep(null);
+    setEditingPuzzle(p);
     setIsModalOpen(true);
   };
 
-  const handleSaveMovie = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!movieName.trim() || !heroName.trim() || !heroineName.trim() || !songName.trim()) {
-      alert('Please fill in Movie, Hero, Heroine, and Song.');
-      return;
-    }
-
-    const cleanId = editingId || movieName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + movieYear;
-
-    const puzzleData: Puzzle = {
-      id: cleanId,
-      year: movieYear,
-      difficulty,
-      director: director.trim() || 'Kollywood Cinema',
-      musicDirector: musicDirector.trim() || 'Tamil Music',
-      genre: genre.trim() || 'Kollywood Blockbuster',
-      trivia: trivia.trim() || `Blockbuster Tamil film starring ${heroName} & ${heroineName}`,
-      wikidataId: fetchedDetails?.qid,
-      posterUrl: moviePoster.trim() || undefined,
-      movie: {
-        name: movieName.trim(),
-        displayName: movieName.trim(),
-        canonicalName: fetchedDetails?.movieTitle || movieName.trim(),
-        wikidataId: fetchedDetails?.qid,
-        firstLetter: movieName.trim().charAt(0).toUpperCase(),
-        imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${movieName.trim()}`,
-        aliases: [movieName.trim(), fetchedDetails?.movieTitle].filter(Boolean) as string[]
-      },
-      hero: {
-        name: heroName.trim(),
-        displayName: heroName.trim(),
-        canonicalName: heroCanonicalName || heroName.trim(),
-        wikidataId: heroQid || undefined,
-        firstLetter: heroName.trim().charAt(0).toUpperCase(),
-        imageUrl: heroPhoto.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroName.trim()}`,
-        aliases: [heroName.trim(), heroCanonicalName].filter(Boolean) as string[]
-      },
-      heroine: {
-        name: heroineName.trim(),
-        displayName: heroineName.trim(),
-        canonicalName: heroineCanonicalName || heroineName.trim(),
-        wikidataId: heroineQid || undefined,
-        firstLetter: heroineName.trim().charAt(0).toUpperCase(),
-        imageUrl: heroinePhoto.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroineName.trim()}`,
-        aliases: [heroineName.trim(), heroineCanonicalName].filter(Boolean) as string[]
-      },
-      song: {
-        name: songName.trim(),
-        displayName: songName.trim(),
-        firstLetter: songName.trim().charAt(0).toUpperCase(),
-        youtubeId: youtubeId.trim() || undefined,
-        aliases: [songName.trim()]
-      }
-    };
-
-    let updatedList: Puzzle[];
-    if (editingId) {
-      updatedList = updatePuzzle(editingId, puzzleData);
-    } else {
-      updatedList = addPuzzle(puzzleData);
-    }
-
+  const handleSaveMovie = (puzzleData: Puzzle) => {
+    const updatedList = addOrUpdatePuzzle(puzzleData);
     setPuzzles(updatedList);
     setIsModalOpen(false);
+    setEditingPuzzle(null);
     refreshData();
   };
 
@@ -366,94 +154,99 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   };
 
   // =========================================================================
-  // ADMIN SECURITY LOGIN GATE
+  // ADMIN SECURITY LOGIN GATE — Premium full-screen design
   // =========================================================================
   if (!isAdminAuth) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 animate-fade-in">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden animate-fade-in">
+        {/* Decorative BG Orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-500/8 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-rose-500/8 rounded-full blur-[80px] pointer-events-none" />
+
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white transition-colors mb-6"
+          className="absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-cinema-muted hover:text-white transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Back to Main Menu
         </button>
 
-        <div className="glass-card rounded-3xl p-8 border border-cinema-border shadow-2xl shadow-brand-500/10 text-center relative overflow-hidden">
-          {/* Glowing accents */}
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-xl shadow-brand-500/30 mb-4 animate-pop">
-            <Lock className="w-8 h-8" />
+        <div className="w-full max-w-sm relative">
+          {/* Logo badge */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-400 via-brand-500 to-amber-500 flex items-center justify-center shadow-2xl shadow-brand-500/40 mb-4">
+                <Lock className="w-9 h-9 text-black" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#06080D] flex items-center justify-center">
+                <ShieldCheck className="w-3 h-3 text-white" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-display font-black text-white tracking-tight mt-2">Admin Portal</h1>
+            <p className="text-sm text-cinema-muted mt-1">Kollywood Game Control Center</p>
           </div>
 
-          <h2 className="text-2xl font-display font-black text-white tracking-tight">
-            Admin Control Center
-          </h2>
-          <p className="text-xs text-cinema-muted mt-1 mb-6">
-            Enter authorized administrator credentials to manage master database movies and users.
+          <div className="glass-card rounded-3xl p-7 border border-cinema-border shadow-2xl shadow-black/50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-amber-500/5 pointer-events-none rounded-3xl" />
+
+            {authError && (
+              <div className="mb-5 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2.5">
+                <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Admin Email
+                </label>
+                <input
+                  type="text"
+                  value={inputEmail}
+                  onChange={(e) => setInputEmail(e.target.value)}
+                  placeholder="admin@gmail.com"
+                  className="w-full bg-cinema-dark/80 border border-cinema-border focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-cinema-muted/50 focus:outline-none transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Admin Password
+                </label>
+                <input
+                  type="password"
+                  value={inputPass}
+                  onChange={(e) => setInputPass(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-cinema-dark/80 border border-cinema-border focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-cinema-muted/50 focus:outline-none transition-all"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full mt-2 py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black text-sm font-black tracking-wide shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Unlock Admin Panel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setInputEmail(ADMIN_EMAIL); setInputPass(ADMIN_PASS); setAuthError(null); }}
+                className="w-full py-2.5 rounded-2xl border border-cinema-border/60 text-cinema-muted hover:text-white hover:border-cinema-border text-xs font-semibold transition-all"
+              >
+                ⚡ Fill Admin Credentials
+              </button>
+            </form>
+          </div>
+
+          <p className="text-center text-[11px] text-cinema-muted/50 mt-4">
+            🔒 Authorized personnel only · Access is logged
           </p>
-
-          {authError && (
-            <div className="mb-5 p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2 text-left">
-              <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-              <span>{authError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Admin Username / Email
-              </label>
-              <input
-                type="text"
-                value={inputEmail}
-                onChange={(e) => setInputEmail(e.target.value)}
-                placeholder="admin@gmail.com"
-                className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-2xl px-4 py-3 text-xs text-white placeholder:text-cinema-muted/60 focus:outline-none"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Admin Password
-              </label>
-              <input
-                type="password"
-                value={inputPass}
-                onChange={(e) => setInputPass(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-2xl px-4 py-3 text-xs text-white placeholder:text-cinema-muted/60 focus:outline-none"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-sm shadow-xl shadow-brand-500/25 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"
-            >
-              <Key className="w-4 h-4" />
-              <span>Unlock Admin Dashboard</span>
-            </button>
-          </form>
-
-          {/* Quick Fill Button */}
-          <div className="mt-6 pt-4 border-t border-cinema-border/50">
-            <button
-              type="button"
-              onClick={() => {
-                setInputEmail(ADMIN_EMAIL);
-                setInputPass(ADMIN_PASS);
-                setAuthError(null);
-              }}
-              className="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline transition-colors"
-            >
-              ⚡ Fill Admin Credentials (admin@gmail.com)
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -479,639 +272,423 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
   );
 
+  // Stats derived values
+  const easyCount = puzzles.filter(p => p.difficulty === 'easy').length;
+  const medCount  = puzzles.filter(p => p.difficulty === 'medium').length;
+  const hardCount = puzzles.filter(p => p.difficulty === 'hard').length;
+  const topPlayer = [...users].sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0))[0];
+
+  const diffBadge = (d: string) =>
+    d === 'easy'   ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30' :
+    d === 'medium' ? 'text-amber-400 bg-amber-500/15 border-amber-500/30' :
+                     'text-rose-400 bg-rose-500/15 border-rose-500/30';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Main Menu
-            </button>
-            <span className="text-cinema-border">•</span>
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Admin Verified ({ADMIN_EMAIL})
-            </span>
-          </div>
+    <>
+      <div className="min-h-screen relative">
+        {/* Ambient glow */}
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-brand-500/8 rounded-full blur-[140px] pointer-events-none" />
 
-          <h1 className="text-2xl sm:text-3xl font-display font-black text-white flex items-center gap-2.5">
-            <ShieldCheck className="w-7 h-7 text-brand-400" />
-            Kollywood Master Admin Control Center
-          </h1>
-          <p className="text-xs text-cinema-muted">
-            Manage official database movie puzzles, Wikidata auto-fetch, user accounts, and stats
-          </p>
-        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20 animate-fade-in">
 
-        {/* Tab Navigation & Logout */}
-        <div className="flex flex-wrap items-center gap-2 bg-cinema-dark/90 p-1.5 rounded-2xl border border-cinema-border/70">
-          <button
-            onClick={() => setActiveTab('movies')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'movies'
-                ? 'bg-brand-500 text-black shadow-md shadow-brand-500/20'
-                : 'text-slate-400 hover:text-white'
-              }`}
-          >
-            <Film className="w-4 h-4" />
-            <span>Movies & Puzzles ({puzzles.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'users'
-                ? 'bg-brand-500 text-black shadow-md shadow-brand-500/20'
-                : 'text-slate-400 hover:text-white'
-              }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Users & Players ({users.length})</span>
-          </button>
-
-          <button
-            onClick={handleAdminLogout}
-            title="Lock & Logout Admin Session"
-            className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* TAB 1: MOVIES MANAGEMENT */}
-      {activeTab === 'movies' && (
-        <div className="space-y-6">
-          {/* Controls Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 glass-card p-4 rounded-2xl border border-cinema-border/70">
-            <div className="flex flex-1 items-center gap-3">
-              <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-cinema-muted absolute left-3.5 top-3" />
-                <input
-                  type="text"
-                  placeholder="Search title, actor, director, song..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none"
-                />
-              </div>
-
-              <select
-                value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="bg-cinema-dark border border-cinema-border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
-              >
-                <option value="all">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
+          {/* ── HEADER ────────────────────────────────────────────────── */}
+          <div className="flex items-center justify-between mb-7">
+            <div className="flex items-center gap-3">
               <button
-                onClick={handleResetPuzzles}
-                title="Reset to default dataset"
-                className="p-2.5 rounded-xl bg-cinema-cardHover hover:bg-cinema-border border border-cinema-border/60 text-cinema-muted hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                onClick={onBack}
+                className="p-2.5 rounded-2xl border border-cinema-border/60 bg-cinema-dark/80 text-cinema-muted hover:text-white hover:border-cinema-border transition-all group"
               >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Reset Defaults</span>
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
               </button>
-
-              <button
-                onClick={handleOpenAddModal}
-                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 text-black text-xs font-bold shadow-md shadow-brand-500/20 hover:brightness-110 flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Official Movie</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Movies Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPuzzles.map((p) => (
-              <div
-                key={p.id}
-                className="glass-card rounded-2xl p-4 border border-cinema-border/70 hover:border-brand-500/40 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  {/* Top Film Title and Actions */}
-                  <div className="flex items-start justify-between gap-2 border-b border-cinema-border/40 pb-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={p.movie.imageUrl || `https://api.dicebear.com/7.x/shapes/svg?seed=${p.movie.name}`}
-                        alt={p.movie.name}
-                        className="w-12 h-16 rounded-lg object-cover border border-cinema-border flex-shrink-0"
-                      />
-                      <div>
-                        <h3 className="font-display font-bold text-white text-base leading-tight">
-                          {p.movie.name} ({p.year})
-                        </h3>
-                        <span className="text-[11px] text-cinema-muted block">
-                          Dir: {p.director || 'Tamil Cinema'}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded uppercase ${p.difficulty === 'easy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
-                              p.difficulty === 'medium' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
-                                'bg-red-500/15 text-red-400 border border-red-500/30'
-                            }`}>
-                            {p.difficulty}
-                          </span>
-                          {p.createdBy && (
-                            <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/40 truncate max-w-[120px]">
-                              🎨 By {p.createdBy}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleOpenEditModal(p)}
-                        className="p-1.5 rounded-lg bg-cinema-cardHover hover:bg-cinema-border text-cinema-muted hover:text-brand-400 transition-colors"
-                        title="Edit puzzle"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMovie(p.id, p.movie.name)}
-                        className="p-1.5 rounded-lg bg-cinema-cardHover hover:bg-red-500/20 text-cinema-muted hover:text-red-400 transition-colors"
-                        title="Delete movie"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 2x2 Clues Grid Preview */}
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                    <div className="p-2 rounded-lg bg-cinema-dark/60 border border-cinema-border/30 flex items-center gap-2">
-                      <img
-                        src={p.hero.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.hero.name}`}
-                        alt={p.hero.name}
-                        className="w-6 h-6 rounded object-cover"
-                      />
-                      <div className="truncate">
-                        <span className="text-[9px] text-cinema-muted block">HERO ({p.hero.firstLetter})</span>
-                        <span className="font-semibold text-white truncate block">{p.hero.name}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-2 rounded-lg bg-cinema-dark/60 border border-cinema-border/30 flex items-center gap-2">
-                      <img
-                        src={p.heroine.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.heroine.name}`}
-                        alt={p.heroine.name}
-                        className="w-6 h-6 rounded object-cover"
-                      />
-                      <div className="truncate">
-                        <span className="text-[9px] text-cinema-muted block">HEROINE ({p.heroine.firstLetter})</span>
-                        <span className="font-semibold text-white truncate block">{p.heroine.name}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-2 rounded-lg bg-cinema-dark/60 border border-cinema-border/30 flex items-center gap-2 col-span-2">
-                      <div className="w-6 h-6 rounded bg-red-600/30 text-red-400 flex items-center justify-center flex-shrink-0">
-                        <Play className="w-3 h-3 fill-red-400" />
-                      </div>
-                      <div className="truncate flex-1">
-                        <span className="text-[9px] text-cinema-muted block">SONG ({p.song.firstLetter})</span>
-                        <span className="font-semibold text-white truncate block">{p.song.name}</span>
-                      </div>
-                      {p.song.youtubeId && (
-                        <a
-                          href={`https://www.youtube.com/watch?v=${p.song.youtubeId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-cinema-muted hover:text-brand-400 p-1"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30 flex-shrink-0">
+                  <Settings className="w-4 h-4 text-black" />
                 </div>
-
-                {p.trivia && (
-                  <p className="text-[10px] text-cinema-muted italic border-t border-cinema-border/30 pt-2 line-clamp-2">
-                    "{p.trivia}"
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight leading-none">
+                    Admin Control Center
+                  </h1>
+                  <p className="text-[11px] text-cinema-muted mt-0.5 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                    <span className="text-emerald-400 font-semibold">Verified</span>
+                    <span>· {ADMIN_EMAIL}</span>
                   </p>
-                )}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAdminLogout}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-xs font-bold transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+
+          {/* ── STATS CARDS ───────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {[
+              { icon: <Clapperboard className="w-5 h-5" />, label: 'Total Films',   value: puzzles.length,                             grad: 'from-brand-500/20 to-brand-700/10 border-brand-500/30',   icon2: 'text-brand-400',  glow: 'shadow-brand-500/10' },
+              { icon: <Users className="w-5 h-5" />,        label: 'Total Players', value: users.length,                               grad: 'from-violet-500/20 to-violet-700/10 border-violet-500/30', icon2: 'text-violet-400', glow: 'shadow-violet-500/10' },
+              { icon: <TrendingUp className="w-5 h-5" />,   label: 'Hard Puzzles',  value: hardCount,                                  grad: 'from-rose-500/20 to-rose-700/10 border-rose-500/30',       icon2: 'text-rose-400',   glow: 'shadow-rose-500/10' },
+              { icon: <Crown className="w-5 h-5" />,        label: 'Top Score',     value: (topPlayer?.totalScore || 0).toLocaleString(), grad: 'from-amber-500/20 to-amber-700/10 border-amber-500/30',   icon2: 'text-amber-400',  glow: 'shadow-amber-500/10' },
+            ].map((s, i) => (
+              <div key={i} className={`glass-card rounded-2xl p-4 border bg-gradient-to-br ${s.grad} shadow-lg ${s.glow}`}>
+                <div className={`${s.icon2} mb-2.5`}>{s.icon}</div>
+                <div className="text-2xl font-display font-black text-white">{s.value}</div>
+                <div className="text-[11px] text-cinema-muted font-semibold mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* TAB 2: USERS & PLAYERS MANAGEMENT */}
-      {activeTab === 'users' && (
-        <div className="space-y-6">
-          {/* User Search Bar */}
-          <div className="glass-card p-4 rounded-2xl border border-cinema-border/70 flex items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-cinema-muted absolute left-3.5 top-3" />
-              <input
-                type="text"
-                placeholder="Search players by name or rank..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none"
-              />
+          {/* ── DIFFICULTY BAR ────────────────────────────────────────── */}
+          <div className="flex items-center gap-3 mb-6 px-0.5">
+            <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5 flex-shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />{easyCount} Easy
+            </span>
+            <div className="flex-1 h-1.5 rounded-full bg-cinema-dark/80 overflow-hidden flex">
+              <div className="bg-emerald-500/70 h-full transition-all" style={{ width: `${(easyCount / (puzzles.length || 1)) * 100}%` }} />
+              <div className="bg-amber-500/70 h-full transition-all"   style={{ width: `${(medCount  / (puzzles.length || 1)) * 100}%` }} />
+              <div className="bg-rose-500/70 h-full transition-all"    style={{ width: `${(hardCount / (puzzles.length || 1)) * 100}%` }} />
             </div>
-            <span className="text-xs text-cinema-muted">
-              {filteredUsers.length} total players registered
+            <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5 flex-shrink-0">
+              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />{medCount} Med
+            </span>
+            <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1.5 flex-shrink-0">
+              <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />{hardCount} Hard
             </span>
           </div>
 
-          {/* Users Table */}
-          <div className="glass-card rounded-2xl border border-cinema-border/70 overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-cinema-dark/90 border-b border-cinema-border/60 text-cinema-muted uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">Player</th>
-                    <th className="py-3 px-4">Rank Title</th>
-                    <th className="py-3 px-4">Total Score</th>
-                    <th className="py-3 px-4">Victories (Wins)</th>
-                    <th className="py-3 px-4">Current Streak</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-cinema-border/40">
-                  {filteredUsers.map((u) => (
-                    <tr key={u.uid} className="hover:bg-cinema-cardHover/40 transition-colors">
-                      <td className="py-3 px-4 flex items-center gap-3">
-                        <img
-                          src={u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
-                          alt={u.displayName}
-                          className="w-8 h-8 rounded-xl bg-cinema-dark border border-cinema-border object-cover"
-                        />
-                        <div>
-                          <span className="font-bold text-white block">{u.displayName || 'Cinema Buff'}</span>
-                          <span className="text-[10px] text-cinema-muted font-mono">{u.email || `${u.uid.slice(0, 10)}...`}</span>
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 font-semibold text-[11px]">
-                          {u.totalScore > 5000 ? 'Superstar Buff 🌟' : u.totalScore > 1000 ? 'Director Buff 🎬' : 'Cinema Fan 🍿'}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 font-mono font-bold text-white">
-                        {(u.totalScore || 0).toLocaleString()} pts
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="flex items-center gap-1 text-amber-400 font-bold">
-                          <Trophy className="w-3.5 h-3.5" />
-                          {u.wins || 0}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="flex items-center gap-1 text-orange-400 font-bold">
-                          <Flame className="w-3.5 h-3.5" />
-                          {u.bestStreak || 0}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 text-right space-x-2">
-                        <button
-                          onClick={() => handleResetStats(u.uid, u.displayName)}
-                          title="Reset Player Stats"
-                          className="p-1.5 rounded-lg bg-cinema-cardHover hover:bg-amber-500/20 text-cinema-muted hover:text-amber-400 transition-colors"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(u.uid, u.displayName)}
-                          title="Delete Player Profile"
-                          className="p-1.5 rounded-lg bg-cinema-cardHover hover:bg-red-500/20 text-cinema-muted hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* ── TABS ──────────────────────────────────────────────────── */}
+          <div className="flex items-center gap-1.5 mb-6 p-1.5 bg-cinema-dark/90 border border-cinema-border/60 rounded-2xl w-fit">
+            {([
+              { key: 'movies', icon: <Film className="w-3.5 h-3.5" />, label: 'Movies & Puzzles', count: puzzles.length },
+              { key: 'users',  icon: <Users className="w-3.5 h-3.5" />, label: 'Players',         count: users.length  },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
+                  activeTab === tab.key
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-400 text-black shadow-lg shadow-brand-500/25'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${activeTab === tab.key ? 'bg-black/20 text-black' : 'bg-cinema-cardHover text-cinema-muted'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
+
+          {/* ════════════════════════════════════════════════════════════ */}
+          {/* TAB 1 — MOVIES                                             */}
+          {/* ════════════════════════════════════════════════════════════ */}
+          {activeTab === 'movies' && (
+            <div className="space-y-5">
+
+              {/* Controls */}
+              <div className="glass-card rounded-2xl border border-cinema-border/60 p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-cinema-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search title, actor, director, song..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all placeholder:text-cinema-muted/50"
+                  />
+                </div>
+                <select
+                  value={selectedDifficulty}
+                  onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  className="bg-cinema-dark border border-cinema-border rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Difficulties</option>
+                  <option value="easy">🟢 Easy</option>
+                  <option value="medium">🟡 Medium</option>
+                  <option value="hard">🔴 Hard</option>
+                </select>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={refreshData}
+                    title="Sync database"
+                    className="p-2.5 rounded-xl border border-cinema-border/70 bg-cinema-dark text-cinema-muted hover:text-white hover:border-cinema-border transition-all group"
+                  >
+                    <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                  </button>
+                  <button
+                    onClick={handleResetPuzzles}
+                    className="px-3.5 py-2.5 rounded-xl border border-cinema-border/70 bg-cinema-dark text-cinema-muted hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <Database className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Reset Defaults</span>
+                  </button>
+                  <button
+                    onClick={handleOpenAddModal}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 text-black text-xs font-black shadow-lg shadow-brand-500/25 hover:brightness-110 active:scale-[0.97] flex items-center gap-1.5 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Official Movie
+                  </button>
+                </div>
+              </div>
+
+              {searchTerm && (
+                <p className="text-xs text-cinema-muted px-1">
+                  Showing <span className="text-white font-bold">{filteredPuzzles.length}</span> results for "<span className="text-brand-400">{searchTerm}</span>"
+                </p>
+              )}
+
+              {/* Movies Grid */}
+              {filteredPuzzles.length === 0 ? (
+                <div className="glass-card rounded-3xl p-16 text-center border border-cinema-border/50">
+                  <Film className="w-12 h-12 text-cinema-muted/30 mx-auto mb-3" />
+                  <p className="text-cinema-muted font-semibold">No movies found</p>
+                  <p className="text-cinema-muted/60 text-xs mt-1">Try a different search or add a new movie</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredPuzzles.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group glass-card rounded-2xl border border-cinema-border/60 hover:border-brand-500/50 transition-all duration-300 overflow-hidden flex flex-col hover:shadow-2xl hover:shadow-brand-500/10 hover:-translate-y-0.5"
+                    >
+                      {/* Poster Banner */}
+                      <div className="relative h-40 bg-cinema-dark overflow-hidden flex-shrink-0">
+                        {p.movie.imageUrl ? (
+                          <img
+                            src={p.movie.imageUrl}
+                            alt={p.movie.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cinema-dark to-cinema-surface">
+                            <Clapperboard className="w-10 h-10 text-cinema-muted/20" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
+
+                        {/* Difficulty badge */}
+                        <span className={`absolute top-2.5 left-2.5 text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${diffBadge(p.difficulty || 'medium')}`}>
+                          {p.difficulty || 'medium'}
+                        </span>
+
+                        {/* Hover action buttons */}
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenEditModal(p)}
+                            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-slate-300 hover:text-brand-400 hover:border-brand-500/50 transition-colors" title="Edit">
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => handleDeleteMovie(p.id, p.movie.name)}
+                            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-slate-300 hover:text-red-400 hover:border-red-500/50 transition-colors" title="Delete">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Title overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                          <h3 className="font-display font-black text-white text-sm leading-tight drop-shadow-lg">{p.movie.name}</h3>
+                          <p className="text-[10px] text-slate-300/80">{p.year} · {p.director || 'Tamil Cinema'}</p>
+                        </div>
+                      </div>
+
+                      {/* Card body */}
+                      <div className="p-3 space-y-2 flex-1">
+                        {/* Hero */}
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-shrink-0">
+                            <img src={p.hero.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.hero.name}&backgroundColor=1e293b`}
+                              alt={p.hero.name} className="w-7 h-7 rounded-lg object-cover border border-cinema-border" />
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-sky-500/80 border border-[#06080D] flex items-center justify-center">
+                              <Star className="w-1.5 h-1.5 text-white fill-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Hero · {p.hero.firstLetter}</div>
+                            <div className="text-xs font-bold text-white truncate">{p.hero.displayName || p.hero.name}</div>
+                          </div>
+                        </div>
+
+                        {/* Heroine */}
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-shrink-0">
+                            <img src={p.heroine.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${p.heroine.name}&backgroundColor=1e293b`}
+                              alt={p.heroine.name} className="w-7 h-7 rounded-lg object-cover border border-cinema-border" />
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-pink-500/80 border border-[#06080D] flex items-center justify-center">
+                              <Star className="w-1.5 h-1.5 text-white fill-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Heroine · {p.heroine.firstLetter}</div>
+                            <div className="text-xs font-bold text-white truncate">{p.heroine.displayName || p.heroine.name}</div>
+                          </div>
+                        </div>
+
+                        {/* Song */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-cinema-border/30">
+                          <div className="w-7 h-7 rounded-lg bg-red-600/20 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                            <Music className="w-3.5 h-3.5 text-red-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Song · {p.song.firstLetter}</div>
+                            <div className="text-xs font-bold text-white truncate">{p.song.name}</div>
+                          </div>
+                          {p.song.youtubeId && (
+                            <a href={`https://www.youtube.com/watch?v=${p.song.youtubeId}`} target="_blank" rel="noreferrer"
+                              className="p-1 text-cinema-muted hover:text-red-400 transition-colors flex-shrink-0" title="Watch on YouTube">
+                              <Play className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card footer */}
+                      <div className="px-3 py-2 border-t border-cinema-border/30 bg-cinema-dark/50 flex items-center justify-between">
+                        <span className="text-[9px] text-cinema-muted/50 font-mono">#{p.id.slice(0, 8)}</span>
+                        {p.createdBy && <span className="text-[9px] text-brand-400/80 font-semibold">By {p.createdBy}</span>}
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => handleOpenEditModal(p)}
+                            className="p-1 rounded-lg text-cinema-muted hover:text-brand-400 hover:bg-brand-500/10 transition-colors">
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => handleDeleteMovie(p.id, p.movie.name)}
+                            className="p-1 rounded-lg text-cinema-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════ */}
+          {/* TAB 2 — PLAYERS (Leaderboard style)                       */}
+          {/* ════════════════════════════════════════════════════════════ */}
+          {activeTab === 'users' && (
+            <div className="space-y-5">
+              {/* Search */}
+              <div className="glass-card p-3.5 rounded-2xl border border-cinema-border/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 text-cinema-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search players by name or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 text-xs text-cinema-muted">
+                  <BarChart3 className="w-4 h-4 text-brand-400" />
+                  <span><span className="text-white font-bold">{filteredUsers.length}</span> players registered</span>
+                </div>
+              </div>
+
+              {/* Leaderboard rows */}
+              <div className="space-y-2.5">
+                {filteredUsers.length === 0 ? (
+                  <div className="glass-card rounded-3xl p-16 text-center border border-cinema-border/50">
+                    <UserCircle2 className="w-12 h-12 text-cinema-muted/30 mx-auto mb-3" />
+                    <p className="text-cinema-muted font-semibold">No players found</p>
+                  </div>
+                ) : (
+                  [...filteredUsers]
+                    .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0))
+                    .map((u, idx) => {
+                      const rank = idx + 1;
+                      const rankBadge =
+                        rank === 1 ? 'text-amber-400 bg-amber-400/15 border-amber-400/40' :
+                        rank === 2 ? 'text-slate-300 bg-slate-400/10 border-slate-400/30' :
+                        rank === 3 ? 'text-orange-400 bg-orange-400/15 border-orange-400/40' :
+                                     'text-cinema-muted bg-cinema-dark border-cinema-border/40';
+                      const rankEmoji = ['🥇','🥈','🥉'][rank - 1] ?? `#${rank}`;
+                      const title = (u.totalScore || 0) > 5000 ? { label: 'Superstar Buff', icon: '🌟' }
+                                  : (u.totalScore || 0) > 1000 ? { label: 'Director Buff',  icon: '🎬' }
+                                  :                              { label: 'Cinema Fan',      icon: '🍿' };
+
+                      return (
+                        <div key={u.uid} className="glass-card rounded-2xl border border-cinema-border/60 hover:border-cinema-border transition-all p-3.5 flex items-center gap-3 sm:gap-4">
+                          {/* Rank */}
+                          <div className={`w-9 h-9 rounded-xl border text-sm font-black flex items-center justify-center flex-shrink-0 ${rankBadge}`}>
+                            {rankEmoji}
+                          </div>
+
+                          {/* Avatar */}
+                          <img src={u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
+                            alt={u.displayName}
+                            className="w-10 h-10 rounded-xl bg-cinema-dark border border-cinema-border object-cover flex-shrink-0" />
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-white text-sm truncate">{u.displayName || 'Cinema Buff'}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 font-bold flex-shrink-0">
+                                {title.icon} {title.label}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-cinema-muted font-mono block truncate">{u.email || u.uid.slice(0, 14) + '...'}</span>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
+                            <div className="text-center min-w-[48px]">
+                              <div className="text-base font-display font-black text-white">{(u.totalScore || 0).toLocaleString()}</div>
+                              <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Score</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center gap-1 justify-center text-amber-400 font-black">
+                                <Trophy className="w-3.5 h-3.5" />{u.wins || 0}
+                              </div>
+                              <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Wins</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center gap-1 justify-center text-orange-400 font-black">
+                                <Flame className="w-3.5 h-3.5" />{u.bestStreak || 0}
+                              </div>
+                              <div className="text-[9px] text-cinema-muted uppercase tracking-wider font-bold">Streak</div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button onClick={() => handleResetStats(u.uid, u.displayName)} title="Reset Stats"
+                              className="p-2 rounded-xl bg-cinema-dark border border-cinema-border/60 hover:bg-amber-500/15 hover:border-amber-500/40 text-cinema-muted hover:text-amber-400 transition-all">
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteUser(u.uid, u.displayName)} title="Delete Profile"
+                              className="p-2 rounded-xl bg-cinema-dark border border-cinema-border/60 hover:bg-red-500/15 hover:border-red-500/40 text-cinema-muted hover:text-red-400 transition-all">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
 
       {/* ADD / EDIT MOVIE MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl glass-card border border-cinema-border/90 rounded-3xl p-6 sm:p-8 shadow-2xl my-8 max-h-[94vh] overflow-y-auto">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-cinema-surface hover:bg-cinema-cardHover text-slate-400 hover:text-white border border-cinema-border/60 transition-colors shadow-sm"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-5 pr-8">
-              <div className="w-11 h-11 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex items-center justify-center shadow-lg shadow-brand-500/10 flex-shrink-0">
-                <Film className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-xl font-display font-black text-white">
-                  {editingId ? 'Edit Official Movie' : 'Add Official Movie to Database'}
-                </h3>
-                <p className="text-xs text-cinema-muted">
-                  Auto-fetch info from Wikidata & control the exact display names players guess.
-                </p>
-              </div>
-            </div>
-
-            {/* Smart Auto-Fetch Search Toolbar */}
-            <div className="p-3.5 rounded-2xl bg-cinema-surface border border-cinema-border/80 mb-4 space-y-2">
-              <label className="block text-xs font-black text-slate-200 uppercase tracking-wider flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-brand-400">
-                  <Search className="w-3.5 h-3.5" />
-                  Auto-Fetch Movie Data (Wikidata & Wikipedia):
-                </span>
-                <span className="text-[10px] text-cinema-muted font-bold">e.g. Leo, Vikram, Master, 96, Ghilli</span>
-              </label>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter movie title to auto-fetch..."
-                  value={movieName}
-                  onChange={(e) => setMovieName(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-medium placeholder:text-cinema-muted/60"
-                />
-                <button
-                  type="button"
-                  onClick={handleAutoFetchMovie}
-                  disabled={isFetchingData || !movieName.trim()}
-                  className="py-2.5 px-4 rounded-xl btn-cinema-primary text-black text-xs font-black flex items-center justify-center gap-1.5 shadow-md flex-shrink-0 disabled:opacity-50 active:scale-95 transition-all"
-                >
-                  <Sparkles className={`w-4 h-4 ${isFetchingData ? 'animate-spin' : ''}`} />
-                  <span>{isFetchingData ? 'Fetching...' : '⚡ Auto-Fetch'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Loading State Banner */}
-            {loadingStep && (
-              <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 mb-3 text-xs text-brand-300 font-bold flex items-center gap-2 animate-pulse">
-                <Sparkles className="w-4 h-4 text-brand-400 animate-spin" />
-                <span>{loadingStep}</span>
-              </div>
-            )}
-
-            {/* Disambiguation Candidates */}
-            {candidates.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4 space-y-2">
-                <span className="text-xs font-black text-amber-300 uppercase block">
-                  Multiple Versions Found — Select One:
-                </span>
-                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                  {candidates.map((c) => (
-                    <div
-                      key={c.qid}
-                      className="p-2 rounded-xl bg-cinema-dark border border-cinema-border/80 flex items-center justify-between gap-2 shadow-2xs"
-                    >
-                      <div className="truncate flex-1">
-                        <span className="font-bold text-xs text-white">{c.cleanTitle}</span>
-                        {c.year && <span className="ml-1.5 text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-bold border border-brand-500/30">{c.year}</span>}
-                        <p className="text-[10px] text-cinema-muted truncate">{c.snippet}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectCandidate(c)}
-                        className="py-1 px-2.5 rounded-lg btn-cinema-primary text-black text-xs font-bold transition-colors"
-                      >
-                        Select
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {fetchNotice && (
-              <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 text-xs text-brand-300 font-medium mb-3">
-                {fetchNotice}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveMovie} className="space-y-4">
-              {/* Movie Title & Year */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">Movie Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Leo, Jailer, Vikram"
-                    value={movieName}
-                    onChange={(e) => setMovieName(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">Release Year</label>
-                  <input
-                    type="number"
-                    value={movieYear}
-                    onChange={(e) => setMovieYear(parseInt(e.target.value, 10) || 2024)}
-                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Movie Poster Banner (Wikidata / Wikimedia Commons Auto-Fetched) */}
-              <div className="p-3 rounded-xl bg-cinema-dark border border-cinema-border/80 space-y-1.5">
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-cinema-surface border border-cinema-border flex-shrink-0">
-                    {moviePoster ? (
-                      <img src={moviePoster} alt={movieName} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] text-cinema-muted">
-                        Poster
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-black text-slate-300 uppercase tracking-wider">
-                        Movie Poster Banner (Wikidata & Wikimedia Commons)
-                      </label>
-                      {moviePoster && (
-                        <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-bold border border-brand-500/30">
-                          Poster Active
-                        </span>
-                      )}
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="Poster URL (auto-fetched from Wikidata or custom)"
-                      value={moviePoster}
-                      onChange={(e) => setMoviePoster(e.target.value)}
-                      className="w-full bg-cinema-surface border border-cinema-border focus:border-brand-500 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none placeholder:text-cinema-muted/60"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 2x2 MAIN CAST REVIEW & DIRECTOR DISPLAY NAMES */}
-              <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 space-y-3">
-                <span className="text-xs font-black font-display text-white uppercase tracking-wider block">
-                  ⭐ Main Cast & Director-Controlled Display Names
-                </span>
-
-                {/* Hero Section */}
-                <div className="p-3 rounded-xl card-category-hero border border-amber-500/30 space-y-2">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-cinema-dark border border-amber-500/30 flex-shrink-0">
-                      {heroPhoto ? (
-                        <img src={heroPhoto} alt={heroName} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] text-amber-400 font-bold">Photo</div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-amber-300 uppercase">Hero (Lead Actor) *</span>
-                        {heroCanonicalName && (
-                          <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">
-                            API: {heroCanonicalName}
-                          </span>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Player-facing display name (e.g. Vijay)"
-                        value={heroName}
-                        onChange={(e) => setHeroName(e.target.value)}
-                        className="w-full bg-cinema-dark border border-amber-500/40 focus:border-amber-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Heroine Section */}
-                <div className="p-3 rounded-xl card-category-heroine border border-rose-500/30 space-y-2">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-cinema-dark border border-rose-500/30 flex-shrink-0">
-                      {heroinePhoto ? (
-                        <img src={heroinePhoto} alt={heroineName} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] text-rose-400 font-bold">Photo</div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-rose-300 uppercase">Heroine (Lead Actress) *</span>
-                        {heroineCanonicalName && (
-                          <span className="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold border border-rose-500/30">
-                            API: {heroineCanonicalName}
-                          </span>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Player-facing display name (e.g. Trisha)"
-                        value={heroineName}
-                        onChange={(e) => setHeroineName(e.target.value)}
-                        className="w-full bg-cinema-dark border border-rose-500/40 focus:border-rose-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Song Section */}
-                <div className="p-3 rounded-xl card-category-song border border-purple-500/30 space-y-1.5">
-                  <span className="text-xs font-black text-purple-300 uppercase block">Hit Song & Audio Clue *</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Song Title (e.g. Naa Ready)"
-                      value={songName}
-                      onChange={(e) => setSongName(e.target.value)}
-                      className="w-full bg-cinema-dark border border-purple-500/40 focus:border-purple-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="YouTube ID (e.g. szvt1vD0Uug)"
-                      value={youtubeId}
-                      onChange={(e) => setYoutubeId(e.target.value)}
-                      className="w-full bg-cinema-dark border border-purple-500/40 focus:border-purple-400 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Director & Difficulty */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Film Director</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Lokesh Kanagaraj, Nelson, Shankar"
-                    value={director}
-                    onChange={(e) => setDirector(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Difficulty Level</label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
-                  >
-                    <option value="easy">Easy (Blockbusters & Popular Hits)</option>
-                    <option value="medium">Medium (Standard Cinephile Hits)</option>
-                    <option value="hard">Hard (Classic / Cult / Tricky Clues)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Trivia / Clue Plot */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Plot Summary / Trivia Clue</label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. An iconic action thriller set in Kashmir with an animal sanctuary owner..."
-                  value={trivia}
-                  onChange={(e) => setTrivia(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none resize-none"
-                />
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-slate-300 hover:text-white text-xs font-bold transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3.5 rounded-2xl btn-cinema-primary text-black text-xs font-black shadow-xl shadow-brand-500/20 active:scale-95 transition-all"
-                >
-                  {editingId ? 'Save Changes' : '💾 Add to Master Database'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      <CreatePuzzleModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingPuzzle(null); }}
+        onSubmit={handleSaveMovie}
+        creatorName="Master Admin"
+        creatorUid={user?.uid || 'admin'}
+        initialPuzzle={editingPuzzle}
+        modalTitle={editingPuzzle ? 'Edit Official Master Movie' : 'Add Official Movie to Database'}
+        modalSubtitle="Auto-fetch info from Wikidata & control the exact display names players guess."
+      />
+    </>
   );
 };
