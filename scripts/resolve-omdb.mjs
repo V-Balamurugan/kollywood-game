@@ -16,7 +16,7 @@ const PUZZLES_PATH = path.join(__dirname, '../src/data/puzzles.json');
 
 async function fetchOMDBMovie(title, year) {
   try {
-    let url = `http://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`;
+    let url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`;
     if (year) url += `&y=${year}`;
 
     const res = await fetch(url);
@@ -32,12 +32,12 @@ async function fetchOMDBMovie(title, year) {
       }
     } else {
       // Try search fallback
-      const searchUrl = `http://www.omdbapi.com/?s=${encodeURIComponent(title)}&type=movie&apikey=${OMDB_API_KEY}`;
+      const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&type=movie&apikey=${OMDB_API_KEY}`;
       const searchRes = await fetch(searchUrl);
       const searchData = await searchRes.json();
       if (searchData.Response === 'True' && searchData.Search && searchData.Search.length > 0) {
         for (const candidate of searchData.Search) {
-          const detailRes = await fetch(`http://www.omdbapi.com/?i=${candidate.imdbID}&apikey=${OMDB_API_KEY}`);
+          const detailRes = await fetch(`https://www.omdbapi.com/?i=${candidate.imdbID}&apikey=${OMDB_API_KEY}`);
           const detailData = await detailRes.json();
           if (detailData.Response === 'True' && detailData.Language && detailData.Language.toLowerCase().includes('tamil')) {
             return detailData;

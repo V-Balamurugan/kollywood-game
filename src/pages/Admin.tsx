@@ -117,11 +117,35 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     const apiKey = import.meta.env.VITE_OMDB_API_KEY || '140528bd';
 
     try {
-      let url = `http://www.omdbapi.com/?t=${encodeURIComponent(movieName.trim())}&apikey=${apiKey}`;
+      let url = `https://www.omdbapi.com/?t=${encodeURIComponent(movieName.trim())}&apikey=${apiKey}`;
       if (movieYear) url += `&y=${movieYear}`;
 
-      const res = await fetch(url);
-      const data = await res.json();
+      let res = await fetch(url);
+      let data = await res.json();
+
+      // If not found with year or direct match, try without year
+      if (data.Response !== 'True' && movieYear) {
+        const fallbackUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(movieName.trim())}&apikey=${apiKey}`;
+        const fallbackRes = await fetch(fallbackUrl);
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.Response === 'True') {
+          data = fallbackData;
+        }
+      }
+
+      // If still not found, try search query
+      if (data.Response !== 'True') {
+        const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(movieName.trim())}&type=movie&apikey=${apiKey}`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        if (searchData.Response === 'True' && searchData.Search && searchData.Search.length > 0) {
+          const detailRes = await fetch(`https://www.omdbapi.com/?i=${searchData.Search[0].imdbID}&apikey=${apiKey}`);
+          const detailData = await detailRes.json();
+          if (detailData.Response === 'True') {
+            data = detailData;
+          }
+        }
+      }
 
       if (data.Response === 'True') {
         if (data.Poster && data.Poster !== 'N/A') {
@@ -136,12 +160,12 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
         if (data.Year) {
           setMovieYear(parseInt(data.Year, 10) || movieYear);
         }
-        setOmdbNotice(`✓ Found Tamil Film: ${data.Title} (${data.Year})`);
+        setOmdbNotice(`✓ Found Film: ${data.Title} (${data.Year})`);
       } else {
-        setOmdbNotice('Movie not found on OMDB. You can manually enter poster URL.');
+        setOmdbNotice(data.Error || 'Movie not found on OMDB. You can manually enter poster URL.');
       }
     } catch (e: any) {
-      setOmdbNotice('Failed to connect to OMDB API.');
+      setOmdbNotice(e?.message ? `Failed to connect to OMDB API: ${e.message}` : 'Failed to connect to OMDB API.');
     } finally {
       setOmdbLoading(false);
     }
