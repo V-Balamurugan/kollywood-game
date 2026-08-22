@@ -14,6 +14,7 @@ import { Profile } from './pages/Profile';
 import { Admin } from './pages/Admin';
 import { Library } from './pages/Library';
 import { Room, Puzzle } from './types/game';
+import { syncGlobalCustomPuzzles, subscribeGlobalCustomPuzzles } from './services/puzzleManager';
 
 type AppView = 
   | 'home'
@@ -49,6 +50,15 @@ export const AppContent: React.FC = () => {
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [soloCustomPuzzle, setSoloCustomPuzzle] = useState<Puzzle | null>(null);
+
+  // Background real-time library sync from Cloud / Admin
+  useEffect(() => {
+    syncGlobalCustomPuzzles();
+    const unsubscribe = subscribeGlobalCustomPuzzles();
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Check URL parameters and paths on mount and updates for deep-linked room codes or /admin /library routes
   useEffect(() => {

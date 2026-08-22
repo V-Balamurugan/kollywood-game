@@ -8,7 +8,7 @@ import {
   TrendingUp, Crown, Settings
 } from 'lucide-react';
 import { Puzzle, UserProfile } from '../types/game';
-import { getAllPuzzles, deletePuzzle, resetPuzzlesToDefault, syncGlobalCustomPuzzles, addOrUpdatePuzzle } from '../services/puzzleManager';
+import { getAllPuzzles, deletePuzzle, resetPuzzlesToDefault, syncGlobalCustomPuzzles, subscribeGlobalCustomPuzzles, addOrUpdatePuzzle } from '../services/puzzleManager';
 import { getAllStoredUsers, deleteStoredUser, resetUserStats } from '../services/userManager';
 import { useAuth } from '../context/AuthContext';
 import { CreatePuzzleModal } from '../components/CreatePuzzleModal';
@@ -62,12 +62,19 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     }
   }, [user]);
 
-  // Load initial data and sync global community movies
+  // Load initial data and subscribe to real-time library updates
   useEffect(() => {
     if (isAdminAuth) {
       setPuzzles(getAllPuzzles());
+      const unsubscribe = subscribeGlobalCustomPuzzles((synced) => {
+        setPuzzles(synced);
+      });
       syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
       setUsers(getAllStoredUsers());
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [isAdminAuth]);
 
@@ -455,7 +462,9 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                   {filteredPuzzles.map((p) => (
                     <div
                       key={p.id}
-                      className="group glass-card rounded-2xl border border-cinema-border/60 hover:border-brand-500/50 transition-all duration-300 overflow-hidden flex flex-col hover:shadow-2xl hover:shadow-brand-500/10 hover:-translate-y-0.5"
+                      onClick={() => handleOpenEditModal(p)}
+                      className="group glass-card rounded-2xl border border-cinema-border/60 hover:border-brand-500/50 transition-all duration-300 overflow-hidden flex flex-col hover:shadow-2xl hover:shadow-brand-500/10 hover:-translate-y-0.5 cursor-pointer"
+                      title="Click to edit this movie"
                     >
                       {/* Poster Banner */}
                       <div className="relative h-40 bg-cinema-dark overflow-hidden flex-shrink-0">
@@ -477,14 +486,16 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                           {p.difficulty || 'medium'}
                         </span>
 
-                        {/* Hover action buttons */}
+                        {/* Hover: Edit hint + Delete button */}
                         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleOpenEditModal(p)}
-                            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-slate-300 hover:text-brand-400 hover:border-brand-500/50 transition-colors" title="Edit">
-                            <Edit className="w-3 h-3" />
-                          </button>
-                          <button onClick={() => handleDeleteMovie(p.id, p.movie.name)}
-                            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-slate-300 hover:text-red-400 hover:border-red-500/50 transition-colors" title="Delete">
+                          <span className="px-2 py-1 rounded-lg bg-brand-500/80 backdrop-blur-sm text-black text-[9px] font-black flex items-center gap-1">
+                            <Edit className="w-2.5 h-2.5" /> Edit
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteMovie(p.id, p.movie.name); }}
+                            className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-slate-300 hover:text-red-400 hover:border-red-500/50 transition-colors"
+                            title="Delete movie"
+                          >
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
@@ -551,12 +562,14 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                         <span className="text-[9px] text-cinema-muted/50 font-mono">#{p.id.slice(0, 8)}</span>
                         {p.createdBy && <span className="text-[9px] text-brand-400/80 font-semibold">By {p.createdBy}</span>}
                         <div className="flex items-center gap-1">
-                          <button onClick={() => handleOpenEditModal(p)}
-                            className="p-1 rounded-lg text-cinema-muted hover:text-brand-400 hover:bg-brand-500/10 transition-colors">
-                            <Edit className="w-3 h-3" />
-                          </button>
-                          <button onClick={() => handleDeleteMovie(p.id, p.movie.name)}
-                            className="p-1 rounded-lg text-cinema-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                          <span className="text-[9px] text-cinema-muted/40 flex items-center gap-0.5 group-hover:text-brand-400/60 transition-colors">
+                            <Edit className="w-2.5 h-2.5" /> click to edit
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteMovie(p.id, p.movie.name); }}
+                            className="p-1 rounded-lg text-cinema-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            title="Delete movie"
+                          >
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>

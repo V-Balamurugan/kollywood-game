@@ -1,6 +1,11 @@
 import { Puzzle } from '../types/game';
 import defaultPuzzles from '../data/puzzles.json';
-import { fetchRemoteCustomPuzzles, saveCustomPuzzleToCloud, deleteCustomPuzzleFromCloud } from './firebase';
+import {
+  fetchRemoteCustomPuzzles,
+  saveCustomPuzzleToCloud,
+  deleteCustomPuzzleFromCloud,
+  subscribeToRemoteCustomPuzzles
+} from './firebase';
 
 const STORAGE_KEY = 'kollywood_custom_puzzles';
 
@@ -10,7 +15,7 @@ export function getAllPuzzles(): Puzzle[] {
   if (!stored) return defaultPuzzles as Puzzle[];
   try {
     const customList = JSON.parse(stored) as Puzzle[];
-    if (customList.length === 0) return defaultPuzzles as Puzzle[];
+    if (!Array.isArray(customList) || customList.length === 0) return defaultPuzzles as Puzzle[];
 
     // Merge default puzzles with custom/edited puzzles so defaults are never lost
     const mergedMap = new Map<string, Puzzle>();
@@ -18,7 +23,9 @@ export function getAllPuzzles(): Puzzle[] {
       mergedMap.set(dp.id, dp);
     }
     for (const cp of customList) {
-      mergedMap.set(cp.id, cp);
+      if (cp && cp.id) {
+        mergedMap.set(cp.id, cp);
+      }
     }
     return Array.from(mergedMap.values());
   } catch {
@@ -29,15 +36,20 @@ export function getAllPuzzles(): Puzzle[] {
 export function saveAllPuzzles(puzzles: Puzzle[]): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(puzzles));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('kollywood_library_updated', { detail: puzzles }));
+  }
 }
 
 /**
  * Adds or updates a movie puzzle in both local storage and cloud database.
+ * Syncs with Firebase so the entire player community sees the updated puzzle.
  */
 export function addOrUpdatePuzzle(puzzle: Puzzle): Puzzle[] {
   const current = getAllPuzzles();
+  const normalizedTitle = puzzle.movie.name.toLowerCase().trim();
   const index = current.findIndex(
-    p => p.id === puzzle.id || p.movie.name.toLowerCase().trim() === puzzle.movie.name.toLowerCase().trim()
+    p => p.id === puzzle.id || p.movie.name.toLowerCase().trim() === normalizedTitle
   );
 
   let updated: Puzzle[];
@@ -100,40 +112,65 @@ export function deletePuzzle(id: string): Puzzle[] {
 export function resetPuzzlesToDefault(): Puzzle[] {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new CustomEvent('kollywood_library_updated', { detail: defaultPuzzles }));
   }
   return defaultPuzzles as Puzzle[];
 }
 
 /**
- * Synchronizes community-created custom movies from Firebase Cloud into the local database.
- * This makes every custom movie created in multiplayer or admin instantly available!
+ * Merges remote cloud puzzles into the local database.
+ * Cloud updates take precedence over local entries for matching IDs,
+ * ensuring all admin edits and additions reflect across all users' devices.
+ */
+export function mergeRemotePuzzles(remotePuzzles: Puzzle[]): Puzzle[] {
+  const mergedMap = new Map<string, Puzzle>();
+
+  // 1. Seed with default base catalogue
+  for (const dp of defaultPuzzles as Puzzle[]) {
+    mergedMap.set(dp.id, dp);
+  }
+
+  // 2. Overwrite / insert with cloud remote puzzles (authoritative from Admin)
+  if (Array.isArray(remotePuzzles)) {
+    for (const rp of remotePuzzles) {
+      if (rp && rp.id && rp.movie && rp.movie.name) {
+        mergedMap.set(rp.id, rp);
+      }
+    }
+  }
+
+  const merged = Array.from(mergedMap.values());
+  saveAllPuzzles(merged);
+  return merged;
+}
+
+/**
+ * Synchronizes community/admin curated custom movies from Firebase Cloud into the local database.
+ * This makes every movie created or updated in admin instantly available to all users.
  */
 export async function syncGlobalCustomPuzzles(): Promise<Puzzle[]> {
   try {
     const remotePuzzles = await fetchRemoteCustomPuzzles();
     if (remotePuzzles && remotePuzzles.length > 0) {
-      let current = getAllPuzzles();
-      const currentMap = new Map<string, Puzzle>();
-      for (const p of current) {
-        currentMap.set(p.id, p);
-      }
-
-      let changed = false;
-      for (const remote of remotePuzzles) {
-        if (!currentMap.has(remote.id)) {
-          currentMap.set(remote.id, remote);
-          changed = true;
-        }
-      }
-
-      if (changed) {
-        const merged = Array.from(currentMap.values());
-        saveAllPuzzles(merged);
-        return merged;
-      }
+      return mergeRemotePuzzles(remotePuzzles);
     }
   } catch (e) {
     console.warn('Could not sync global custom puzzles:', e);
   }
   return getAllPuzzles();
 }
+
+/**
+ * Subscribes to real-time cloud updates for the movie library.
+ * Whenever an admin adds, edits, or deletes a movie in the master database,
+ * this listener automatically updates all users' libraries in real-time.
+ */
+export function subscribeGlobalCustomPuzzles(callback?: (puzzles: Puzzle[]) => void): () => void {
+  return subscribeToRemoteCustomPuzzles((remotePuzzles) => {
+    const updatedList = mergeRemotePuzzles(remotePuzzles);
+    if (callback) {
+      callback(updatedList);
+    }
+  });
+}
+

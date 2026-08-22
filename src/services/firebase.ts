@@ -115,6 +115,27 @@ class LocalStorageFallback {
       }
     };
   }
+
+  emitKey(key: string, data: any): void {
+    if (this.channel) {
+      this.channel.postMessage({ key, data });
+    }
+    if (this.listeners.has(key)) {
+      this.listeners.get(key)!.forEach(cb => cb(data));
+    }
+  }
+
+  subscribeKey(key: string, callback: (data: any) => void): () => void {
+    if (!this.listeners.has(key)) {
+      this.listeners.set(key, new Set());
+    }
+    this.listeners.get(key)!.add(callback);
+    return () => {
+      if (this.listeners.has(key)) {
+        this.listeners.get(key)!.delete(callback);
+      }
+    };
+  }
 }
 
 const localFallback = new LocalStorageFallback();
@@ -745,6 +766,37 @@ export async function deleteCustomPuzzleFromCloud(id: string): Promise<void> {
       console.warn('Could not delete custom puzzle from cloud:', e);
     }
   }
+}
+
+/**
+ * Subscribes to real-time custom puzzles updates from Firebase Realtime Database.
+ * When the admin adds, edits, or deletes any movie, this fires immediately for all users.
+ */
+export function subscribeToRemoteCustomPuzzles(callback: (puzzles: Puzzle[]) => void): () => void {
+  if (hasValidFirebaseConfig && db) {
+    const customRef = ref(db, 'customPuzzles');
+    const callbackWrapper = (snapshot: any) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const list = Object.values(data) as Puzzle[];
+        callback(list);
+      } else {
+        callback([]);
+      }
+    };
+    onValue(customRef, callbackWrapper);
+
+    return () => {
+      off(customRef, 'value', callbackWrapper);
+    };
+  }
+
+  // Multi-tab local fallback
+  return localFallback.subscribeKey('custom_puzzles_sync', (data) => {
+    if (Array.isArray(data)) {
+      callback(data);
+    }
+  });
 }
 
 // ==========================================

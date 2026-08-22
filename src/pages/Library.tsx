@@ -4,7 +4,7 @@ import {
   Music, User, Heart, ArrowLeft, Database, SlidersHorizontal, BookOpen
 } from 'lucide-react';
 import { Puzzle } from '../types/game';
-import { getAllPuzzles, syncGlobalCustomPuzzles } from '../services/puzzleManager';
+import { getAllPuzzles, syncGlobalCustomPuzzles, subscribeGlobalCustomPuzzles } from '../services/puzzleManager';
 
 interface LibraryProps {
   onBack: () => void;
@@ -12,15 +12,27 @@ interface LibraryProps {
 }
 
 export const Library: React.FC<LibraryProps> = ({ onBack, onSelectMovieForMatch }) => {
-  const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
+  const [puzzles, setPuzzles] = useState<Puzzle[]>(() => getAllPuzzles());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<'all' | 'curated' | 'community'>('all');
   const [selectedMovie, setSelectedMovie] = useState<Puzzle | null>(null);
 
   useEffect(() => {
-    // Load and sync all available database movies
+    // 1. Initial local load
+    setPuzzles(getAllPuzzles());
+
+    // 2. Subscribe to real-time library changes from Cloud/Admin
+    const unsubscribe = subscribeGlobalCustomPuzzles((syncedList) => {
+      setPuzzles(syncedList);
+    });
+
+    // 3. Trigger initial remote sync
     syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Filter logic
