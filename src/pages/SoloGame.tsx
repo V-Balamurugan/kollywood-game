@@ -11,11 +11,12 @@ import { ArrowLeft, Play, Sparkles, Sliders } from 'lucide-react';
 
 interface SoloGameProps {
   onExit: () => void;
+  initialPuzzle?: Puzzle;
 }
 
-export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
+export const SoloGame: React.FC<SoloGameProps> = ({ onExit, initialPuzzle }) => {
   const { user } = useAuth();
-  
+
   // Game Setup State
   const [isPlaying, setIsPlaying] = useState(false);
   const [settings, setSettings] = useState<GameSettings>({
@@ -42,6 +43,29 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
     syncGlobalCustomPuzzles();
   }, []);
 
+  // If an initial custom puzzle is passed (e.g. from Custom Match creator), auto-launch Solo Game!
+  useEffect(() => {
+    if (initialPuzzle) {
+      startWithCustomPuzzle(initialPuzzle);
+    }
+  }, [initialPuzzle]);
+
+  const startWithCustomPuzzle = (customPuz: Puzzle) => {
+    const allAvailable = getAllPuzzles();
+    const shuffledRemaining = getSelectedPuzzles(Math.max(20, allAvailable.length), settings.difficulty)
+      .filter((p) => p.id !== customPuz.id);
+
+    setRoundPuzzles([customPuz, ...shuffledRemaining]);
+    setCurrentRoundIndex(0);
+    setScore(0);
+    setStreak(0);
+    setAnswers({});
+    setTimeLeft(settings.roundTimeSeconds);
+    setIsRoundEnded(false);
+    setIsGameFinished(false);
+    setIsPlaying(true);
+  };
+
   // Initialize Game Session with infinite/continuous stream of movies
   const startGame = () => {
     const allAvailable = getAllPuzzles();
@@ -63,7 +87,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
     if (!isPlaying || isRoundEnded || isGameFinished || settings.roundTimeSeconds === 0) return;
 
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current!);
           handleRoundTimeout();
@@ -81,7 +105,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
   // Check if all 4 cells solved
   useEffect(() => {
     if (!isPlaying || isRoundEnded || isGameFinished) return;
-    const solvedCount = Object.values(answers).filter(a => a.correct).length;
+    const solvedCount = Object.values(answers).filter((a) => a.correct).length;
     if (solvedCount === 4) {
       handleAllSolved();
     }
@@ -93,13 +117,13 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
     const streakBonus = streak * 50;
     const roundPoints = 1000 + speedBonus + streakBonus;
 
-    setScore(prev => prev + roundPoints);
-    setStreak(prev => prev + 1);
+    setScore((prev) => prev + roundPoints);
+    setStreak((prev) => prev + 1);
     setIsRoundEnded(true);
   };
 
   const handleRoundTimeout = () => {
-    const solvedCount = Object.values(answers).filter(a => a.correct).length;
+    const solvedCount = Object.values(answers).filter((a) => a.correct).length;
     if (solvedCount < 4) {
       setStreak(0); // Reset streak on timeout
     }
@@ -107,9 +131,9 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
   };
 
   const handleCellSolved = (category: CellCategory, answer: CellAnswer) => {
-    setAnswers(prev => ({ ...prev, [category]: answer }));
+    setAnswers((prev) => ({ ...prev, [category]: answer }));
     const points = Math.max(50, 250 - answer.hintsUsed * 50);
-    setScore(prev => prev + points);
+    setScore((prev) => prev + points);
   };
 
   const handleNextRound = () => {
@@ -118,7 +142,7 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
       // Refresh with more shuffled movies
       const allAvailable = getAllPuzzles();
       const more = getSelectedPuzzles(Math.max(20, allAvailable.length), settings.difficulty);
-      setRoundPuzzles(prev => [...prev, ...more]);
+      setRoundPuzzles((prev) => [...prev, ...more]);
     }
     setCurrentRoundIndex(nextIdx);
     setAnswers({});
@@ -129,7 +153,10 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
   const handleStopGame = () => {
     setIsGameFinished(true);
     if (user && score > 0) {
-      const movieNames = roundPuzzles.slice(0, currentRoundIndex + 1).map(p => p?.movie?.name).filter(Boolean) as string[];
+      const movieNames = roundPuzzles
+        .slice(0, currentRoundIndex + 1)
+        .map((p) => p?.movie?.name)
+        .filter(Boolean) as string[];
       updateUserStats(user.uid, user.displayName || 'Player', score, true, streak, {
         mode: 'solo',
         roundsPlayed: currentRoundIndex + 1,
@@ -140,7 +167,10 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
 
   const handleExitGame = () => {
     if (isPlaying && user && score > 0 && !isGameFinished) {
-      const movieNames = roundPuzzles.slice(0, currentRoundIndex + 1).map(p => p?.movie?.name).filter(Boolean) as string[];
+      const movieNames = roundPuzzles
+        .slice(0, currentRoundIndex + 1)
+        .map((p) => p?.movie?.name)
+        .filter(Boolean) as string[];
       updateUserStats(user.uid, user.displayName || 'Player', score, true, streak, {
         mode: 'solo',
         roundsPlayed: currentRoundIndex + 1,
@@ -158,45 +188,45 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
       <div className="max-w-xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
         <button
           onClick={onExit}
-          className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Arena</span>
         </button>
 
-        <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl">
-          <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-cinema-border/50">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
-              <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl relative overflow-hidden">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/60">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/10">
+              <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-display font-black text-white">Solo Cinema Challenge</h2>
-              <p className="text-[11px] sm:text-xs text-cinema-muted">Play continuously & decide when to stop</p>
+              <h2 className="text-lg sm:text-2xl font-display font-black text-white">Solo Cinema Challenge</h2>
+              <p className="text-[11px] sm:text-xs text-cinema-muted">Play an endless stream of Tamil blockbusters</p>
             </div>
           </div>
 
-          <div className="space-y-5 sm:space-y-6">
+          <div className="space-y-6">
             {/* Time per Round */}
             <div>
-              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                Time Per Round
+              <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
+                ⏱️ Round Timer
               </label>
-              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2">
                 {[
-                  { sec: 0, label: '♾️ No Timer' },
+                  { sec: 0, label: '♾️ Chill' },
                   { sec: 30, label: '30s' },
                   { sec: 45, label: '45s' },
                   { sec: 60, label: '60s' },
                   { sec: 90, label: '90s' }
-                ].map(opt => (
+                ].map((opt) => (
                   <button
                     key={opt.sec}
                     type="button"
-                    onClick={() => setSettings(s => ({ ...s, roundTimeSeconds: opt.sec }))}
-                    className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    onClick={() => setSettings((s) => ({ ...s, roundTimeSeconds: opt.sec }))}
+                    className={`py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${
                       settings.roundTimeSeconds === opt.sec
-                        ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
-                        : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
+                        ? 'btn-cinema-primary text-black border-amber-400'
+                        : 'bg-cinema-surface text-slate-300 border-cinema-border/70 hover:text-white hover:border-brand-500/40'
                     }`}
                   >
                     {opt.label}
@@ -207,24 +237,26 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
 
             {/* Difficulty */}
             <div>
-              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                Difficulty Pool
+              <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
+                🎬 Difficulty Pool
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
-                {([
-                  { id: 'all', label: '🎲 Mixed (All)' },
-                  { id: 'easy', label: '⚡ Easy' },
-                  { id: 'medium', label: '🔥 Medium' },
-                  { id: 'hard', label: '💀 Hard' }
-                ] as const).map(diff => (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(
+                  [
+                    { id: 'all', label: '🎲 All Era' },
+                    { id: 'easy', label: '⚡ Easy' },
+                    { id: 'medium', label: '🔥 Medium' },
+                    { id: 'hard', label: '💀 Hard' }
+                  ] as const
+                ).map((diff) => (
                   <button
                     key={diff.id}
                     type="button"
-                    onClick={() => setSettings(s => ({ ...s, difficulty: diff.id }))}
-                    className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border tracking-wider transition-all ${
+                    onClick={() => setSettings((s) => ({ ...s, difficulty: diff.id }))}
+                    className={`py-2.5 rounded-xl text-xs font-black border tracking-wider transition-all active:scale-95 ${
                       settings.difficulty === diff.id
-                        ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
-                        : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
+                        ? 'btn-cinema-primary text-black border-amber-400'
+                        : 'bg-cinema-surface text-slate-300 border-cinema-border/70 hover:text-white hover:border-brand-500/40'
                     }`}
                   >
                     {diff.label}
@@ -235,10 +267,10 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
 
             <button
               onClick={startGame}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+              className="w-full py-4 rounded-2xl btn-cinema-primary text-black font-black text-sm shadow-xl flex items-center justify-center gap-2 mt-4 active:scale-95 transition-all tracking-wider"
             >
               <Play className="w-4 h-4 fill-black" />
-              <span>Start Cinema Challenge</span>
+              <span>START CINEMA CHALLENGE 🎬</span>
             </button>
           </div>
         </div>
@@ -284,4 +316,3 @@ export const SoloGame: React.FC<SoloGameProps> = ({ onExit }) => {
     </div>
   );
 };
-

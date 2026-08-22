@@ -13,7 +13,7 @@ import { MultiplayerGame } from './pages/MultiplayerGame';
 import { Profile } from './pages/Profile';
 import { Admin } from './pages/Admin';
 import { Library } from './pages/Library';
-import { Room } from './types/game';
+import { Room, Puzzle } from './types/game';
 
 type AppView = 
   | 'home'
@@ -33,6 +33,7 @@ export const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+  const [soloCustomPuzzle, setSoloCustomPuzzle] = useState<Puzzle | null>(null);
 
   // Check URL parameters and paths on mount for deep-linked room codes or /admin /library routes
   useEffect(() => {
@@ -102,6 +103,11 @@ export const AppContent: React.FC = () => {
     setCurrentView(view);
   };
 
+  const handleStartSolo = (puzzle?: Puzzle) => {
+    setSoloCustomPuzzle(puzzle || null);
+    setCurrentView('solo');
+  };
+
   const handleRoomCreated = (code: string) => {
     setActiveRoomCode(code);
     setCurrentView('room-lobby');
@@ -143,16 +149,23 @@ export const AppContent: React.FC = () => {
       <main className="flex-1">
         {currentView === 'home' && (
           <Home
-            onStartSolo={() => setCurrentView('solo')}
+            onStartSolo={() => handleStartSolo()}
             onCreateRoom={() => setCurrentView('create-room')}
             onJoinRoom={() => setCurrentView('join-room')}
             onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
             onOpenProfile={() => setCurrentView('profile')}
+            onOpenLibrary={() => navigateTo('library')}
           />
         )}
 
         {currentView === 'solo' && (
-          <SoloGame onExit={() => setCurrentView('home')} />
+          <SoloGame
+            initialPuzzle={soloCustomPuzzle || undefined}
+            onExit={() => {
+              setSoloCustomPuzzle(null);
+              setCurrentView('home');
+            }}
+          />
         )}
 
         {currentView === 'create-room' && (
@@ -187,13 +200,16 @@ export const AppContent: React.FC = () => {
         {currentView === 'profile' && (
           <Profile
             onBack={() => navigateTo('home')}
-            onStartSolo={() => navigateTo('solo')}
+            onStartSolo={() => handleStartSolo()}
             onOpenAdmin={() => navigateTo('admin')}
           />
         )}
 
         {currentView === 'library' && (
-          <Library onBack={() => navigateTo('home')} />
+          <Library
+            onBack={() => navigateTo('home')}
+            onSelectMovieForMatch={(puzzle) => handleStartSolo(puzzle)}
+          />
         )}
 
         {currentView === 'admin' && (

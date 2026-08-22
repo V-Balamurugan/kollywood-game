@@ -20,10 +20,10 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
   const sortedPlayers = Object.values(players).sort((a, b) => b.score - a.score);
 
   return (
-    <div className="glass-panel rounded-2xl p-4 border border-cinema-border/70 shadow-xl">
-      <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-cinema-border/50">
+    <div className="glass-card rounded-3xl p-4 sm:p-5 border border-cinema-border shadow-2xl">
+      <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-cinema-border/60">
         <Trophy className="w-4 h-4 text-brand-400" />
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+        <h3 className="text-xs font-black uppercase tracking-wider text-slate-200">
           Live Arena Standings
         </h3>
       </div>
@@ -37,31 +37,30 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
           return (
             <div
               key={player.uid}
-              className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                isCurrent
-                  ? 'bg-brand-500/10 border-brand-500/40 shadow-sm shadow-brand-500/10'
-                  : 'bg-cinema-card/70 border-cinema-border/40'
-              }`}
+              className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isCurrent
+                  ? 'bg-brand-500/10 border-brand-500/40 shadow-md shadow-brand-500/10'
+                  : 'bg-cinema-surface border-cinema-border/70'
+                }`}
             >
               {/* Rank & Avatar & Name */}
               <div className="flex items-center gap-2.5">
-                <div className="w-5 text-center font-mono font-bold text-xs text-cinema-muted">
+                <div className="w-5 text-center font-mono font-black text-xs text-cinema-muted">
                   {index === 0 ? <Crown className="w-4 h-4 text-amber-400 inline" /> : `#${index + 1}`}
                 </div>
 
                 <img
                   src={player.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${player.uid}`}
                   alt={player.name}
-                  className="w-8 h-8 rounded-lg bg-cinema-cardHover border border-cinema-border object-cover"
+                  className="w-8 h-8 rounded-xl bg-cinema-dark border border-cinema-border object-cover"
                 />
 
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-white max-w-[90px] truncate">
+                    <span className="text-xs font-bold text-white max-w-[95px] truncate">
                       {player.name}
                     </span>
                     {isCurrent && (
-                      <span className="text-[9px] bg-brand-500/20 text-brand-400 font-bold px-1 rounded">
+                      <span className="text-[9px] bg-brand-500/20 text-brand-300 font-black px-1.5 py-0.2 rounded">
                         YOU
                       </span>
                     )}
@@ -71,15 +70,14 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                     {[0, 1, 2, 3].map((cellIdx) => (
                       <div
                         key={cellIdx}
-                        className={`w-2 h-2 rounded-full ${
-                          cellIdx < solvedCount
-                            ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50'
-                            : 'bg-cinema-border/60'
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-all ${cellIdx < solvedCount
+                            ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50 scale-110'
+                            : 'bg-cinema-border'
+                          }`}
                       />
                     ))}
-                    <span className="text-[10px] text-cinema-muted ml-1">
-                      {solvedCount}/4 solved
+                    <span className="text-[10px] text-cinema-muted font-mono ml-1">
+                      {solvedCount}/4
                     </span>
                   </div>
                 </div>
@@ -88,16 +86,16 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
               {/* Score & Kick Action */}
               <div className="flex items-center gap-2">
                 <span className="font-mono font-black text-xs sm:text-sm text-brand-400">
-                  {player.score.toLocaleString()}
+                  {player.score.toLocaleString()} pts
                 </span>
 
                 {isHost && !isCurrent && onKickPlayer && (
                   <button
                     onClick={() => onKickPlayer(player.uid, player.name)}
                     title={`Kick ${player.name}`}
-                    className="p-1 rounded-lg bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 transition-colors"
+                    className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 transition-colors"
                   >
-                    <UserX className="w-3 h-3" />
+                    <UserX className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

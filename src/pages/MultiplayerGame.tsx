@@ -179,9 +179,9 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   const currentPuzzleId = room.puzzleIds && room.puzzleIds.length > 0
     ? room.puzzleIds[currentIdx % room.puzzleIds.length]
     : (allPuzzles[0]?.id || 'leo-2023');
-    
+
   const currentPuzzle: Puzzle = room.customPuzzle || allPuzzles.find(p => p.id === currentPuzzleId) || allPuzzles[0];
-  
+
   const isHost = user.uid === room.hostUid;
   const isCreatorOfMovie = Boolean(
     currentPuzzle.creatorUid
@@ -196,7 +196,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     score: 0,
     ready: true
   };
-  
+
   const isFinal = room.status === 'finished';
 
   const handleCellSolved = async (category: CellCategory, answer: CellAnswer) => {
@@ -367,6 +367,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
               directorName={user.displayName || 'Director'}
               hintRequests={room.hintRequests || []}
               directorHints={room.directorHints || []}
+              answers={sharedAnswers}
               onSendHint={handleSendDirectorHint}
             />
           )}

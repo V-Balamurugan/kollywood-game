@@ -433,7 +433,9 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
     roundStartTime: Date.now(),
     sharedAnswers: {},
     answers: {},
-    nextRoundVotes: {}
+    nextRoundVotes: {},
+    directorHints: [],
+    hintRequests: []
   };
 
   const room = localFallback.getRoom(roomCode);
@@ -442,6 +444,8 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
     room.customPuzzle = puzzle;
     room.sharedAnswers = {};
     room.nextRoundVotes = {};
+    room.directorHints = [];
+    room.hintRequests = [];
     localFallback.setRoom(roomCode, room);
   }
 
@@ -452,6 +456,8 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
       await update(ref(db, `rooms/${roomCode}`), updates);
       await set(ref(db, `rooms/${roomCode}/sharedAnswers`), {});
       await set(ref(db, `rooms/${roomCode}/nextRoundVotes`), {});
+      await set(ref(db, `rooms/${roomCode}/directorHints`), []);
+      await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
     } catch (err: any) {
       console.warn('Firebase setCustomPuzzleAndStart notice:', err?.message);
     }
@@ -509,9 +515,16 @@ export async function requestDirectorHint(
   };
 
   const room = localFallback.getRoom(roomCode);
+  let updatedScore = 0;
   if (room) {
     if (!room.hintRequests) room.hintRequests = [];
     room.hintRequests.push(reqData);
+    if (room.players && room.players[player.uid]) {
+      const currentScore = room.players[player.uid].score || 0;
+      // Deduct 25 points, never going below zero
+      updatedScore = Math.max(0, currentScore - 25);
+      room.players[player.uid].score = updatedScore;
+    }
     localFallback.setRoom(roomCode, room);
   }
 
@@ -519,6 +532,11 @@ export async function requestDirectorHint(
     try {
       const roomRef = ref(db, `rooms/${roomCode}/hintRequests`);
       await set(roomRef, (room?.hintRequests || [reqData]));
+      if (room?.players && room.players[player.uid]) {
+        await update(ref(db, `rooms/${roomCode}/players/${player.uid}`), {
+          score: updatedScore
+        });
+      }
     } catch (err: any) {
       console.warn('Firebase requestDirectorHint notice:', err?.message);
     }
@@ -660,7 +678,9 @@ export async function advanceRound(code: string, nextIndex: number, isFinished: 
     status: isFinished ? ('finished' as const) : ('in-progress' as const),
     sharedAnswers: {},
     answers: {},
-    nextRoundVotes: {}
+    nextRoundVotes: {},
+    directorHints: [],
+    hintRequests: []
   };
 
   if (nextCreatorUid) {
@@ -673,6 +693,8 @@ export async function advanceRound(code: string, nextIndex: number, isFinished: 
     room.sharedAnswers = {};
     room.answers = {};
     room.nextRoundVotes = {};
+    room.directorHints = [];
+    room.hintRequests = [];
     localFallback.setRoom(roomCode, room);
   }
 
@@ -682,6 +704,8 @@ export async function advanceRound(code: string, nextIndex: number, isFinished: 
       await set(ref(db, `rooms/${roomCode}/sharedAnswers`), {});
       await set(ref(db, `rooms/${roomCode}/answers`), {});
       await set(ref(db, `rooms/${roomCode}/nextRoundVotes`), {});
+      await set(ref(db, `rooms/${roomCode}/directorHints`), []);
+      await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
     } catch (err: any) {
       console.warn('Firebase advanceRound notice:', err?.message);
     }

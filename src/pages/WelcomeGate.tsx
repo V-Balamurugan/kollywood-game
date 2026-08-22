@@ -157,8 +157,8 @@ export const WelcomeGate: React.FC = () => {
               type="button"
               onClick={() => { setActiveTab('signin'); setError(null); }}
               className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'signin'
-                  ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
-                  : 'text-slate-400 hover:text-white'
+                ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
+                : 'text-slate-400 hover:text-white'
                 }`}
             >
               <LogIn className="w-3.5 h-3.5" />
@@ -168,8 +168,8 @@ export const WelcomeGate: React.FC = () => {
               type="button"
               onClick={() => { setActiveTab('signup'); setError(null); }}
               className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'signup'
-                  ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
-                  : 'text-slate-400 hover:text-white'
+                ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
+                : 'text-slate-400 hover:text-white'
                 }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -179,8 +179,8 @@ export const WelcomeGate: React.FC = () => {
               type="button"
               onClick={() => { setActiveTab('guest'); setError(null); }}
               className={`py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'guest'
-                  ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
-                  : 'text-slate-400 hover:text-white'
+                ? 'bg-brand-500 text-black shadow-md shadow-brand-500/25'
+                : 'text-slate-400 hover:text-white'
                 }`}
             >
               <Zap className="w-3.5 h-3.5" />

@@ -15,20 +15,20 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenAdmin
 }) => {
   return (
-    <footer className="w-full glass-panel border-t border-cinema-border/60 mt-auto safe-bottom relative overflow-hidden">
+    <footer className="w-full glass-panel border-t border-cinema-border/70 mt-auto safe-bottom relative overflow-hidden">
       {/* Top subtle gold glow highlight */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-brand-500/50 to-transparent" />
-      
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-brand-500/60 to-transparent" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 text-center md:text-left">
           {/* Brand Logo & Name */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-md shadow-brand-500/20 flex-shrink-0">
-              <Film className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl overflow-hidden border border-brand-500/60 shadow-md shadow-brand-500/20 flex-shrink-0 bg-black">
+              <img src="/logo.png" alt="Kollywood Game" className="w-full h-full object-cover" />
             </div>
             <div>
               <span className="font-display font-black text-sm sm:text-base tracking-wider bg-gradient-to-r from-amber-200 via-brand-400 to-amber-500 bg-clip-text text-transparent block">
-                KOLLYWOOD CONNECT
+                KOLLYWOOD GAME
               </span>
               <span className="text-[10px] text-cinema-muted block">
                 Multiplayer Tamil Cinema Trivia
@@ -36,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
           </div>
 
-          {/* Copyright Section (Centered on Desktop / Clear on Mobile) */}
+          {/* Copyright Section */}
           <div className="text-xs text-cinema-muted space-y-1">
             <p className="text-slate-300 text-[11px] sm:text-xs">
               All Rights Reserved by <strong className="text-brand-400 font-bold">Balamurugan V</strong> © 2026
@@ -53,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({
             {onOpenHowToPlay && (
               <button
                 onClick={onOpenHowToPlay}
-                className="px-3 py-1.5 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 border border-cinema-border/50 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-colors flex items-center gap-1.5 text-[11px]"
+                className="px-3 py-1.5 rounded-xl bg-cinema-card hover:bg-cinema-cardHover border border-cinema-border/60 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-all flex items-center gap-1.5 text-[11px] font-semibold active:scale-95"
               >
                 <HelpCircle className="w-3.5 h-3.5 text-brand-400" />
                 <span>Game Rules</span>
@@ -63,7 +63,7 @@ export const Footer: React.FC<FooterProps> = ({
             {onOpenLibrary && (
               <button
                 onClick={onOpenLibrary}
-                className="px-3 py-1.5 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 border border-cinema-border/50 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-colors flex items-center gap-1.5 text-[11px]"
+                className="px-3 py-1.5 rounded-xl bg-cinema-card hover:bg-cinema-cardHover border border-cinema-border/60 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-all flex items-center gap-1.5 text-[11px] font-semibold active:scale-95"
               >
                 <BookOpen className="w-3.5 h-3.5 text-brand-400" />
                 <span>Film Library</span>
@@ -73,7 +73,7 @@ export const Footer: React.FC<FooterProps> = ({
             {onOpenProfile && (
               <button
                 onClick={onOpenProfile}
-                className="px-3 py-1.5 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 border border-cinema-border/50 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-colors flex items-center gap-1.5 text-[11px]"
+                className="px-3 py-1.5 rounded-xl bg-cinema-card hover:bg-cinema-cardHover border border-cinema-border/60 hover:border-brand-500/40 text-slate-300 hover:text-brand-300 transition-all flex items-center gap-1.5 text-[11px] font-semibold active:scale-95"
               >
                 <Trophy className="w-3.5 h-3.5 text-brand-400" />
                 <span>My Stats</span>

@@ -1,7 +1,10 @@
 export type CellCategory = 'hero' | 'heroine' | 'movie' | 'song';
 
 export interface PuzzleEntity {
-  name: string;
+  name: string; // The primary director-approved display name shown to players
+  displayName?: string; // Explicit director-controlled display name
+  canonicalName?: string; // API / Wikidata canonical full name (e.g. "C. Joseph Vijay")
+  wikidataId?: string; // Wikidata Entity QID (e.g. "Q315796")
   imageUrl?: string;
   youtubeId?: string;
   firstLetter: string;
@@ -20,6 +23,9 @@ export interface Puzzle {
   musicDirector?: string;
   genre?: string;
   trivia?: string;
+  posterUrl?: string;
+  backdropUrl?: string;
+  wikidataId?: string;
   createdBy?: string;
   creatorUid?: string;
 }
@@ -130,3 +136,20 @@ export interface RoundResult {
   playerScores: Record<string, number>;
   timeTakenSeconds: number;
 }
+
+export interface CastMember {
+  id: string;
+  name: string;
+  character?: string;
+  image?: string;
+  wikidataUrl?: string;
+}
+
+export interface MovieCast {
+  movieName: string;
+  qid?: string;
+  year?: number;
+  members: CastMember[];
+  fetchedAt: number;
+}
+

@@ -60,39 +60,39 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onRoomJoined, onBack }) => {
     <div className="max-w-md mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors group"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Home
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Arena</span>
       </button>
 
-      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl">
-        <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-cinema-border/50">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10 flex-shrink-0">
+      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl relative overflow-hidden">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/60">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10 flex-shrink-0">
             <KeyRound className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-display font-black text-white">Join Cinema Room</h2>
-            <p className="text-[11px] sm:text-xs text-cinema-muted">Enter the 6-character host code</p>
+            <h2 className="text-lg sm:text-2xl font-display font-black text-white">Join Match Room</h2>
+            <p className="text-[11px] sm:text-xs text-cinema-muted">Enter the 6-character room invite code</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs space-y-1.5 sm:space-y-2">
+          <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-1.5 leading-relaxed">
             <div className="flex items-center gap-2 font-bold">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed pl-6">
-              Make sure the host is currently in the lobby and your Firebase Realtime Database rules have been set to public.
+            <p className="text-[11px] text-slate-300 pl-6">
+              Make sure the room host is in the lobby and your room code is typed correctly.
             </p>
           </div>
         )}
 
-        <form onSubmit={handleJoin} className="space-y-4 sm:space-y-6">
+        <form onSubmit={handleJoin} className="space-y-6">
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-              Room Code
+            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
+              🎟️ 6-Digit Room Code
             </label>
             <div className="relative">
               <input
@@ -104,32 +104,32 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onRoomJoined, onBack }) => {
                   setError(null);
                 }}
                 placeholder="e.g. K7X2QP"
-                className="w-full bg-cinema-dark border-2 border-cinema-border focus:border-brand-500 rounded-2xl px-3 sm:px-4 py-3 sm:py-3.5 text-center font-mono font-black text-xl sm:text-2xl tracking-widest text-white uppercase placeholder:text-slate-600 focus:outline-none transition-colors"
+                className="w-full bg-cinema-dark border-2 border-cinema-border focus:border-brand-500 rounded-2xl px-4 py-3.5 text-center font-mono font-black text-2xl sm:text-3xl tracking-widest text-amber-300 uppercase placeholder:text-slate-700 focus:outline-none transition-colors"
               />
               <button
                 type="button"
                 onClick={handlePaste}
                 title="Paste from clipboard"
-                className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3.5 p-1.5 rounded-xl bg-cinema-cardHover hover:bg-cinema-border text-cinema-muted hover:text-white transition-colors"
+                className="absolute right-3 top-3.5 p-2 rounded-xl bg-cinema-surface hover:bg-cinema-cardHover text-cinema-muted hover:text-brand-300 border border-cinema-border/60 transition-colors"
               >
                 <Clipboard className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-cinema-muted text-center mt-2">
-              Ask your friend for their 6-character room code.
+            <p className="text-[11px] text-cinema-muted text-center mt-2">
+              Ask the room host for their 6-character code.
             </p>
           </div>
 
           <button
             type="submit"
             disabled={loading || !code.trim()}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-xs sm:text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
             {loading ? (
               <span className="animate-pulse">Connecting to Room...</span>
             ) : (
               <>
-                <span>Enter Room Arena</span>
+                <span>ENTER ROOM ARENA</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

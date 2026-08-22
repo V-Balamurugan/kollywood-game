@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Trophy, Flame, Play, Award, ArrowLeft, Film, Sparkles, 
-  Edit3, Check, Zap, Crown, LogOut, History, Users, 
+import {
+  Trophy, Flame, Play, Award, ArrowLeft, Film, Sparkles,
+  Edit3, Check, Zap, Crown, LogOut, History, Users,
   Trash2, Calendar, CheckCircle2, ChevronRight, RefreshCw, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,7 @@ interface ProfileProps {
 }
 
 const AVATAR_SEEDS = [
-  'Thalapathy', 'Superstar', 'Ulaganayagan', 'Chiyaan', 
+  'Thalapathy', 'Superstar', 'Ulaganayagan', 'Chiyaan',
   'Thala', 'Dhanush', 'MakkalSelvan', 'SK', 'Anirudh', 'VijaySethupathi'
 ];
 
@@ -55,7 +55,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
         user.photoURL = selectedAvatar;
         if (user.isGuest) {
           localStorage.setItem(
-            'kollywood_current_guest', 
+            'kollywood_current_guest',
             JSON.stringify({ ...user, displayName: nameInput.trim(), photoURL: selectedAvatar })
           );
         }
@@ -141,30 +141,30 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
+    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 animate-fade-in">
       {/* Top Navigation */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Arena
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Arena</span>
         </button>
 
         {onOpenAdmin && user?.email === 'admin@gmail.com' && (
           <button
             onClick={onOpenAdmin}
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 text-brand-400 border border-cinema-border/70 hover:border-brand-500/40 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-cinema-surface hover:bg-brand-500/20 text-brand-300 border border-cinema-border/70 hover:border-brand-500/40 transition-colors"
           >
             <Film className="w-3.5 h-3.5" />
-            Admin Console
+            <span>Admin Console</span>
           </button>
         )}
       </div>
 
       {savedNotice && (
-        <div className="mb-4 p-2.5 sm:p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center animate-fade-in">
+        <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center animate-fade-in">
           ✓ Profile updated successfully!
         </div>
       )}
@@ -183,7 +183,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
             />
             <button
               onClick={() => setIsAvatarPickerOpen(true)}
-              className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black shadow-md transition-transform hover:scale-105"
+              className="absolute -bottom-1 -right-1 p-1.5 rounded-xl btn-cinema-primary text-black shadow-md transition-transform hover:scale-105"
               title="Change Avatar"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                   />
                   <button
                     onClick={handleSaveProfile}
-                    className="p-1.5 rounded-xl bg-brand-500 text-black font-bold hover:bg-brand-400"
+                    className="p-1.5 rounded-xl btn-cinema-primary text-black font-bold"
                   >
                     <Check className="w-4 h-4" />
                   </button>
@@ -217,7 +217,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                   </h1>
                   <button
                     onClick={() => setIsEditingName(true)}
-                    className="text-cinema-muted hover:text-brand-400 p-1"
+                    className="text-cinema-muted hover:text-brand-300 p-1"
                     title="Edit Name"
                   >
                     <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -225,7 +225,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                 </div>
               )}
 
-              <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full border ${tierColor}`}>
+              <span className={`text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full border ${tierColor}`}>
                 {tierBadge} {tierName}
               </span>
             </div>
@@ -255,7 +255,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
 
       {/* Clean 4-Column Performance Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6 sm:mb-8">
-        <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
           <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {totalScore.toLocaleString()}
@@ -265,7 +265,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           </span>
         </div>
 
-        <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
           <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {bestStreak}x
@@ -275,8 +275,8 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           </span>
         </div>
 
-        <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
-          <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 mx-auto mb-1.5" />
+        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
+          <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {wins}
           </div>
@@ -285,7 +285,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           </span>
         </div>
 
-        <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-cinema-border/70 text-center">
+        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
           <Film className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {totalGames}
@@ -297,7 +297,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       </div>
 
       {/* MATCH & GAME HISTORY SECTION */}
-      <div className="glass-panel rounded-3xl p-4 sm:p-6 border border-cinema-border/80 mb-6 sm:mb-8">
+      <div className="glass-panel rounded-3xl p-4 sm:p-6 border border-cinema-border/80 mb-6 sm:mb-8 shadow-xl">
         {/* Section Header & Filters */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-cinema-border/50 mb-4">
           <div className="flex items-center gap-2">
@@ -314,36 +314,33 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
 
           <div className="flex items-center gap-2">
             {/* Filter Tabs */}
-            <div className="flex items-center bg-cinema-dark p-1 rounded-xl border border-cinema-border/60 text-xs">
+            <div className="flex items-center bg-cinema-dark p-1 rounded-xl border border-cinema-border/60 text-xs font-bold">
               <button
                 onClick={() => setHistoryFilter('all')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
-                  historyFilter === 'all'
-                    ? 'bg-brand-500 text-black'
+                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'all'
+                    ? 'btn-cinema-primary text-black'
                     : 'text-cinema-muted hover:text-white'
-                }`}
+                  }`}
               >
                 All ({gameHistory.length})
               </button>
               <button
                 onClick={() => setHistoryFilter('solo')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
-                  historyFilter === 'solo'
-                    ? 'bg-brand-500 text-black'
+                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'solo'
+                    ? 'btn-cinema-primary text-black'
                     : 'text-cinema-muted hover:text-white'
-                }`}
+                  }`}
               >
                 Solo ({gameHistory.filter(h => h.mode === 'solo').length})
               </button>
               <button
                 onClick={() => setHistoryFilter('multiplayer')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
-                  historyFilter === 'multiplayer'
-                    ? 'bg-brand-500 text-black'
+                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'multiplayer'
+                    ? 'btn-cinema-primary text-black'
                     : 'text-cinema-muted hover:text-white'
-                }`}
+                  }`}
               >
-                Multiplayer ({gameHistory.filter(h => h.mode === 'multiplayer').length})
+                Multi ({gameHistory.filter(h => h.mode === 'multiplayer').length})
               </button>
             </div>
 
@@ -351,7 +348,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
               <button
                 onClick={handleClearHistory}
                 title="Clear Match History"
-                className="p-1.5 rounded-xl bg-cinema-cardHover hover:bg-red-500/20 text-cinema-muted hover:text-red-400 border border-cinema-border transition-colors"
+                className="p-2 rounded-xl bg-cinema-surface hover:bg-rose-500/20 text-cinema-muted hover:text-rose-400 border border-cinema-border/70 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -362,7 +359,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
         {/* History List */}
         {filteredHistory.length === 0 ? (
           <div className="text-center py-8 px-4 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-cinema-cardHover border border-cinema-border text-cinema-muted flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-cinema-surface border border-cinema-border text-cinema-muted flex items-center justify-center mx-auto">
               <Film className="w-6 h-6" />
             </div>
             <div>
@@ -375,10 +372,10 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
             </div>
             <button
               onClick={onStartSolo}
-              className="py-2.5 px-5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black font-bold text-xs shadow-md transition-all inline-flex items-center gap-1.5"
+              className="py-2.5 px-5 rounded-xl btn-cinema-primary text-black font-black text-xs shadow-md transition-all inline-flex items-center gap-1.5"
             >
               <Play className="w-3.5 h-3.5 fill-black" />
-              <span>Play Solo Now</span>
+              <span>PLAY SOLO NOW</span>
             </button>
           </div>
         ) : (
@@ -388,25 +385,24 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
               return (
                 <div
                   key={item.id}
-                  className="p-3 sm:p-3.5 rounded-2xl bg-cinema-cardHover/70 hover:bg-cinema-cardHover border border-cinema-border/50 hover:border-cinema-border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                 >
                   {/* Left: Mode Icon & Date & Movies */}
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className={`p-2 rounded-xl flex-shrink-0 border ${
-                      isMulti 
-                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' 
+                    <div className={`p-2 rounded-xl flex-shrink-0 border ${isMulti
+                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
                         : 'bg-brand-500/15 text-brand-400 border-brand-500/30'
-                    }`}>
+                      }`}>
                       {isMulti ? <Users className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-black text-white">
-                          {isMulti ? '⚡ Live Multiplayer Match' : '🎮 Solo Challenge'}
+                          {isMulti ? '⚡ Live Match' : '🎮 Solo Challenge'}
                         </span>
                         {item.roomCode && (
-                          <span className="text-[10px] font-mono font-bold bg-cinema-dark text-brand-400 px-1.5 py-0.5 rounded border border-cinema-border">
+                          <span className="text-[10px] font-mono font-bold bg-cinema-dark text-amber-300 px-1.5 py-0.5 rounded border border-cinema-border">
                             {item.roomCode}
                           </span>
                         )}
@@ -421,13 +417,13 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                           {item.movieNames.slice(0, 3).map((m, idx) => (
                             <span
                               key={idx}
-                              className="text-[9px] font-semibold text-slate-300 bg-cinema-dark/80 px-2 py-0.5 rounded-md border border-cinema-border/40"
+                              className="text-[9px] font-bold text-slate-300 bg-cinema-dark px-2 py-0.5 rounded-md border border-cinema-border/50"
                             >
                               🎬 {m}
                             </span>
                           ))}
                           {item.movieNames.length > 3 && (
-                            <span className="text-[9px] text-cinema-muted">
+                            <span className="text-[9px] text-cinema-muted font-mono">
                               +{item.movieNames.length - 3} more
                             </span>
                           )}
@@ -440,7 +436,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                   <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-cinema-border/30">
                     <div className="flex items-center gap-2">
                       {item.streak > 1 && (
-                        <span className="text-[10px] font-bold text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[10px] font-black text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Flame className="w-3 h-3" />
                           {item.streak}x
                         </span>
@@ -454,7 +450,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                     {/* Outcome Badge */}
                     {isMulti ? (
                       item.rank === 1 ? (
-                        <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[10px] font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <Crown className="w-3 h-3 text-amber-400" />
                           Winner (#1)
                         </span>
@@ -481,36 +477,36 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       <div className="flex flex-col sm:flex-row justify-center gap-3">
         <button
           onClick={onStartSolo}
-          className="py-3 px-6 rounded-2xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-sm shadow-xl shadow-brand-500/25 hover:brightness-110 active:scale-95 transition-all inline-flex items-center justify-center gap-2"
+          className="py-3.5 px-6 rounded-2xl btn-cinema-primary text-black font-black text-sm shadow-xl active:scale-95 transition-all inline-flex items-center justify-center gap-2"
         >
           <Play className="w-4 h-4 fill-black" />
-          Play Solo Challenge
+          <span>PLAY SOLO CHALLENGE</span>
         </button>
 
         {user?.isGuest ? (
           <>
             <button
               onClick={() => openAuthModal('signup')}
-              className="py-3 px-6 rounded-2xl bg-cinema-cardHover hover:bg-cinema-border/60 border border-cinema-border text-white text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+              className="py-3.5 px-6 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-white text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-brand-400" />
-              Save Progress (Sign Up)
+              <span>SAVE PROGRESS (SIGN UP)</span>
             </button>
             <button
               onClick={signOut}
-              className="py-3 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+              className="py-3.5 px-6 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4" />
-              Exit to Login
+              <span>EXIT TO LOGIN</span>
             </button>
           </>
         ) : (
           <button
             onClick={signOut}
-            className="py-3 px-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2"
+            className="py-3.5 px-6 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
-            Sign Out
+            <span>SIGN OUT</span>
           </button>
         )}
       </div>
@@ -518,7 +514,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       {/* Avatar Picker Modal */}
       {isAvatarPickerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-sm bg-cinema-card border border-cinema-border rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-sm glass-card border border-cinema-border/90 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-cinema-border/50 pb-3">
               <h3 className="text-base font-bold text-white">Choose Your Avatar</h3>
               <button
@@ -537,11 +533,10 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                   <button
                     key={seed}
                     onClick={() => handleSelectAvatar(url)}
-                    className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all p-0.5 ${
-                      isSelected
+                    className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all p-0.5 ${isSelected
                         ? 'border-brand-400 scale-105 shadow-md shadow-brand-500/30 bg-brand-500/20'
                         : 'border-cinema-border/60 hover:border-brand-500/50 bg-cinema-dark'
-                    }`}
+                      }`}
                   >
                     <img src={url} alt={seed} className="w-full h-full object-cover rounded-xl" />
                   </button>
@@ -558,3 +553,4 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
     </div>
   );
 };
+

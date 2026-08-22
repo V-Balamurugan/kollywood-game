@@ -48,38 +48,38 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
     <div className="max-w-xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-semibold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors group"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Home
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Arena</span>
       </button>
 
-      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl">
-        <div className="flex items-center gap-3 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-cinema-border/50">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center shadow-lg shadow-brand-500/10 flex-shrink-0">
+      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl relative overflow-hidden">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/60">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex items-center justify-center shadow-lg shadow-brand-500/10 flex-shrink-0">
             <Users className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-display font-black text-white">Create Custom Match Room</h2>
-            <p className="text-[11px] sm:text-xs text-cinema-muted">Play with custom movies created by you & your friends</p>
+            <h2 className="text-lg sm:text-2xl font-display font-black text-white">Create Match Room</h2>
+            <p className="text-[11px] sm:text-xs text-cinema-muted">Host a live multiplayer arena with friends</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs leading-relaxed">
             {error}
           </div>
         )}
 
-        <div className="space-y-5 sm:space-y-6">
+        <div className="space-y-6">
           {/* Time per Round */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-              Round Timer
+            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
+              ⏱️ Round Timer
             </label>
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2">
               {[
-                { sec: 0, label: '♾️ No Timer' },
+                { sec: 0, label: '♾️ Chill' },
                 { sec: 30, label: '30s' },
                 { sec: 45, label: '45s' },
                 { sec: 60, label: '60s' },
@@ -89,11 +89,10 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
                   key={opt.sec}
                   type="button"
                   onClick={() => setSettings(s => ({ ...s, roundTimeSeconds: opt.sec }))}
-                  className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                    settings.roundTimeSeconds === opt.sec
-                      ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
-                      : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
-                  }`}
+                  className={`py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${settings.roundTimeSeconds === opt.sec
+                      ? 'btn-cinema-primary text-black border-amber-400'
+                      : 'bg-cinema-surface text-slate-300 border-cinema-border/70 hover:text-white hover:border-brand-500/40'
+                    }`}
                 >
                   {opt.label}
                 </button>
@@ -103,12 +102,12 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
 
           {/* Difficulty Selection */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-              Difficulty Pool
+            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
+              🎬 Difficulty Pool
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {([
-                { id: 'all', label: '🎲 Mixed (All)' },
+                { id: 'all', label: '🎲 All Era' },
                 { id: 'easy', label: '⚡ Easy' },
                 { id: 'medium', label: '🔥 Medium' },
                 { id: 'hard', label: '💀 Hard' }
@@ -117,11 +116,10 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
                   key={diff.id}
                   type="button"
                   onClick={() => setSettings(s => ({ ...s, difficulty: diff.id }))}
-                  className={`py-2 sm:py-2.5 rounded-xl text-xs font-bold border tracking-wider transition-all ${
-                    settings.difficulty === diff.id
-                      ? 'bg-brand-500 text-black border-brand-500 shadow-md shadow-brand-500/20'
-                      : 'bg-cinema-cardHover text-slate-300 border-cinema-border/60 hover:text-white'
-                  }`}
+                  className={`py-2.5 rounded-xl text-xs font-black border tracking-wider transition-all active:scale-95 ${settings.difficulty === diff.id
+                      ? 'btn-cinema-primary text-black border-amber-400'
+                      : 'bg-cinema-surface text-slate-300 border-cinema-border/70 hover:text-white hover:border-brand-500/40'
+                    }`}
                 >
                   {diff.label}
                 </button>
@@ -129,8 +127,8 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-cinema-dark/80 border border-cinema-border/60 text-[11px] sm:text-xs text-cinema-muted flex items-center gap-2.5 sm:gap-3">
-            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 flex-shrink-0" />
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-cinema-surface border border-cinema-border/80 text-[11px] sm:text-xs text-cinema-muted flex items-center gap-3">
+            <Shield className="w-5 h-5 text-brand-400 flex-shrink-0" />
             <span>
               A unique 6-character room code will be generated. You can invite friends to battle live.
             </span>
@@ -139,13 +137,13 @@ export const CreateRoom: React.FC<CreateRoomProps> = ({ onRoomCreated, onBack })
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-400 via-brand-500 to-amber-500 text-black font-black text-xs sm:text-sm shadow-xl shadow-brand-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
             {loading ? (
-              <span className="animate-pulse">Generating Room...</span>
+              <span className="animate-pulse">Generating Arena Room...</span>
             ) : (
               <>
-                <span>Create Arena & Go to Lobby</span>
+                <span>CREATE ARENA & GO TO LOBBY</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

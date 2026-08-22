@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, Film, Search, Plus, Trash2, Edit, Check, X, 
-  Users, RefreshCw, Sparkles, Play, ExternalLink, ShieldCheck, 
+import {
+  ArrowLeft, Film, Search, Plus, Trash2, Edit, Check, X,
+  Users, RefreshCw, Sparkles, Play, ExternalLink, ShieldCheck,
   Trophy, Flame, Award, AlertCircle, Database, Lock, Key, LogOut, ShieldAlert
 } from 'lucide-react';
 import { Puzzle, UserProfile } from '../types/game';
 import { getAllPuzzles, addPuzzle, updatePuzzle, deletePuzzle, resetPuzzlesToDefault, syncGlobalCustomPuzzles } from '../services/puzzleManager';
 import { getAllStoredUsers, deleteStoredUser, resetUserStats } from '../services/userManager';
 import { useAuth } from '../context/AuthContext';
+import {
+  searchMovieCandidates,
+  fetchFullMovieDetailsByQid,
+  MovieCandidate,
+  FullMovieDetails,
+  FullCastPerson
+} from '../services/wikidataCast';
 
 const ADMIN_EMAIL = 'admin@gmail.com';
 const ADMIN_PASS = 'admin@02072006';
@@ -19,7 +26,7 @@ interface AdminProps {
 
 export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const { user } = useAuth();
-  
+
   // Admin Login Security Gate State
   const [isAdminAuth, setIsAdminAuth] = useState<boolean>(() => {
     return (
@@ -33,31 +40,48 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const [authError, setAuthError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'movies' | 'users'>('movies');
-  
+
   // Movie State
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
-  
+
   // Modal State for Add / Edit Movie
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [omdbLoading, setOmdbLoading] = useState(false);
-  const [omdbNotice, setOmdbNotice] = useState<string | null>(null);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const [fetchNotice, setFetchNotice] = useState<string | null>(null);
 
-  // Form Fields
+  // Form Fields & Auto-Fetch State
   const [movieName, setMovieName] = useState('');
   const [movieYear, setMovieYear] = useState<number>(2024);
   const [moviePoster, setMoviePoster] = useState('');
   const [director, setDirector] = useState('');
-  const [heroName, setHeroName] = useState('');
-  const [heroPhoto, setHeroPhoto] = useState('');
-  const [heroineName, setHeroineName] = useState('');
-  const [heroinePhoto, setHeroinePhoto] = useState('');
-  const [songName, setSongName] = useState('');
-  const [youtubeId, setYoutubeId] = useState('');
+  const [musicDirector, setMusicDirector] = useState('');
+  const [genre, setGenre] = useState('Action / Drama');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [trivia, setTrivia] = useState('');
+
+  // Hero Fields
+  const [heroName, setHeroName] = useState(''); // Director display name
+  const [heroCanonicalName, setHeroCanonicalName] = useState('');
+  const [heroPhoto, setHeroPhoto] = useState('');
+  const [heroQid, setHeroQid] = useState('');
+
+  // Heroine Fields
+  const [heroineName, setHeroineName] = useState(''); // Director display name
+  const [heroineCanonicalName, setHeroineCanonicalName] = useState('');
+  const [heroinePhoto, setHeroinePhoto] = useState('');
+  const [heroineQid, setHeroineQid] = useState('');
+
+  // Song Fields
+  const [songName, setSongName] = useState('');
+  const [youtubeId, setYoutubeId] = useState('');
+
+  // Disambiguation & Cast State
+  const [candidates, setCandidates] = useState<MovieCandidate[]>([]);
+  const [fetchedDetails, setFetchedDetails] = useState<FullMovieDetails | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string | null>(null);
 
   // User Management State
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -108,66 +132,76 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     setUsers(getAllStoredUsers());
   };
 
-  // OMDB Auto-fetch for Movie Poster and Director
-  const handleOmdbFetch = async () => {
+  // Step 1: Search movie candidates for disambiguation
+  const handleAutoFetchMovie = async () => {
     if (!movieName.trim()) return;
-    setOmdbLoading(true);
-    setOmdbNotice(null);
-
-    const apiKey = import.meta.env.VITE_OMDB_API_KEY || '140528bd';
+    setIsFetchingData(true);
+    setCandidates([]);
+    setLoadingStep('🎬 Searching Wikidata for Tamil cinema matches...');
 
     try {
-      let url = `https://www.omdbapi.com/?t=${encodeURIComponent(movieName.trim())}&apikey=${apiKey}`;
-      if (movieYear) url += `&y=${movieYear}`;
+      const results = await searchMovieCandidates(movieName.trim());
 
-      let res = await fetch(url);
-      let data = await res.json();
-
-      // If not found with year or direct match, try without year
-      if (data.Response !== 'True' && movieYear) {
-        const fallbackUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(movieName.trim())}&apikey=${apiKey}`;
-        const fallbackRes = await fetch(fallbackUrl);
-        const fallbackData = await fallbackRes.json();
-        if (fallbackData.Response === 'True') {
-          data = fallbackData;
-        }
-      }
-
-      // If still not found, try search query
-      if (data.Response !== 'True') {
-        const searchUrl = `https://www.omdbapi.com/?s=${encodeURIComponent(movieName.trim())}&type=movie&apikey=${apiKey}`;
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
-        if (searchData.Response === 'True' && searchData.Search && searchData.Search.length > 0) {
-          const detailRes = await fetch(`https://www.omdbapi.com/?i=${searchData.Search[0].imdbID}&apikey=${apiKey}`);
-          const detailData = await detailRes.json();
-          if (detailData.Response === 'True') {
-            data = detailData;
-          }
-        }
-      }
-
-      if (data.Response === 'True') {
-        if (data.Poster && data.Poster !== 'N/A') {
-          setMoviePoster(data.Poster);
-        }
-        if (data.Director && data.Director !== 'N/A') {
-          setDirector(data.Director);
-        }
-        if (data.Plot && data.Plot !== 'N/A') {
-          setTrivia(data.Plot);
-        }
-        if (data.Year) {
-          setMovieYear(parseInt(data.Year, 10) || movieYear);
-        }
-        setOmdbNotice(`✓ Found Film: ${data.Title} (${data.Year})`);
+      if (results.length === 0) {
+        setLoadingStep(null);
+        setFetchNotice(`No exact Wikidata matches found for "${movieName}". Please enter details manually.`);
+      } else if (results.length === 1) {
+        await handleSelectCandidate(results[0]);
       } else {
-        setOmdbNotice(data.Error || 'Movie not found on OMDB. You can manually enter poster URL.');
+        setCandidates(results);
+        setLoadingStep(null);
+        setFetchNotice(`Found ${results.length} film versions. Please select the specific movie below:`);
       }
     } catch (e: any) {
-      setOmdbNotice(e?.message ? `Failed to connect to OMDB API: ${e.message}` : 'Failed to connect to OMDB API.');
+      setLoadingStep(null);
+      setFetchNotice(e?.message ? `Lookup notice: ${e.message}` : 'Lookup notice.');
     } finally {
-      setOmdbLoading(false);
+      setIsFetchingData(false);
+    }
+  };
+
+  // Step 2: Fetch full details for a chosen candidate
+  const handleSelectCandidate = async (candidate: MovieCandidate) => {
+    setIsFetchingData(true);
+    setCandidates([]);
+    setLoadingStep('🔎 Resolving film metadata, director & music composer...');
+
+    try {
+      setLoadingStep('👥 Finding main cast & extracting character roles...');
+      const details = await fetchFullMovieDetailsByQid(candidate.qid, candidate.cleanTitle);
+      setLoadingStep('🖼️ Retrieving Wikimedia Commons profile pictures...');
+
+      if (details) {
+        setFetchedDetails(details);
+        setMovieName(details.movieTitle);
+        setMovieYear(details.year || candidate.year || 2024);
+        if (details.director) setDirector(details.director);
+        if (details.musicDirector) setMusicDirector(details.musicDirector);
+        if (details.genre) setGenre(details.genre);
+        if (details.overview || candidate.snippet) setTrivia(details.overview || candidate.snippet);
+        if (details.posterUrl) setMoviePoster(details.posterUrl);
+
+        if (details.hero) {
+          setHeroCanonicalName(details.hero.canonicalName);
+          setHeroName(details.hero.suggestedDisplayName);
+          setHeroPhoto(details.hero.imageUrl || '');
+          setHeroQid(details.hero.id);
+        }
+
+        if (details.heroine) {
+          setHeroineCanonicalName(details.heroine.canonicalName);
+          setHeroineName(details.heroine.suggestedDisplayName);
+          setHeroinePhoto(details.heroine.imageUrl || '');
+          setHeroineQid(details.heroine.id);
+        }
+
+        setFetchNotice(`✨ Auto-filled "${details.movieTitle}" (${details.year}) from Wikidata! You can adjust display names below.`);
+      }
+    } catch (err) {
+      setFetchNotice('Failed to fetch detailed cast. Please input names manually.');
+    } finally {
+      setLoadingStep(null);
+      setIsFetchingData(false);
     }
   };
 
@@ -177,15 +211,24 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     setMovieYear(2024);
     setMoviePoster('');
     setDirector('');
+    setMusicDirector('');
+    setGenre('Action / Drama');
     setHeroName('');
+    setHeroCanonicalName('');
     setHeroPhoto('');
+    setHeroQid('');
     setHeroineName('');
+    setHeroineCanonicalName('');
     setHeroinePhoto('');
+    setHeroineQid('');
     setSongName('');
     setYoutubeId('');
     setDifficulty('easy');
     setTrivia('');
-    setOmdbNotice(null);
+    setCandidates([]);
+    setFetchedDetails(null);
+    setFetchNotice(null);
+    setLoadingStep(null);
     setIsModalOpen(true);
   };
 
@@ -195,15 +238,24 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
     setMovieYear(p.year || 2024);
     setMoviePoster(p.movie.imageUrl || '');
     setDirector(p.director || '');
-    setHeroName(p.hero.name);
+    setMusicDirector(p.musicDirector || '');
+    setGenre(p.genre || 'Action / Drama');
+    setHeroName(p.hero.displayName || p.hero.name);
+    setHeroCanonicalName(p.hero.canonicalName || p.hero.name);
     setHeroPhoto(p.hero.imageUrl || '');
-    setHeroineName(p.heroine.name);
+    setHeroQid(p.hero.wikidataId || '');
+    setHeroineName(p.heroine.displayName || p.heroine.name);
+    setHeroineCanonicalName(p.heroine.canonicalName || p.heroine.name);
     setHeroinePhoto(p.heroine.imageUrl || '');
+    setHeroineQid(p.heroine.wikidataId || '');
     setSongName(p.song.name);
     setYoutubeId(p.song.youtubeId || '');
     setDifficulty(p.difficulty);
     setTrivia(p.trivia || '');
-    setOmdbNotice(null);
+    setCandidates([]);
+    setFetchedDetails(null);
+    setFetchNotice(null);
+    setLoadingStep(null);
     setIsModalOpen(true);
   };
 
@@ -221,27 +273,41 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
       year: movieYear,
       difficulty,
       director: director.trim() || 'Kollywood Cinema',
+      musicDirector: musicDirector.trim() || 'Tamil Music',
+      genre: genre.trim() || 'Kollywood Blockbuster',
       trivia: trivia.trim() || `Blockbuster Tamil film starring ${heroName} & ${heroineName}`,
+      wikidataId: fetchedDetails?.qid,
+      posterUrl: moviePoster.trim() || undefined,
       movie: {
         name: movieName.trim(),
+        displayName: movieName.trim(),
+        canonicalName: fetchedDetails?.movieTitle || movieName.trim(),
+        wikidataId: fetchedDetails?.qid,
         firstLetter: movieName.trim().charAt(0).toUpperCase(),
         imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${movieName.trim()}`,
-        aliases: [movieName.trim()]
+        aliases: [movieName.trim(), fetchedDetails?.movieTitle].filter(Boolean) as string[]
       },
       hero: {
         name: heroName.trim(),
+        displayName: heroName.trim(),
+        canonicalName: heroCanonicalName || heroName.trim(),
+        wikidataId: heroQid || undefined,
         firstLetter: heroName.trim().charAt(0).toUpperCase(),
         imageUrl: heroPhoto.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroName.trim()}`,
-        aliases: [heroName.trim()]
+        aliases: [heroName.trim(), heroCanonicalName].filter(Boolean) as string[]
       },
       heroine: {
         name: heroineName.trim(),
+        displayName: heroineName.trim(),
+        canonicalName: heroineCanonicalName || heroineName.trim(),
+        wikidataId: heroineQid || undefined,
         firstLetter: heroineName.trim().charAt(0).toUpperCase(),
         imageUrl: heroinePhoto.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroineName.trim()}`,
-        aliases: [heroineName.trim()]
+        aliases: [heroineName.trim(), heroineCanonicalName].filter(Boolean) as string[]
       },
       song: {
         name: songName.trim(),
+        displayName: songName.trim(),
         firstLetter: songName.trim().charAt(0).toUpperCase(),
         youtubeId: youtubeId.trim() || undefined,
         aliases: [songName.trim()]
@@ -383,7 +449,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   // Filtered Movies
   const filteredPuzzles = puzzles.filter(p => {
-    const matchesSearch = 
+    const matchesSearch =
       p.movie.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.hero.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.heroine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -396,7 +462,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   });
 
   // Filtered Users
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     (u.displayName || '').toLowerCase().includes(userSearch.toLowerCase()) ||
     (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
   );
@@ -426,7 +492,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
             Kollywood Master Admin Control Center
           </h1>
           <p className="text-xs text-cinema-muted">
-            Manage official database movie puzzles, OMDB scraper, user accounts, and stats
+            Manage official database movie puzzles, Wikidata auto-fetch, user accounts, and stats
           </p>
         </div>
 
@@ -434,11 +500,10 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
         <div className="flex flex-wrap items-center gap-2 bg-cinema-dark/90 p-1.5 rounded-2xl border border-cinema-border/70">
           <button
             onClick={() => setActiveTab('movies')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'movies'
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'movies'
                 ? 'bg-brand-500 text-black shadow-md shadow-brand-500/20'
                 : 'text-slate-400 hover:text-white'
-            }`}
+              }`}
           >
             <Film className="w-4 h-4" />
             <span>Movies & Puzzles ({puzzles.length})</span>
@@ -446,11 +511,10 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
           <button
             onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'users'
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'users'
                 ? 'bg-brand-500 text-black shadow-md shadow-brand-500/20'
                 : 'text-slate-400 hover:text-white'
-            }`}
+              }`}
           >
             <Users className="w-4 h-4" />
             <span>Users & Players ({users.length})</span>
@@ -539,11 +603,10 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                           Dir: {p.director || 'Tamil Cinema'}
                         </span>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
-                            p.difficulty === 'easy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
-                            p.difficulty === 'medium' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
-                            'bg-red-500/15 text-red-400 border border-red-500/30'
-                          }`}>
+                          <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded uppercase ${p.difficulty === 'easy' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                              p.difficulty === 'medium' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
+                                'bg-red-500/15 text-red-400 border border-red-500/30'
+                            }`}>
                             {p.difficulty}
                           </span>
                           {p.createdBy && (
@@ -732,76 +795,250 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
       {/* ADD / EDIT MOVIE MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-cinema-card border border-cinema-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-brand-500/10 my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl glass-card border border-cinema-border/90 rounded-3xl p-6 sm:p-8 shadow-2xl my-8 max-h-[94vh] overflow-y-auto">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-cinema-cardHover text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 p-2 rounded-xl bg-cinema-surface hover:bg-cinema-cardHover text-slate-400 hover:text-white border border-cinema-border/60 transition-colors shadow-sm"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center text-black">
-                <Film className="w-5 h-5" />
+            <div className="flex items-center gap-3 mb-5 pr-8">
+              <div className="w-11 h-11 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex items-center justify-center shadow-lg shadow-brand-500/10 flex-shrink-0">
+                <Film className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-xl font-display font-black text-white">
                   {editingId ? 'Edit Official Movie' : 'Add Official Movie to Database'}
                 </h3>
                 <p className="text-xs text-cinema-muted">
-                  Official Kollywood database movies are available across all game modes.
+                  Auto-fetch info from Wikidata & control the exact display names players guess.
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleSaveMovie} className="space-y-4">
-              {/* OMDB Auto-fetch Toolbar */}
-              <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                <div className="flex-1">
-                  <span className="text-xs font-bold text-white block">OMDB Scraper Integration</span>
-                  <p className="text-[11px] text-cinema-muted">
-                    Enter Tamil movie title and click Fetch to auto-fill poster, director & plot.
-                  </p>
-                </div>
+            {/* Smart Auto-Fetch Search Toolbar */}
+            <div className="p-3.5 rounded-2xl bg-cinema-surface border border-cinema-border/80 mb-4 space-y-2">
+              <label className="block text-xs font-black text-slate-200 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-brand-400">
+                  <Search className="w-3.5 h-3.5" />
+                  Auto-Fetch Movie Data (Wikidata & Wikipedia):
+                </span>
+                <span className="text-[10px] text-cinema-muted font-bold">e.g. Leo, Vikram, Master, 96, Ghilli</span>
+              </label>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter movie title to auto-fetch..."
+                  value={movieName}
+                  onChange={(e) => setMovieName(e.target.value)}
+                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-medium placeholder:text-cinema-muted/60"
+                />
                 <button
                   type="button"
-                  onClick={handleOmdbFetch}
-                  disabled={omdbLoading || !movieName.trim()}
-                  className="py-2 px-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                  onClick={handleAutoFetchMovie}
+                  disabled={isFetchingData || !movieName.trim()}
+                  className="py-2.5 px-4 rounded-xl btn-cinema-primary text-black text-xs font-black flex items-center justify-center gap-1.5 shadow-md flex-shrink-0 disabled:opacity-50 active:scale-95 transition-all"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{omdbLoading ? 'Fetching...' : 'Auto-Fetch from OMDB'}</span>
+                  <Sparkles className={`w-4 h-4 ${isFetchingData ? 'animate-spin' : ''}`} />
+                  <span>{isFetchingData ? 'Fetching...' : '⚡ Auto-Fetch'}</span>
                 </button>
               </div>
+            </div>
 
-              {omdbNotice && (
-                <div className="p-2.5 rounded-xl bg-cinema-dark border border-brand-500/30 text-xs text-brand-300">
-                  {omdbNotice}
+            {/* Loading State Banner */}
+            {loadingStep && (
+              <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 mb-3 text-xs text-brand-300 font-bold flex items-center gap-2 animate-pulse">
+                <Sparkles className="w-4 h-4 text-brand-400 animate-spin" />
+                <span>{loadingStep}</span>
+              </div>
+            )}
+
+            {/* Disambiguation Candidates */}
+            {candidates.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4 space-y-2">
+                <span className="text-xs font-black text-amber-300 uppercase block">
+                  Multiple Versions Found — Select One:
+                </span>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {candidates.map((c) => (
+                    <div
+                      key={c.qid}
+                      className="p-2 rounded-xl bg-cinema-dark border border-cinema-border/80 flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="truncate flex-1">
+                        <span className="font-bold text-xs text-white">{c.cleanTitle}</span>
+                        {c.year && <span className="ml-1.5 text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-bold border border-brand-500/30">{c.year}</span>}
+                        <p className="text-[10px] text-cinema-muted truncate">{c.snippet}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCandidate(c)}
+                        className="py-1 px-2.5 rounded-lg btn-cinema-primary text-black text-xs font-bold transition-colors"
+                      >
+                        Select
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
+            {fetchNotice && (
+              <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 text-xs text-brand-300 font-medium mb-3">
+                {fetchNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveMovie} className="space-y-4">
               {/* Movie Title & Year */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Movie Name *</label>
+                  <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">Movie Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Leo, Jailer, Vikram"
                     value={movieName}
                     onChange={(e) => setMovieName(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Release Year</label>
+                  <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">Release Year</label>
                   <input
                     type="number"
                     value={movieYear}
                     onChange={(e) => setMovieYear(parseInt(e.target.value, 10) || 2024)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Movie Poster Banner (Wikidata / Wikimedia Commons Auto-Fetched) */}
+              <div className="p-3 rounded-xl bg-cinema-dark border border-cinema-border/80 space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-cinema-surface border border-cinema-border flex-shrink-0">
+                    {moviePoster ? (
+                      <img src={moviePoster} alt={movieName} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-cinema-muted">
+                        Poster
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-black text-slate-300 uppercase tracking-wider">
+                        Movie Poster Banner (Wikidata & Wikimedia Commons)
+                      </label>
+                      {moviePoster && (
+                        <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-bold border border-brand-500/30">
+                          Poster Active
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      placeholder="Poster URL (auto-fetched from Wikidata or custom)"
+                      value={moviePoster}
+                      onChange={(e) => setMoviePoster(e.target.value)}
+                      className="w-full bg-cinema-surface border border-cinema-border focus:border-brand-500 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none placeholder:text-cinema-muted/60"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2x2 MAIN CAST REVIEW & DIRECTOR DISPLAY NAMES */}
+              <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 space-y-3">
+                <span className="text-xs font-black font-display text-white uppercase tracking-wider block">
+                  ⭐ Main Cast & Director-Controlled Display Names
+                </span>
+
+                {/* Hero Section */}
+                <div className="p-3 rounded-xl card-category-hero border border-amber-500/30 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-cinema-dark border border-amber-500/30 flex-shrink-0">
+                      {heroPhoto ? (
+                        <img src={heroPhoto} alt={heroName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-amber-400 font-bold">Photo</div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-amber-300 uppercase">Hero (Lead Actor) *</span>
+                        {heroCanonicalName && (
+                          <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/30">
+                            API: {heroCanonicalName}
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Player-facing display name (e.g. Vijay)"
+                        value={heroName}
+                        onChange={(e) => setHeroName(e.target.value)}
+                        className="w-full bg-cinema-dark border border-amber-500/40 focus:border-amber-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Heroine Section */}
+                <div className="p-3 rounded-xl card-category-heroine border border-rose-500/30 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-cinema-dark border border-rose-500/30 flex-shrink-0">
+                      {heroinePhoto ? (
+                        <img src={heroinePhoto} alt={heroineName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-rose-400 font-bold">Photo</div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-rose-300 uppercase">Heroine (Lead Actress) *</span>
+                        {heroineCanonicalName && (
+                          <span className="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold border border-rose-500/30">
+                            API: {heroineCanonicalName}
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Player-facing display name (e.g. Trisha)"
+                        value={heroineName}
+                        onChange={(e) => setHeroineName(e.target.value)}
+                        className="w-full bg-cinema-dark border border-rose-500/40 focus:border-rose-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Song Section */}
+                <div className="p-3 rounded-xl card-category-song border border-purple-500/30 space-y-1.5">
+                  <span className="text-xs font-black text-purple-300 uppercase block">Hit Song & Audio Clue *</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Song Title (e.g. Naa Ready)"
+                      value={songName}
+                      onChange={(e) => setSongName(e.target.value)}
+                      className="w-full bg-cinema-dark border border-purple-500/40 focus:border-purple-400 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="YouTube ID (e.g. szvt1vD0Uug)"
+                      value={youtubeId}
+                      onChange={(e) => setYoutubeId(e.target.value)}
+                      className="w-full bg-cinema-dark border border-purple-500/40 focus:border-purple-400 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -814,7 +1051,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                     placeholder="e.g. Lokesh Kanagaraj, Nelson, Shankar"
                     value={director}
                     onChange={(e) => setDirector(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                   />
                 </div>
                 <div>
@@ -822,75 +1059,12 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                   <select
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                   >
                     <option value="easy">Easy (Blockbusters & Popular Hits)</option>
                     <option value="medium">Medium (Standard Cinephile Hits)</option>
                     <option value="hard">Hard (Classic / Cult / Tricky Clues)</option>
                   </select>
-                </div>
-              </div>
-
-              {/* Poster URL */}
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Poster Image URL</label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={moviePoster}
-                  onChange={(e) => setMoviePoster(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
-                />
-              </div>
-
-              {/* Hero & Heroine */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Lead Actor (Hero) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Vijay, Rajinikanth, Kamal"
-                    value={heroName}
-                    onChange={(e) => setHeroName(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Lead Actress (Heroine) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Trisha, Nayanthara, Samantha"
-                    value={heroineName}
-                    onChange={(e) => setHeroineName(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
-                  />
-                </div>
-              </div>
-
-              {/* Song & YouTube Link */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Hit Song Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Naa Ready, Hukum, Arabic Kuthu"
-                    value={songName}
-                    onChange={(e) => setSongName(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">YouTube Video ID (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. szvt1vD0Uug"
-                    value={youtubeId}
-                    onChange={(e) => setYoutubeId(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500"
-                  />
                 </div>
               </div>
 
@@ -902,24 +1076,24 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
                   placeholder="e.g. An iconic action thriller set in Kashmir with an animal sanctuary owner..."
                   value={trivia}
                   onChange={(e) => setTrivia(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500 resize-none"
+                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none resize-none"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex gap-3 pt-3">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 rounded-2xl bg-cinema-cardHover border border-cinema-border text-slate-300 text-xs font-bold hover:text-white"
+                  className="flex-1 py-3 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-slate-300 hover:text-white text-xs font-bold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-2xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-bold shadow-lg shadow-brand-500/20"
+                  className="flex-1 py-3.5 rounded-2xl btn-cinema-primary text-black text-xs font-black shadow-xl shadow-brand-500/20 active:scale-95 transition-all"
                 >
-                  {editingId ? 'Save Changes' : 'Add to Master Database'}
+                  {editingId ? 'Save Changes' : '💾 Add to Master Database'}
                 </button>
               </div>
             </form>
