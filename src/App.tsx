@@ -30,12 +30,27 @@ import { Footer } from './components/Footer';
 
 export const AppContent: React.FC = () => {
   const { hasEntered, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<AppView>('home');
+  const [currentView, setCurrentView] = useState<AppView>(() => {
+    if (typeof window === 'undefined') return 'home';
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view')?.toLowerCase() || params.get('page')?.toLowerCase();
+
+    if (path.includes('/admin') || hash.includes('admin') || viewParam === 'admin') {
+      return 'admin';
+    }
+    if (path.includes('/library') || hash.includes('library') || viewParam === 'library') {
+      return 'library';
+    }
+    return 'home';
+  });
+
   const [activeRoomCode, setActiveRoomCode] = useState<string | null>(null);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [soloCustomPuzzle, setSoloCustomPuzzle] = useState<Puzzle | null>(null);
 
-  // Check URL parameters and paths on mount for deep-linked room codes or /admin /library routes
+  // Check URL parameters and paths on mount and updates for deep-linked room codes or /admin /library routes
   useEffect(() => {
     const handleUrlRouting = () => {
       // Check stored SPA redirect if any from 404.html fallback

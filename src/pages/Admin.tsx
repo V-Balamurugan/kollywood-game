@@ -18,7 +18,7 @@ import {
 
 const ADMIN_EMAIL = 'admin@gmail.com';
 const ADMIN_PASS = 'admin@02072006';
-const ADMIN_SESSION_KEY = 'kollywood_admin_auth_active';
+const ADMIN_STORAGE_KEY = 'kollywood_admin_auth_active';
 
 interface AdminProps {
   onBack: () => void;
@@ -29,9 +29,11 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   // Admin Login Security Gate State
   const [isAdminAuth, setIsAdminAuth] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
     return (
-      (user && user.email === ADMIN_EMAIL) ||
-      sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'
+      (user && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ||
+      localStorage.getItem(ADMIN_STORAGE_KEY) === 'true' ||
+      sessionStorage.getItem(ADMIN_STORAGE_KEY) === 'true'
     );
   });
 
@@ -42,7 +44,7 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'movies' | 'users'>('movies');
 
   // Movie State
-  const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
+  const [puzzles, setPuzzles] = useState<Puzzle[]>(() => getAllPuzzles());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
 
@@ -89,9 +91,10 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   // Auto-authenticate if logged in with admin email
   useEffect(() => {
-    if (user && user.email === ADMIN_EMAIL) {
+    if (user && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       setIsAdminAuth(true);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+      sessionStorage.setItem(ADMIN_STORAGE_KEY, 'true');
     }
   }, [user]);
 
@@ -113,7 +116,8 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
     if (emailTrim === ADMIN_EMAIL.toLowerCase() && passTrim === ADMIN_PASS) {
       setIsAdminAuth(true);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+      sessionStorage.setItem(ADMIN_STORAGE_KEY, 'true');
       setPuzzles(getAllPuzzles());
       syncGlobalCustomPuzzles().then(synced => setPuzzles(synced));
       setUsers(getAllStoredUsers());
@@ -124,7 +128,8 @@ export const Admin: React.FC<AdminProps> = ({ onBack }) => {
 
   const handleAdminLogout = () => {
     setIsAdminAuth(false);
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    localStorage.removeItem(ADMIN_STORAGE_KEY);
+    sessionStorage.removeItem(ADMIN_STORAGE_KEY);
     setInputEmail('');
     setInputPass('');
   };
