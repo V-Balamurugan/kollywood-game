@@ -121,13 +121,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     setLastFeedback({ hero: null, heroine: null, movie: null, song: null });
   }, [puzzle?.id, puzzle?.movie?.name]);
 
+  // Safe director hints normalization
+  const safeDirectorHints: DirectorHint[] = Array.isArray(directorHints)
+    ? directorHints
+    : (directorHints && typeof directorHints === 'object' ? Object.values(directorHints) : []);
+
   // Audio cue when new hint arrives and reset request state so player can request again if needed
   useEffect(() => {
-    if (directorHints.length > 0) {
+    if (safeDirectorHints.length > 0) {
       sound.playHint();
       setHasRequestedDirector(false);
     }
-  }, [directorHints.length]);
+  }, [safeDirectorHints.length]);
 
   const handleInputChange = (category: CellCategory, val: string) => {
     setInputs(prev => ({ ...prev, [category]: val }));
@@ -253,7 +258,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* 🎬 DIRECTOR'S BROADCAST CLUES */}
-      {directorHints.length > 0 && (
+      {safeDirectorHints.length > 0 && (
         <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-cinema-surface border border-brand-500/60 shadow-xl shadow-brand-500/15 space-y-2.5 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-1">
             <div className="flex items-center gap-2 text-xs font-display font-black text-amber-300">
@@ -261,14 +266,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <span>DIRECTOR'S LIVE BROADCAST</span>
             </div>
             <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">
-              From {directorHints[directorHints.length - 1]?.fromName || 'Director'}
+              From {safeDirectorHints[safeDirectorHints.length - 1]?.fromName || 'Director'}
             </span>
           </div>
 
           <div className="space-y-1.5">
-            {directorHints.map((dh) => (
+            {safeDirectorHints.map((dh) => (
               <div
-                key={dh.id}
+                key={dh.id || `hint-${dh.timestamp}`}
                 className="p-2.5 rounded-xl bg-cinema-dark/90 border border-brand-500/40 text-xs text-white font-semibold flex items-start gap-2 shadow-sm"
               >
                 <span className="text-amber-400 font-bold">🎬</span>

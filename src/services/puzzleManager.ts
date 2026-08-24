@@ -70,9 +70,13 @@ export function addOrUpdatePuzzle(puzzle: Puzzle): Puzzle[] {
 export function addPuzzleIfNotExists(puzzle: Puzzle): { added: boolean; list: Puzzle[] } {
   const current = getAllPuzzles();
   const normalizedTitle = puzzle.movie.name.toLowerCase().trim();
+  const normalizedCanonical = puzzle.movie.canonicalName?.toLowerCase().trim();
   
   const alreadyExists = current.some(
-    p => p.id === puzzle.id || p.movie.name.toLowerCase().trim() === normalizedTitle
+    p => p.id === puzzle.id ||
+         p.movie.name.toLowerCase().trim() === normalizedTitle ||
+         (normalizedCanonical && p.movie.canonicalName?.toLowerCase().trim() === normalizedCanonical) ||
+         (p.wikidataId && puzzle.wikidataId && p.wikidataId === puzzle.wikidataId)
   );
 
   if (alreadyExists) {

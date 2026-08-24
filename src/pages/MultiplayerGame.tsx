@@ -5,7 +5,7 @@ import { LiveScoreboard } from '../components/LiveScoreboard';
 import { GameResultModal } from '../components/GameResultModal';
 import { CreatePuzzleModal } from '../components/CreatePuzzleModal';
 import { DirectorConsole } from '../components/DirectorConsole';
-import { CellCategory, Puzzle, CellAnswer, Room } from '../types/game';
+import { CellCategory, Puzzle, CellAnswer, Room, DirectorHint, HintRequest } from '../types/game';
 import { subscribeToRoom, submitSharedCellAnswer, advanceRound, updateUserStats, setCustomPuzzleAndStart, awardCreatorHintBounty, requestDirectorHint, sendDirectorHint, kickPlayerFromRoom, leaveRoom, voteNextRound } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { getAllPuzzles } from '../services/puzzleManager';
@@ -189,6 +189,18 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
       : (currentPuzzle.createdBy && currentPuzzle.createdBy === user.displayName)
   );
 
+  const totalPlayersCount = Object.keys(room.players || {}).length;
+  // If director is the only player in the room (e.g. testing), allow interactive play; otherwise act as director spectator
+  const isSpectator = isCreatorOfMovie && totalPlayersCount > 1;
+
+  const safeDirectorHints: DirectorHint[] = Array.isArray(room.directorHints)
+    ? room.directorHints
+    : (room.directorHints && typeof room.directorHints === 'object' ? (Object.values(room.directorHints) as DirectorHint[]) : []);
+
+  const safeHintRequests: HintRequest[] = Array.isArray(room.hintRequests)
+    ? room.hintRequests
+    : (room.hintRequests && typeof room.hintRequests === 'object' ? (Object.values(room.hintRequests) as HintRequest[]) : []);
+
   const myPlayer = (room.players && room.players[user.uid]) || {
     uid: user.uid,
     name: user.displayName || 'Player',
@@ -200,8 +212,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   const isFinal = room.status === 'finished';
 
   const handleCellSolved = async (category: CellCategory, answer: CellAnswer) => {
-    // If user is creator, they cannot submit guesses
-    if (isCreatorOfMovie) return;
+    // If user is in spectator mode, they cannot submit guesses
+    if (isSpectator) return;
 
     const points = Math.max(50, 250 - answer.hintsUsed * 50);
     await submitSharedCellAnswer(
@@ -365,8 +377,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             <DirectorConsole
               puzzle={currentPuzzle}
               directorName={user.displayName || 'Director'}
-              hintRequests={room.hintRequests || []}
-              directorHints={room.directorHints || []}
+              hintRequests={safeHintRequests}
+              directorHints={safeDirectorHints}
               answers={sharedAnswers}
               onSendHint={handleSendDirectorHint}
             />
@@ -378,9 +390,9 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             onCellSolved={handleCellSolved}
             disabled={isRoundEnded || isRoundClear || room.status === 'finished'}
             revealAll={isRoundEnded || isRoundClear || room.status === 'finished'}
-            isSpectator={isCreatorOfMovie}
+            isSpectator={isSpectator}
             onUnlockHint={handleUnlockHint}
-            directorHints={room.directorHints || []}
+            directorHints={safeDirectorHints}
             onRequestDirectorHint={handleAskDirector}
           />
         </div>

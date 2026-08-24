@@ -262,9 +262,27 @@ export async function joinRoom(
 export function subscribeToRoom(code: string, callback: (room: Room | null) => void): () => void {
   const roomCode = code.toUpperCase().trim();
 
+  // Helper to normalize room arrays and objects
+  const normalizeRoom = (r: Room | null): Room | null => {
+    if (!r) return null;
+    return {
+      ...r,
+      directorHints: Array.isArray(r.directorHints)
+        ? r.directorHints
+        : (r.directorHints && typeof r.directorHints === 'object' ? (Object.values(r.directorHints) as DirectorHint[]) : []),
+      hintRequests: Array.isArray(r.hintRequests)
+        ? r.hintRequests
+        : (r.hintRequests && typeof r.hintRequests === 'object' ? (Object.values(r.hintRequests) as HintRequest[]) : []),
+      players: r.players || {},
+      sharedAnswers: r.sharedAnswers || {},
+      answers: r.answers || {},
+      nextRoundVotes: r.nextRoundVotes || {}
+    };
+  };
+
   // Local fallback subscription (always active)
   const unsubscribeLocal = localFallback.subscribeRoom(roomCode, (localRoom) => {
-    if (localRoom) callback(localRoom);
+    if (localRoom) callback(normalizeRoom(localRoom));
   });
 
   if (hasValidFirebaseConfig && db) {
@@ -274,9 +292,11 @@ export function subscribeToRoom(code: string, callback: (room: Room | null) => v
         roomRef,
         (snapshot) => {
           if (snapshot.exists()) {
-            const firebaseRoom = snapshot.val() as Room;
-            localFallback.setRoom(roomCode, firebaseRoom);
-            callback(firebaseRoom);
+            const firebaseRoom = normalizeRoom(snapshot.val() as Room);
+            if (firebaseRoom) {
+              localFallback.setRoom(roomCode, firebaseRoom);
+              callback(firebaseRoom);
+            }
           }
         },
         (error) => {
@@ -450,6 +470,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
 
   const updates = {
     customPuzzle: puzzle,
+    currentCreatorUid: puzzle.creatorUid || undefined,
     status: 'in-progress' as const,
     roundStartTime: Date.now(),
     sharedAnswers: {},
@@ -463,7 +484,9 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
   if (room) {
     Object.assign(room, updates);
     room.customPuzzle = puzzle;
+    room.currentCreatorUid = puzzle.creatorUid || undefined;
     room.sharedAnswers = {};
+    room.answers = {};
     room.nextRoundVotes = {};
     room.directorHints = [];
     room.hintRequests = [];
@@ -476,6 +499,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
       await set(ref(db, `customPuzzles/${puzzle.id}`), puzzle);
       await update(ref(db, `rooms/${roomCode}`), updates);
       await set(ref(db, `rooms/${roomCode}/sharedAnswers`), {});
+      await set(ref(db, `rooms/${roomCode}/answers`), {});
       await set(ref(db, `rooms/${roomCode}/nextRoundVotes`), {});
       await set(ref(db, `rooms/${roomCode}/directorHints`), []);
       await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
@@ -535,11 +559,17 @@ export async function requestDirectorHint(
     timestamp: Date.now()
   };
 
-  const room = localFallback.getRoom(roomCode);
   let updatedScore = 0;
+  let allRequests: HintRequest[] = [reqData];
+
+  const room = localFallback.getRoom(roomCode);
   if (room) {
-    if (!room.hintRequests) room.hintRequests = [];
-    room.hintRequests.push(reqData);
+    const existing: HintRequest[] = Array.isArray(room.hintRequests)
+      ? room.hintRequests
+      : (room.hintRequests && typeof room.hintRequests === 'object' ? (Object.values(room.hintRequests) as HintRequest[]) : []);
+    allRequests = [...existing, reqData];
+    room.hintRequests = allRequests;
+
     if (room.players && room.players[player.uid]) {
       const currentScore = room.players[player.uid].score || 0;
       // Deduct 25 points, never going below zero
@@ -552,7 +582,7 @@ export async function requestDirectorHint(
   if (hasValidFirebaseConfig && db) {
     try {
       const roomRef = ref(db, `rooms/${roomCode}/hintRequests`);
-      await set(roomRef, (room?.hintRequests || [reqData]));
+      await set(roomRef, allRequests);
       if (room?.players && room.players[player.uid]) {
         await update(ref(db, `rooms/${roomCode}/players/${player.uid}`), {
           score: updatedScore
@@ -579,24 +609,31 @@ export async function sendDirectorHint(
     timestamp: Date.now()
   };
 
+  let allHints: DirectorHint[] = [hintData];
+  let directorNewScore = bountyPoints;
+
   const room = localFallback.getRoom(roomCode);
   if (room) {
-    if (!room.directorHints) room.directorHints = [];
-    room.directorHints.push(hintData);
+    const existing: DirectorHint[] = Array.isArray(room.directorHints)
+      ? room.directorHints
+      : (room.directorHints && typeof room.directorHints === 'object' ? (Object.values(room.directorHints) as DirectorHint[]) : []);
+    allHints = [...existing, hintData];
+    room.directorHints = allHints;
     room.hintRequests = []; // Clear pending requests
     if (room.players[directorUid]) {
-      room.players[directorUid].score = (room.players[directorUid].score || 0) + bountyPoints;
+      directorNewScore = (room.players[directorUid].score || 0) + bountyPoints;
+      room.players[directorUid].score = directorNewScore;
     }
     localFallback.setRoom(roomCode, room);
   }
 
   if (hasValidFirebaseConfig && db) {
     try {
-      await set(ref(db, `rooms/${roomCode}/directorHints`), room?.directorHints || [hintData]);
+      await set(ref(db, `rooms/${roomCode}/directorHints`), allHints);
       await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
       if (room?.players[directorUid]) {
         await update(ref(db, `rooms/${roomCode}/players/${directorUid}`), {
-          score: room.players[directorUid].score
+          score: directorNewScore
         });
       }
     } catch (err: any) {
@@ -701,16 +738,21 @@ export async function advanceRound(code: string, nextIndex: number, isFinished: 
     answers: {},
     nextRoundVotes: {},
     directorHints: [],
-    hintRequests: []
+    hintRequests: [],
+    customPuzzle: null
   };
 
   if (nextCreatorUid) {
     updates.currentCreatorUid = nextCreatorUid;
+  } else {
+    updates.currentCreatorUid = null;
   }
 
   const room = localFallback.getRoom(roomCode);
   if (room) {
     Object.assign(room, updates);
+    delete (room as any).customPuzzle;
+    delete (room as any).currentCreatorUid;
     room.sharedAnswers = {};
     room.answers = {};
     room.nextRoundVotes = {};
@@ -727,6 +769,7 @@ export async function advanceRound(code: string, nextIndex: number, isFinished: 
       await set(ref(db, `rooms/${roomCode}/nextRoundVotes`), {});
       await set(ref(db, `rooms/${roomCode}/directorHints`), []);
       await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
+      await remove(ref(db, `rooms/${roomCode}/customPuzzle`));
     } catch (err: any) {
       console.warn('Firebase advanceRound notice:', err?.message);
     }

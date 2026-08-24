@@ -323,6 +323,25 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       return;
     }
 
+    const normalizedNewTitle = movieTitle.toLowerCase().trim();
+    // Check if creating a new movie that already exists in the database
+    const existingMatch = existingDbPuzzles.find(
+      p => (!initialPuzzle || p.id !== initialPuzzle.id) && (
+        p.movie.name.toLowerCase().trim() === normalizedNewTitle ||
+        p.movie.canonicalName?.toLowerCase().trim() === normalizedNewTitle ||
+        (fetchedDetails?.qid && p.wikidataId && p.wikidataId === fetchedDetails.qid)
+      )
+    );
+
+    if (existingMatch && !initialPuzzle) {
+      setStatusNotice({
+        text: `⚠️ "${existingMatch.movie.name}" already exists in the database! You cannot create duplicate movies. Please enter a new movie title.`,
+        type: 'error'
+      });
+      setActiveTab('review');
+      return;
+    }
+
     if (!heroDisplayName.trim() || !heroineDisplayName.trim() || !songTitle.trim()) {
       setStatusNotice({
         text: 'Please fill in all required game answers: Hero, Heroine, and Song.',
