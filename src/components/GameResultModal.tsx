@@ -208,37 +208,37 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                         : 'bg-cinema-surface border-cinema-border/60 text-slate-300'
                       }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-5 font-mono font-black text-xs text-cinema-muted">
+                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 mr-2">
+                      <span className="w-5 text-center font-mono font-black text-xs text-cinema-muted flex-shrink-0">
                         {isRank1 ? '👑' : `#${idx + 1}`}
                       </span>
                       <img
                         src={player.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${player.uid}`}
                         alt={player.name}
-                        className="w-7 h-7 rounded-lg bg-cinema-dark border border-cinema-border object-cover"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cinema-dark border border-cinema-border object-cover flex-shrink-0"
                       />
-                      <span className="text-xs font-bold max-w-[130px] truncate">
-                        {player.name} {isCurrent && '(You)'}
+                      <span className="text-xs font-bold truncate max-w-[100px] sm:max-w-[180px] text-white">
+                        {player.name} {isCurrent && <span className="text-brand-400 text-[10px] font-normal">(You)</span>}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                       {!isFinal && totalPlayersCount > 1 && (
                         playerReadyNext ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                             <Check className="w-3 h-3" />
-                            Ready
+                            <span className="hidden xs:inline">Ready</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-dark/80 px-2 py-0.5 rounded-full border border-cinema-border/50">
                             <Clock className="w-3 h-3 text-amber-400/80" />
-                            Reviewing
+                            <span className="hidden xs:inline">Reviewing</span>
                           </span>
                         )
                       )}
 
                       <span className="font-mono font-black text-xs sm:text-sm text-brand-400">
-                        {(player.score || 0).toLocaleString()} pts
+                        {(player.score || 0).toLocaleString()} <span className="text-[10px] text-cinema-muted font-normal">pts</span>
                       </span>
                     </div>
                   </div>

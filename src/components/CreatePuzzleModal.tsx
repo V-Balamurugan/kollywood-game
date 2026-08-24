@@ -324,7 +324,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
     }
 
     const normalizedNewTitle = movieTitle.toLowerCase().trim();
-    // Check if creating a new movie that already exists in the database
+    // Check if creating a movie that already exists in the database
     const existingMatch = existingDbPuzzles.find(
       p => (!initialPuzzle || p.id !== initialPuzzle.id) && (
         p.movie.name.toLowerCase().trim() === normalizedNewTitle ||
@@ -333,12 +333,14 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       )
     );
 
+    // If movie already exists in the database, launch with existing data (do NOT duplicate in database)
     if (existingMatch && !initialPuzzle) {
-      setStatusNotice({
-        text: `⚠️ "${existingMatch.movie.name}" already exists in the database! You cannot create duplicate movies. Please enter a new movie title.`,
-        type: 'error'
-      });
-      setActiveTab('review');
+      const launchPuzzle: Puzzle = {
+        ...existingMatch,
+        createdBy: creatorName,
+        creatorUid: creatorUid
+      };
+      onSubmit(launchPuzzle);
       return;
     }
 

@@ -107,43 +107,71 @@ room.hintRequests = [];
 room.sharedAnswers = {};
 room.nextRoundVotes = {};
 
-// 6. Test Movie Database Existence & Duplicate Rejection
+// 6. Test Movie Database Existence & Launch Behavior
 const mockDb = [
-  { id: 'leo-2023', movie: { name: 'Leo', canonicalName: 'Leo' }, wikidataId: 'Q116536092' },
-  { id: 'vikram-2022', movie: { name: 'Vikram', canonicalName: 'Vikram' }, wikidataId: 'Q102147285' }
+  { id: 'leo-2023', movie: { name: 'Leo', canonicalName: 'Leo' }, wikidataId: 'Q116536092', director: 'Lokesh Kanagaraj' },
+  { id: 'vikram-2022', movie: { name: 'Vikram', canonicalName: 'Vikram' }, wikidataId: 'Q102147285', director: 'Lokesh Kanagaraj' }
 ];
 
-function canAddCustomMovie(movieCandidate, db) {
+function processMovieSubmission(movieCandidate, db, creatorName, creatorUid) {
   const normalizedTitle = movieCandidate.movie.name.toLowerCase().trim();
   const normalizedCanonical = movieCandidate.movie.canonicalName?.toLowerCase().trim();
-  const alreadyExists = db.some(
+  const existingMatch = db.find(
     p => p.id === movieCandidate.id ||
          p.movie.name.toLowerCase().trim() === normalizedTitle ||
          (normalizedCanonical && p.movie.canonicalName?.toLowerCase().trim() === normalizedCanonical) ||
          (p.wikidataId && movieCandidate.wikidataId && p.wikidataId === movieCandidate.wikidataId)
   );
-  if (alreadyExists) return { allowed: false, reason: 'Movie already exists in database' };
-  return { allowed: true, reason: 'New movie added to database' };
+
+  if (existingMatch) {
+    // Launch with existing database data without adding duplicate
+    return {
+      addedToDb: false,
+      launchedPuzzle: {
+        ...existingMatch,
+        createdBy: creatorName,
+        creatorUid: creatorUid
+      }
+    };
+  }
+
+  // Brand new movie: Add into database and launch
+  const newPuzzle = {
+    ...movieCandidate,
+    createdBy: creatorName,
+    creatorUid: creatorUid
+  };
+  db.push(newPuzzle);
+  return {
+    addedToDb: true,
+    launchedPuzzle: newPuzzle
+  };
 }
 
-// Existing movie "Leo" should be rejected
-const duplicateAttempt = {
-  id: 'custom-leo-duplicate',
+// Case A: Existing movie "Leo" -> Do NOT add to DB, launch using existing DB record
+const existingAttempt = {
+  id: 'custom-leo-temp',
   movie: { name: 'LEO', canonicalName: 'Leo' },
   wikidataId: 'Q116536092'
 };
-const duplicateResult = canAddCustomMovie(duplicateAttempt, mockDb);
-assert.strictEqual(duplicateResult.allowed, false, 'Existing movie correctly blocked from duplicate entry');
-console.log('✅ PASS: Existing movie "Leo" rejected from duplicate insertion');
+const existingResult = processMovieSubmission(existingAttempt, mockDb, 'Host Bala', 'user-1');
+assert.strictEqual(existingResult.addedToDb, false, 'Existing movie should not be added to DB');
+assert.strictEqual(existingResult.launchedPuzzle.id, 'leo-2023', 'Launched with existing database record');
+assert.strictEqual(existingResult.launchedPuzzle.director, 'Lokesh Kanagaraj', 'Launched with verified DB director');
+assert.strictEqual(mockDb.length, 2, 'DB length should remain unchanged');
+console.log('✅ PASS: Existing movie "Leo" launched with existing DB data without duplicate creation');
 
-// New movie "Ghilli" should be allowed
+// Case B: Brand new movie "Ghilli" -> Add to DB and launch
 const newMovieAttempt = {
   id: 'custom-ghilli-2004',
   movie: { name: 'Ghilli', canonicalName: 'Ghilli' },
-  wikidataId: 'Q3424381'
+  wikidataId: 'Q3424381',
+  director: 'Dharani'
 };
-const newResult = canAddCustomMovie(newMovieAttempt, mockDb);
-assert.strictEqual(newResult.allowed, true, 'Brand new movie successfully allowed into database');
-console.log('✅ PASS: Brand new movie "Ghilli" successfully validated and added');
+const newResult = processMovieSubmission(newMovieAttempt, mockDb, 'Host Bala', 'user-1');
+assert.strictEqual(newResult.addedToDb, true, 'Brand new movie added to DB');
+assert.strictEqual(newResult.launchedPuzzle.id, 'custom-ghilli-2004', 'Launched with new movie record');
+assert.strictEqual(mockDb.length, 3, 'DB length incremented by 1');
+console.log('✅ PASS: Brand new movie "Ghilli" added to DB and launched successfully');
 
 console.log('\n🎉 ALL CUSTOM ROOM & DIRECTOR QUEST SYSTEM LOGICAL TESTS PASSED PERFECTLY!');

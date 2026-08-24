@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, Check, Users, Play, Crown, ArrowLeft, Share2, Sparkles, PlusCircle, Film, UserX, UserMinus, LogOut, Home } from 'lucide-react';
+import { Copy, Check, Users, Play, Crown, ArrowLeft, Share2, Sparkles, PlusCircle, Film, UserX, UserMinus, LogOut, Home, Clock, AlertCircle } from 'lucide-react';
 import { Room, Puzzle, Player } from '../types/game';
 import { subscribeToRoom, setPlayerReady, setCustomPuzzleAndStart, kickPlayerFromRoom, leaveRoom } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -120,7 +120,9 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
 
   const isHost = user.uid === room.hostUid;
   const playersList = Object.values(room.players || {});
-  const isReady = room.players[user.uid]?.ready || false;
+  const isReady = Boolean(user && room.players?.[user.uid]?.ready);
+  const readyCount = playersList.filter(p => p.ready).length;
+  const allReady = playersList.length > 0 && playersList.every(p => p.ready);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -245,7 +247,7 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
             <div className="flex justify-between text-cinema-muted">
               <span>Timer / Round:</span>
               <strong className="text-white">
-                {room.settings.roundTimeSeconds ? `${room.settings.roundTimeSeconds}s` : '♾️ Chill'}
+                {room.settings?.roundTimeSeconds ? `${room.settings.roundTimeSeconds}s` : '♾️ Chill'}
               </strong>
             </div>
           </div>
@@ -262,8 +264,8 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
                   Contestants ({playersList.length})
                 </h3>
               </div>
-              <span className="text-xs font-mono font-bold text-cinema-muted">
-                {playersList.filter(p => p.ready).length} / {playersList.length} ready
+              <span className={`text-xs font-mono font-black px-2.5 py-1 rounded-full border ${allReady ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-cinema-dark text-amber-300 border-cinema-border/70'}`}>
+                {readyCount} / {playersList.length} Ready
               </span>
             </div>
 
@@ -275,12 +277,12 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
               <div className="text-xs">
                 <span className="font-bold text-white block">Custom Match Arena</span>
                 <p className="text-cinema-muted text-[11px]">
-                  Custom matches are played with player-crafted movies! Anyone in the room can create a movie clue to start.
+                  All contestants must click Ready! Once everyone is ready, create or pick a movie to launch the match.
                 </p>
               </div>
             </div>
 
-            {/* Players Grid with Kick Buttons for Host */}
+            {/* Players Grid with Ready Status & Kick Buttons for Host */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
               {playersList.map((player) => {
                 const isCurrent = player.uid === user.uid;
@@ -320,12 +322,13 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
                     {/* Status & Kick Action */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {player.ready ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full animate-fade-in">
                           <Check className="w-3 h-3" />
                           Ready
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-dark/80 px-2 py-0.5 rounded-full border border-cinema-border/50">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-dark/80 px-2.5 py-0.5 rounded-full border border-cinema-border/50">
+                          <Clock className="w-3 h-3 text-amber-400/80" />
                           Waiting
                         </span>
                       )}
@@ -346,25 +349,58 @@ export const RoomLobby: React.FC<RoomLobbyProps> = ({
               })}
             </div>
 
-            {/* Ready & Launch Custom Movie Actions */}
+            {/* Ready Toggle & Launch Actions */}
             <div className="space-y-3 pt-2">
-              {!isHost && (
-                <button
-                  onClick={handleToggleReady}
-                  className={`w-full py-3 rounded-2xl font-black text-xs sm:text-sm transition-all shadow-lg active:scale-95 ${isReady
-                      ? 'bg-emerald-500 text-black shadow-emerald-500/25 hover:bg-emerald-400'
-                      : 'bg-cinema-surface border border-cinema-border text-white hover:border-brand-500/50'
-                    }`}
-                >
-                  {isReady ? '✓ You are Ready! (Click to cancel)' : 'Click to Ready Up'}
-                </button>
+              {/* Ready / Cancel Ready Button for Current Player */}
+              <button
+                type="button"
+                onClick={handleToggleReady}
+                className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+                  isReady
+                    ? 'bg-emerald-500 text-black shadow-emerald-500/25 hover:bg-emerald-400 border border-emerald-400'
+                    : 'bg-cinema-surface hover:bg-cinema-cardHover border-2 border-brand-500/50 text-brand-300 hover:text-white'
+                }`}
+              >
+                {isReady ? (
+                  <>
+                    <Check className="w-4 h-4 text-black stroke-[3]" />
+                    <span>✓ YOU ARE READY! (Click to cancel ready)</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-brand-400 text-brand-400" />
+                    <span>▶️ CLICK TO READY UP FOR MOVIE QUEST</span>
+                  </>
+                )}
+              </button>
+
+              {/* Status Notice Banner when waiting for all players */}
+              {!allReady ? (
+                <div className="p-3 rounded-xl bg-cinema-dark/80 border border-cinema-border/70 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <span>
+                    Waiting for all contestants to ready up ({readyCount}/{playersList.length} ready) before launching match.
+                  </span>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-300 font-bold animate-fade-in">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span>
+                    🎉 All contestants are Ready! Click below to create movie clue & launch match!
+                  </span>
+                </div>
               )}
 
-              {/* Primary Action: Create Custom Movie to Launch Match */}
+              {/* Primary Launch Button (Enabled only when all contestants are ready) */}
               <button
+                type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                disabled={loadingStart}
-                className="w-full py-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                disabled={!allReady || loadingStart}
+                className={`w-full py-4 rounded-2xl font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 transition-all active:scale-95 ${
+                  allReady
+                    ? 'btn-cinema-primary text-black cursor-pointer shadow-brand-500/30 hover:brightness-110'
+                    : 'bg-cinema-surface/60 border border-cinema-border/60 text-cinema-muted cursor-not-allowed opacity-50'
+                }`}
               >
                 <PlusCircle className="w-4 h-4 fill-black text-brand-400" />
                 <span>🎨 CREATE MOVIE CLUE & LAUNCH MATCH</span>
