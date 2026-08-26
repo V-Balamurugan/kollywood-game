@@ -352,54 +352,55 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
       return;
     }
 
+    const rawSlug = movieTitle.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
     const cleanId =
       initialPuzzle?.id ||
-      ('custom-' + movieTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now());
+      ('custom-' + (rawSlug || 'film') + '-' + Math.random().toString(36).substring(2, 7) + '-' + Date.now());
 
     const puzzle: Puzzle = {
       id: cleanId,
-      year: movieYear,
-      difficulty,
+      year: Number(movieYear) || 2024,
+      difficulty: difficulty || 'medium',
       director: director.trim() || 'Kollywood Cinema',
       musicDirector: musicDirector.trim() || 'Tamil Music',
       genre: genre.trim() || 'Kollywood Blockbuster',
       trivia: overview.trim() || `Iconic Tamil film crafted by ${creatorName}`,
-      wikidataId: fetchedDetails?.qid || initialPuzzle?.wikidataId,
+      wikidataId: fetchedDetails?.qid || initialPuzzle?.wikidataId || '',
       posterUrl: moviePoster.trim() || undefined,
-      createdBy: creatorName,
-      creatorUid: creatorUid,
+      createdBy: creatorName || 'Director',
+      creatorUid: creatorUid || undefined,
       movie: {
         name: movieTitle.trim(),
         displayName: movieTitle.trim(),
         canonicalName: fetchedDetails?.movieTitle || initialPuzzle?.movie.canonicalName || movieTitle.trim(),
-        wikidataId: fetchedDetails?.qid || initialPuzzle?.movie.wikidataId,
-        firstLetter: movieTitle.trim().charAt(0).toUpperCase(),
-        imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${movieTitle.trim()}`,
+        wikidataId: fetchedDetails?.qid || initialPuzzle?.movie.wikidataId || '',
+        firstLetter: (movieTitle.trim().charAt(0) || 'M').toUpperCase(),
+        imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(movieTitle.trim())}`,
         aliases: [movieTitle.trim(), fetchedDetails?.movieTitle].filter(Boolean) as string[]
       },
       hero: {
         name: heroDisplayName.trim(),
         displayName: heroDisplayName.trim(),
         canonicalName: heroCanonicalName || heroDisplayName.trim(),
-        wikidataId: heroQid || undefined,
-        firstLetter: heroDisplayName.trim().charAt(0).toUpperCase(),
-        imageUrl: heroImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroDisplayName.trim()}`,
+        wikidataId: heroQid || '',
+        firstLetter: (heroDisplayName.trim().charAt(0) || 'H').toUpperCase(),
+        imageUrl: heroImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(heroDisplayName.trim())}`,
         aliases: [heroDisplayName.trim(), heroCanonicalName].filter(Boolean) as string[]
       },
       heroine: {
         name: heroineDisplayName.trim(),
         displayName: heroineDisplayName.trim(),
         canonicalName: heroineCanonicalName || heroineDisplayName.trim(),
-        wikidataId: heroineQid || undefined,
-        firstLetter: heroineDisplayName.trim().charAt(0).toUpperCase(),
-        imageUrl: heroineImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroineDisplayName.trim()}`,
+        wikidataId: heroineQid || '',
+        firstLetter: (heroineDisplayName.trim().charAt(0) || 'H').toUpperCase(),
+        imageUrl: heroineImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(heroineDisplayName.trim())}`,
         aliases: [heroineDisplayName.trim(), heroineCanonicalName].filter(Boolean) as string[]
       },
       song: {
         name: songTitle.trim(),
         displayName: songTitle.trim(),
-        firstLetter: songTitle.trim().charAt(0).toUpperCase(),
-        youtubeId: youtubeId.trim(),
+        firstLetter: (songTitle.trim().charAt(0) || 'S').toUpperCase(),
+        youtubeId: youtubeId.trim() || '',
         aliases: [songTitle.trim()]
       }
     };

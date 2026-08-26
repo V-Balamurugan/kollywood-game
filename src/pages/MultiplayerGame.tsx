@@ -33,6 +33,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     message: string;
     countdown: number;
   } | null>(null);
+  const [directorRole, setDirectorRole] = useState<'director' | 'player'>('director');
 
   const lastNotifiedLeftTimestamp = useRef<number>(0);
   const hasHandledExit = useRef(false);
@@ -190,8 +191,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   );
 
   const totalPlayersCount = Object.keys(room.players || {}).length;
-  // If director is the only player in the room (e.g. testing), allow interactive play; otherwise act as director spectator
-  const isSpectator = isCreatorOfMovie && totalPlayersCount > 1;
+  // If director is the only player, or if they choose Play Along mode, allow interactive play; otherwise act as director
+  const isSpectator = isCreatorOfMovie && totalPlayersCount > 1 && directorRole === 'director';
 
   const safeDirectorHints: DirectorHint[] = Array.isArray(room.directorHints)
     ? room.directorHints
@@ -339,11 +340,38 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
           {currentPuzzle.createdBy && (
             <span className="text-cinema-muted">
               Director: <strong className="text-amber-400">{currentPuzzle.createdBy}</strong>
             </span>
+          )}
+
+          {isCreatorOfMovie && totalPlayersCount > 1 && (
+            <div className="flex items-center gap-1 bg-cinema-dark/80 p-0.5 rounded-lg border border-cinema-border/70">
+              <button
+                type="button"
+                onClick={() => setDirectorRole('director')}
+                className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
+                  directorRole === 'director'
+                    ? 'bg-amber-500 text-black shadow'
+                    : 'text-cinema-muted hover:text-white'
+                }`}
+              >
+                👑 Director Mode
+              </button>
+              <button
+                type="button"
+                onClick={() => setDirectorRole('player')}
+                className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
+                  directorRole === 'player'
+                    ? 'bg-emerald-500 text-black shadow'
+                    : 'text-cinema-muted hover:text-white'
+                }`}
+              >
+                🎮 Play Along
+              </button>
+            </div>
           )}
 
           {/* In-Game Stop / Leave Button */}

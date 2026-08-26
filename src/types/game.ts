@@ -77,6 +77,16 @@ export interface HintRequest {
   timestamp: number;
 }
 
+export interface RoomMessage {
+  id: string;
+  senderUid: string;
+  senderName: string;
+  senderAvatar?: string;
+  text: string;
+  timestamp: number;
+  isQuickReaction?: boolean;
+}
+
 export interface Room {
   code: string;
   hostUid: string;
@@ -95,6 +105,8 @@ export interface Room {
   hintRequests?: HintRequest[];
   // Synchronized round transition votes (uid -> boolean)
   nextRoundVotes?: Record<string, boolean>;
+  // Lobby messages / reactions
+  messages?: RoomMessage[];
   lastLeftPlayer?: { uid: string; name: string; timestamp: number };
   closedReason?: 'player-left' | 'host-left' | 'finished';
   createdAt: number;

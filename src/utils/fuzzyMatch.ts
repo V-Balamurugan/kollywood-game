@@ -36,7 +36,7 @@ export function normalizeText(text: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // remove diacritics
-    .replace(/[^a-z0-9\s]/g, ' ')   // replace non-alphanumeric with space
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ') // replace non-letter/non-number with space (preserves Tamil, English, and all Unicode alphabets)
     .replace(/\s+/g, ' ')           // collapse multiple spaces
     .trim();
 }

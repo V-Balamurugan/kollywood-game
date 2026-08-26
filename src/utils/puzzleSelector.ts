@@ -7,11 +7,16 @@ import { getAllPuzzles } from '../services/puzzleManager';
  */
 export function getSelectedPuzzles(count: number, difficulty: 'all' | 'easy' | 'medium' | 'hard' = 'all'): Puzzle[] {
   const allPuzzles = getAllPuzzles();
+  if (allPuzzles.length === 0) return [];
 
   if (difficulty !== 'all') {
-    const pool = allPuzzles.filter(p => p.difficulty === difficulty);
-    const available = pool.length >= count ? pool : allPuzzles;
-    return [...available].sort(() => 0.5 - Math.random()).slice(0, count);
+    const matching = allPuzzles.filter(p => p.difficulty === difficulty).sort(() => 0.5 - Math.random());
+    if (matching.length >= count) {
+      return matching.slice(0, count);
+    }
+    // If not enough puzzles match the exact difficulty, take all matching and fill remainder
+    const remaining = allPuzzles.filter(p => p.difficulty !== difficulty).sort(() => 0.5 - Math.random());
+    return [...matching, ...remaining].slice(0, count);
   }
 
   // Mixed mode: Randomly balance across Easy, Medium, and Hard

@@ -24,6 +24,10 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Kollywood Connect Uncaught Error:', error, errorInfo);
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
     window.location.href = window.location.origin;
@@ -42,17 +46,25 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h2>
             
-            <p className="text-xs text-cinema-muted">
+            <p className="text-xs text-cinema-muted leading-relaxed">
               {this.state.error?.message || 'An unexpected error occurred while loading the game arena.'}
             </p>
 
-            <button
-              onClick={this.handleReset}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-xs shadow-lg shadow-brand-500/25 hover:brightness-110 flex items-center justify-center gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Return to Lobby / Main Menu</span>
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                onClick={this.handleRetry}
+                className="flex-1 py-3 rounded-2xl btn-cinema-primary text-black font-bold text-xs shadow-lg flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Retry Game</span>
+              </button>
+              <button
+                onClick={this.handleReset}
+                className="flex-1 py-3 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2"
+              >
+                <span>Main Menu</span>
+              </button>
+            </div>
           </div>
         </div>
       );

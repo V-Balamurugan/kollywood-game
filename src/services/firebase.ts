@@ -21,19 +21,33 @@ import {
   getDoc, 
   Firestore 
 } from 'firebase/firestore';
-import { Room, UserProfile, Player, CellAnswer, SharedCellAnswer, GameSettings, Puzzle, DirectorHint, HintRequest, GameHistoryItem } from '../types/game';
+import { Room, UserProfile, Player, CellAnswer, SharedCellAnswer, GameSettings, Puzzle, DirectorHint, HintRequest, GameHistoryItem, RoomMessage } from '../types/game';
 import puzzlesData from '../data/puzzles.json';
 import { getSelectedPuzzles } from '../utils/puzzleSelector';
 import { addPuzzleIfNotExists } from './puzzleManager';
 
+const getEnv = (key: string): string | undefined => {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      return import.meta.env[key];
+    }
+  } catch { }
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env[key];
+    }
+  } catch { }
+  return undefined;
+};
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: getEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  databaseURL: getEnv('VITE_FIREBASE_DATABASE_URL'),
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: getEnv('VITE_FIREBASE_APP_ID')
 };
 
 const hasValidFirebaseConfig = Boolean(
@@ -70,6 +84,7 @@ export { auth, db, firestore, hasValidFirebaseConfig };
 class LocalStorageFallback {
   private channel: BroadcastChannel | null = null;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private memoryStore: Map<string, string> = new Map();
 
   constructor() {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -83,14 +98,28 @@ class LocalStorageFallback {
     }
   }
 
+  private getItem(key: string): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+    return this.memoryStore.get(key) || null;
+  }
+
+  private setItem(key: string, value: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+    this.memoryStore.set(key, value);
+  }
+
   getRoom(code: string): Room | null {
-    const raw = localStorage.getItem(`kollywood_room_${code.toUpperCase()}`);
+    const raw = this.getItem(`kollywood_room_${code.toUpperCase()}`);
     return raw ? JSON.parse(raw) : null;
   }
 
   setRoom(code: string, room: Room): void {
     const key = code.toUpperCase();
-    localStorage.setItem(`kollywood_room_${key}`, JSON.stringify(room));
+    this.setItem(`kollywood_room_${key}`, JSON.stringify(room));
     if (this.channel) {
       this.channel.postMessage({ key: `room_${key}`, data: room });
     }
@@ -259,6 +288,13 @@ export async function joinRoom(
   return { success: true, room };
 }
 
+function cleanForFirebase<T>(data: T): T {
+  if (data === null || data === undefined) return null as any;
+  return JSON.parse(JSON.stringify(data, (_, value) => {
+    return value === undefined ? null : value;
+  }));
+}
+
 export function subscribeToRoom(code: string, callback: (room: Room | null) => void): () => void {
   const roomCode = code.toUpperCase().trim();
 
@@ -267,12 +303,46 @@ export function subscribeToRoom(code: string, callback: (room: Room | null) => v
     if (!r) return null;
     return {
       ...r,
+      customPuzzle: r.customPuzzle ? {
+        ...r.customPuzzle,
+        movie: {
+          name: r.customPuzzle.movie?.name || 'Unknown Movie',
+          displayName: r.customPuzzle.movie?.displayName || r.customPuzzle.movie?.name || 'Unknown Movie',
+          firstLetter: r.customPuzzle.movie?.firstLetter || (r.customPuzzle.movie?.name ? r.customPuzzle.movie.name.charAt(0).toUpperCase() : '?'),
+          imageUrl: r.customPuzzle.movie?.imageUrl || '',
+          aliases: Array.isArray(r.customPuzzle.movie?.aliases) ? r.customPuzzle.movie.aliases : [r.customPuzzle.movie?.name || ''].filter(Boolean)
+        },
+        hero: {
+          name: r.customPuzzle.hero?.name || 'Hero',
+          displayName: r.customPuzzle.hero?.displayName || r.customPuzzle.hero?.name || 'Hero',
+          firstLetter: r.customPuzzle.hero?.firstLetter || (r.customPuzzle.hero?.name ? r.customPuzzle.hero.name.charAt(0).toUpperCase() : '?'),
+          imageUrl: r.customPuzzle.hero?.imageUrl || '',
+          aliases: Array.isArray(r.customPuzzle.hero?.aliases) ? r.customPuzzle.hero.aliases : [r.customPuzzle.hero?.name || ''].filter(Boolean)
+        },
+        heroine: {
+          name: r.customPuzzle.heroine?.name || 'Heroine',
+          displayName: r.customPuzzle.heroine?.displayName || r.customPuzzle.heroine?.name || 'Heroine',
+          firstLetter: r.customPuzzle.heroine?.firstLetter || (r.customPuzzle.heroine?.name ? r.customPuzzle.heroine.name.charAt(0).toUpperCase() : '?'),
+          imageUrl: r.customPuzzle.heroine?.imageUrl || '',
+          aliases: Array.isArray(r.customPuzzle.heroine?.aliases) ? r.customPuzzle.heroine.aliases : [r.customPuzzle.heroine?.name || ''].filter(Boolean)
+        },
+        song: {
+          name: r.customPuzzle.song?.name || 'Song',
+          displayName: r.customPuzzle.song?.displayName || r.customPuzzle.song?.name || 'Song',
+          firstLetter: r.customPuzzle.song?.firstLetter || (r.customPuzzle.song?.name ? r.customPuzzle.song.name.charAt(0).toUpperCase() : '?'),
+          youtubeId: r.customPuzzle.song?.youtubeId || '',
+          aliases: Array.isArray(r.customPuzzle.song?.aliases) ? r.customPuzzle.song.aliases : [r.customPuzzle.song?.name || ''].filter(Boolean)
+        }
+      } : undefined,
       directorHints: Array.isArray(r.directorHints)
         ? r.directorHints
         : (r.directorHints && typeof r.directorHints === 'object' ? (Object.values(r.directorHints) as DirectorHint[]) : []),
       hintRequests: Array.isArray(r.hintRequests)
         ? r.hintRequests
         : (r.hintRequests && typeof r.hintRequests === 'object' ? (Object.values(r.hintRequests) as HintRequest[]) : []),
+      messages: Array.isArray(r.messages)
+        ? r.messages
+        : (r.messages && typeof r.messages === 'object' ? (Object.values(r.messages) as RoomMessage[]) : []),
       players: r.players || {},
       sharedAnswers: r.sharedAnswers || {},
       answers: r.answers || {},
@@ -314,6 +384,65 @@ export function subscribeToRoom(code: string, callback: (room: Room | null) => v
   }
 
   return unsubscribeLocal;
+}
+
+export async function updateRoomSettings(code: string, newSettings: Partial<GameSettings>): Promise<void> {
+  const roomCode = code.toUpperCase().trim();
+  const room = localFallback.getRoom(roomCode);
+  if (room) {
+    room.settings = { ...room.settings, ...newSettings };
+    localFallback.setRoom(roomCode, room);
+  }
+
+  if (hasValidFirebaseConfig && db) {
+    try {
+      await update(ref(db, `rooms/${roomCode}/settings`), newSettings);
+    } catch (err: any) {
+      console.warn('Firebase updateRoomSettings notice:', err?.message);
+    }
+  }
+}
+
+export async function sendRoomMessage(
+  code: string,
+  message: {
+    senderUid: string;
+    senderName: string;
+    senderAvatar?: string;
+    text: string;
+    isQuickReaction?: boolean;
+  }
+): Promise<void> {
+  const roomCode = code.toUpperCase().trim();
+  const msgObj: RoomMessage = {
+    id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    ...message,
+    timestamp: Date.now()
+  };
+
+  const room = localFallback.getRoom(roomCode);
+  if (room) {
+    if (!room.messages) room.messages = [];
+    room.messages = [...room.messages.slice(-49), msgObj];
+    localFallback.setRoom(roomCode, room);
+  }
+
+  if (hasValidFirebaseConfig && db) {
+    try {
+      const roomRef = ref(db, `rooms/${roomCode}`);
+      const snapshot = await get(roomRef);
+      if (snapshot.exists()) {
+        const currentData = snapshot.val() as Room;
+        const currentMsgs = Array.isArray(currentData.messages)
+          ? currentData.messages
+          : (currentData.messages && typeof currentData.messages === 'object' ? Object.values(currentData.messages) : []);
+        const updatedMsgs = [...currentMsgs.slice(-49), msgObj];
+        await update(roomRef, { messages: updatedMsgs });
+      }
+    } catch (err: any) {
+      console.warn('Firebase sendRoomMessage notice:', err?.message);
+    }
+  }
 }
 
 export async function setPlayerReady(code: string, uid: string, ready: boolean): Promise<void> {
@@ -464,13 +593,14 @@ export async function startPuzzleCreation(code: string, creatorUid: string): Pro
 
 export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Promise<void> {
   const roomCode = code.toUpperCase().trim();
+  const cleanPuzzle = cleanForFirebase(puzzle);
   
   // Persist to local & global database if not exists
-  addPuzzleIfNotExists(puzzle);
+  addPuzzleIfNotExists(cleanPuzzle);
 
-  const updates = {
-    customPuzzle: puzzle,
-    currentCreatorUid: puzzle.creatorUid || undefined,
+  const updates: any = {
+    customPuzzle: cleanPuzzle,
+    currentCreatorUid: puzzle.creatorUid || null,
     status: 'in-progress' as const,
     roundStartTime: Date.now(),
     sharedAnswers: {},
@@ -483,7 +613,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
   const room = localFallback.getRoom(roomCode);
   if (room) {
     Object.assign(room, updates);
-    room.customPuzzle = puzzle;
+    room.customPuzzle = cleanPuzzle;
     room.currentCreatorUid = puzzle.creatorUid || undefined;
     room.sharedAnswers = {};
     room.answers = {};
@@ -496,8 +626,8 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
   if (hasValidFirebaseConfig && db) {
     try {
       // Store into shared /customPuzzles node so all players get it
-      await set(ref(db, `customPuzzles/${puzzle.id}`), puzzle);
-      await update(ref(db, `rooms/${roomCode}`), updates);
+      await set(ref(db, `customPuzzles/${cleanPuzzle.id}`), cleanPuzzle);
+      await update(ref(db, `rooms/${roomCode}`), cleanForFirebase(updates));
       await set(ref(db, `rooms/${roomCode}/sharedAnswers`), {});
       await set(ref(db, `rooms/${roomCode}/answers`), {});
       await set(ref(db, `rooms/${roomCode}/nextRoundVotes`), {});
