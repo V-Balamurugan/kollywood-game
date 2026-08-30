@@ -28,7 +28,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   const [selectedAvatar, setSelectedAvatar] = useState(user?.photoURL || '');
   const [savedNotice, setSavedNotice] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'solo' | 'multiplayer'>('all');
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -82,7 +82,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
 
   const handleClearHistory = async () => {
     if (!user) return;
-    if (window.confirm('Are you sure you want to clear your entire game history? (Total score will be retained)')) {
+    if (window.confirm('Are you sure you want to clear your game history? (Total score is retained)')) {
       await clearUserHistory(user.uid);
       await fetchProfile();
     }
@@ -95,7 +95,6 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const gameHistory: GameHistoryItem[] = profile?.gameHistory || [];
 
-  // Filter history
   const filteredHistory = gameHistory.filter(item => {
     if (historyFilter === 'all') return true;
     return item.mode === historyFilter;
@@ -104,23 +103,23 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   // Calculate Cinema Tier
   let tierName = 'Cinema Rasigan';
   let tierBadge = '🥉 Bronze';
-  let tierColor = 'text-amber-500 border-amber-500/30 bg-amber-500/10';
+  let tierColor = 'text-amber-400 border-amber-500/40 bg-amber-950/40';
   let nextTierThreshold = 1000;
 
   if (totalScore >= 10000) {
     tierName = 'Kollywood Legend';
     tierBadge = '💎 Diamond';
-    tierColor = 'text-cyan-400 border-cyan-400/40 bg-cyan-400/15';
+    tierColor = 'text-cyan-300 border-cyan-400/50 bg-cyan-950/60 shadow-[0_0_12px_rgba(6,182,212,0.3)]';
     nextTierThreshold = 25000;
   } else if (totalScore >= 5000) {
     tierName = 'Superstar Tier';
     tierBadge = '👑 Gold';
-    tierColor = 'text-yellow-400 border-yellow-400/40 bg-yellow-400/15';
+    tierColor = 'text-yellow-300 border-yellow-400/40 bg-yellow-950/50';
     nextTierThreshold = 10000;
   } else if (totalScore >= 1000) {
     tierName = 'Silver Screen Buff';
     tierBadge = '🥈 Silver';
-    tierColor = 'text-slate-200 border-slate-300/30 bg-slate-400/10';
+    tierColor = 'text-slate-200 border-slate-400/40 bg-slate-800/50';
     nextTierThreshold = 5000;
   }
 
@@ -141,21 +140,21 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-3.5 sm:px-4 py-4 sm:py-8 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 font-sans animate-fade-in">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+      <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white transition-colors group"
+          className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-cyan-300 transition-colors group cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to Arena</span>
+          <span>Back to Lobby</span>
         </button>
 
         {onOpenAdmin && user?.email === 'admin@gmail.com' && (
           <button
             onClick={onOpenAdmin}
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-cinema-surface hover:bg-brand-500/20 text-brand-300 border border-cinema-border/70 hover:border-brand-500/40 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-[#0c101a] hover:bg-purple-950 border border-purple-500/40 text-purple-300 transition-colors cursor-pointer"
           >
             <Film className="w-3.5 h-3.5" />
             <span>Admin Console</span>
@@ -164,35 +163,35 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
       </div>
 
       {savedNotice && (
-        <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center animate-fade-in">
-          ✓ Profile updated successfully!
+        <div className="mb-5 p-3 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center animate-fade-in">
+          ✓ Profile changes saved successfully!
         </div>
       )}
 
       {/* Main Profile Header Card */}
-      <div className="glass-card rounded-3xl p-5 sm:p-7 border border-cinema-border shadow-2xl mb-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="rounded-3xl bg-[#0c101a]/90 border border-slate-800/90 p-6 sm:p-8 shadow-2xl mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 relative z-10">
-          {/* Avatar with Quick Edit Button */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-7 relative z-10">
+          {/* Avatar with Edit Action */}
           <div className="relative group flex-shrink-0">
             <img
               src={selectedAvatar}
               alt={user?.displayName || 'Player'}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-cinema-dark border-2 border-brand-500/70 object-cover shadow-xl shadow-brand-500/20"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#070a12] border-2 border-cyan-400/80 object-cover shadow-[0_0_20px_rgba(6,182,212,0.3)]"
             />
             <button
               onClick={() => setIsAvatarPickerOpen(true)}
-              className="absolute -bottom-1 -right-1 p-1.5 rounded-xl btn-cinema-primary text-black shadow-md transition-transform hover:scale-105"
+              className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-cyan-400 text-black shadow-md transition-transform hover:scale-105 cursor-pointer"
               title="Change Avatar"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
           </div>
 
           {/* User Info & Tier Progress */}
           <div className="flex-1 text-center sm:text-left min-w-0">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1.5">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-2">
               {isEditingName ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -200,51 +199,51 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSaveProfile()}
-                    className="bg-cinema-dark border border-brand-500 rounded-xl px-3 py-1 text-base sm:text-lg font-black text-white focus:outline-none max-w-[170px] sm:max-w-xs"
+                    className="bg-[#070a12] border border-cyan-400 rounded-xl px-3 py-1 text-base sm:text-lg font-black text-white focus:outline-none max-w-[180px]"
                     autoFocus
                   />
                   <button
                     onClick={handleSaveProfile}
-                    className="p-1.5 rounded-xl btn-cinema-primary text-black font-bold"
+                    className="p-2 rounded-xl bg-cyan-400 text-black font-bold cursor-pointer"
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4 stroke-[3]" />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white truncate max-w-[220px] sm:max-w-none">
+                  <h1 className="text-2xl sm:text-3xl font-display font-black text-white truncate">
                     {user?.displayName || 'Player'}
                   </h1>
                   <button
                     onClick={() => setIsEditingName(true)}
-                    className="text-cinema-muted hover:text-brand-300 p-1"
+                    className="text-slate-400 hover:text-cyan-300 p-1 cursor-pointer"
                     title="Edit Name"
                   >
-                    <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Edit3 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
 
-              <span className={`text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full border ${tierColor}`}>
+              <span className={`text-[10px] sm:text-xs font-black px-3 py-1 rounded-full border ${tierColor}`}>
                 {tierBadge} {tierName}
               </span>
             </div>
 
-            <p className="text-[11px] sm:text-xs text-cinema-muted mb-3 sm:mb-4">
-              Player Status: <strong className="text-slate-200">{user?.isGuest ? 'Guest Rasigan' : 'Registered Cinephile'}</strong>
+            <p className="text-xs text-slate-400 mb-4">
+              Status: <strong className="text-slate-200">{user?.isGuest ? 'Guest VIP Pass' : 'Permanent Cinephile Account'}</strong>
             </p>
 
             {/* Rank Progress Bar */}
             <div className="space-y-1.5 max-w-md mx-auto sm:mx-0">
-              <div className="flex justify-between text-[11px] sm:text-xs font-semibold">
-                <span className="text-cinema-muted">Tier Mastery Progress</span>
-                <span className="text-brand-400 font-mono font-bold">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-slate-400">Mastery Tier Progress</span>
+                <span className="text-cyan-300 font-mono font-bold">
                   {totalScore.toLocaleString()} / {nextTierThreshold.toLocaleString()} pts
                 </span>
               </div>
-              <div className="w-full h-2 rounded-full bg-cinema-dark border border-cinema-border/50 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-[#070a12] border border-slate-800 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-brand-500 to-amber-400 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-cyan-400 to-teal-300 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(6,182,212,0.7)]"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -253,102 +252,78 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
         </div>
       </div>
 
-      {/* Clean 4-Column Performance Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6 sm:mb-8">
-        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
-          <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 mx-auto mb-1.5" />
+      {/* 4 Performance Metric Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="rounded-2xl bg-[#0c101a]/90 border border-slate-800 p-4 text-center">
+          <Trophy className="w-5 h-5 text-cyan-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {totalScore.toLocaleString()}
           </div>
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-cinema-muted">
-            Total Points
-          </span>
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Total Score</div>
         </div>
 
-        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
-          <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mx-auto mb-1.5" />
-          <div className="text-xl sm:text-2xl font-mono font-black text-white">
-            {bestStreak}x
-          </div>
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-cinema-muted">
-            Best Streak
-          </span>
-        </div>
-
-        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
-          <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1.5" />
-          <div className="text-xl sm:text-2xl font-mono font-black text-white">
-            {wins}
-          </div>
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-cinema-muted">
-            Victories ({winRate}%)
-          </span>
-        </div>
-
-        <div className="glass-card p-4 rounded-2xl border border-cinema-border/80 text-center">
-          <Film className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1.5" />
+        <div className="rounded-2xl bg-[#0c101a]/90 border border-slate-800 p-4 text-center">
+          <Play className="w-5 h-5 text-cyan-400 mx-auto mb-1.5" />
           <div className="text-xl sm:text-2xl font-mono font-black text-white">
             {totalGames}
           </div>
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold text-cinema-muted">
-            Matches Played
-          </span>
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Games Played</div>
+        </div>
+
+        <div className="rounded-2xl bg-[#0c101a]/90 border border-slate-800 p-4 text-center">
+          <Award className="w-5 h-5 text-cyan-400 mx-auto mb-1.5" />
+          <div className="text-xl sm:text-2xl font-mono font-black text-white">
+            {winRate}%
+          </div>
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Win Rate ({wins}W)</div>
+        </div>
+
+        <div className="rounded-2xl bg-[#0c101a]/90 border border-slate-800 p-4 text-center">
+          <Flame className="w-5 h-5 text-orange-400 mx-auto mb-1.5" />
+          <div className="text-xl sm:text-2xl font-mono font-black text-white">
+            {bestStreak}x
+          </div>
+          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Best Streak</div>
         </div>
       </div>
 
-      {/* MATCH & GAME HISTORY SECTION */}
-      <div className="glass-panel rounded-3xl p-4 sm:p-6 border border-cinema-border/80 mb-6 sm:mb-8 shadow-xl">
-        {/* Section Header & Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-cinema-border/50 mb-4">
+      {/* Game History Section */}
+      <div className="rounded-3xl bg-[#0c101a]/90 border border-slate-800 p-6 shadow-xl mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-brand-400" />
-            <div>
-              <h3 className="text-sm sm:text-base font-display font-black text-white">
-                Game History & Match Logs
-              </h3>
-              <p className="text-[10px] sm:text-xs text-cinema-muted">
-                {gameHistory.length} total matches recorded
-              </p>
-            </div>
+            <History className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              Match History ({filteredHistory.length})
+            </h3>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Filter Tabs */}
-            <div className="flex items-center bg-cinema-dark p-1 rounded-xl border border-cinema-border/60 text-xs font-bold">
-              <button
-                onClick={() => setHistoryFilter('all')}
-                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'all'
-                    ? 'btn-cinema-primary text-black'
-                    : 'text-cinema-muted hover:text-white'
+            <div className="flex items-center gap-1 bg-[#070a12] p-1 rounded-xl border border-slate-800 text-xs font-bold">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'solo', label: 'Solo' },
+                { id: 'multiplayer', label: 'Arena' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setHistoryFilter(tab.id as any)}
+                  className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+                    historyFilter === tab.id
+                      ? 'bg-cyan-400 text-black font-extrabold shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                      : 'text-slate-400 hover:text-white'
                   }`}
-              >
-                All ({gameHistory.length})
-              </button>
-              <button
-                onClick={() => setHistoryFilter('solo')}
-                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'solo'
-                    ? 'btn-cinema-primary text-black'
-                    : 'text-cinema-muted hover:text-white'
-                  }`}
-              >
-                Solo ({gameHistory.filter(h => h.mode === 'solo').length})
-              </button>
-              <button
-                onClick={() => setHistoryFilter('multiplayer')}
-                className={`px-2.5 py-1 rounded-lg transition-colors ${historyFilter === 'multiplayer'
-                    ? 'btn-cinema-primary text-black'
-                    : 'text-cinema-muted hover:text-white'
-                  }`}
-              >
-                Multi ({gameHistory.filter(h => h.mode === 'multiplayer').length})
-              </button>
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             {gameHistory.length > 0 && (
               <button
                 onClick={handleClearHistory}
                 title="Clear Match History"
-                className="p-2 rounded-xl bg-cinema-surface hover:bg-rose-500/20 text-cinema-muted hover:text-rose-400 border border-cinema-border/70 transition-colors"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -356,201 +331,102 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onStartSolo, onOpenAdm
           </div>
         </div>
 
-        {/* History List */}
         {filteredHistory.length === 0 ? (
-          <div className="text-center py-8 px-4 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-cinema-surface border border-cinema-border text-cinema-muted flex items-center justify-center mx-auto">
-              <Film className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-white">No Match History Found</h4>
-              <p className="text-xs text-cinema-muted max-w-sm mx-auto mt-1">
-                {historyFilter === 'all'
-                  ? 'Play a Solo Cinema Challenge or join a Live Multiplayer Room to build your match history!'
-                  : `No ${historyFilter} matches recorded yet.`}
-              </p>
-            </div>
-            <button
-              onClick={onStartSolo}
-              className="py-2.5 px-5 rounded-xl btn-cinema-primary text-black font-black text-xs shadow-md transition-all inline-flex items-center gap-1.5"
-            >
-              <Play className="w-3.5 h-3.5 fill-black" />
-              <span>PLAY SOLO NOW</span>
-            </button>
+          <div className="text-center py-10 text-slate-500 text-xs">
+            No matches played yet in this mode. Start a challenge to record your score!
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-            {filteredHistory.map((item) => {
-              const isMulti = item.mode === 'multiplayer';
-              return (
-                <div
-                  key={item.id}
-                  className="p-3 sm:p-3.5 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
-                >
-                  {/* Left: Mode Icon & Date & Movies */}
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className={`p-2 rounded-xl flex-shrink-0 border ${isMulti
-                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
-                        : 'bg-brand-500/15 text-brand-400 border-brand-500/30'
-                      }`}>
-                      {isMulti ? <Users className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-black text-white">
-                          {isMulti ? '⚡ Live Match' : '🎮 Solo Challenge'}
-                        </span>
-                        {item.roomCode && (
-                          <span className="text-[10px] font-mono font-bold bg-cinema-dark text-amber-300 px-1.5 py-0.5 rounded border border-cinema-border">
-                            {item.roomCode}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-cinema-muted">
-                          {formatDate(item.timestamp)}
-                        </span>
-                      </div>
-
-                      {/* Movies Played Badges */}
-                      {item.movieNames && item.movieNames.length > 0 && (
-                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                          {item.movieNames.slice(0, 3).map((m, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[9px] font-bold text-slate-300 bg-cinema-dark px-2 py-0.5 rounded-md border border-cinema-border/50"
-                            >
-                              🎬 {m}
-                            </span>
-                          ))}
-                          {item.movieNames.length > 3 && (
-                            <span className="text-[9px] text-cinema-muted font-mono">
-                              +{item.movieNames.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            {filteredHistory.map((item, idx) => (
+              <div
+                key={idx}
+                className="p-3 rounded-2xl bg-[#070a12] border border-slate-800 flex items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl border ${
+                    item.isWinner
+                      ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30'
+                      : 'bg-slate-900 text-slate-400 border-slate-800'
+                  }`}>
+                    {item.mode === 'multiplayer' ? <Users className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   </div>
-
-                  {/* Right: Score, Streak, & Outcome */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-cinema-border/30">
-                    <div className="flex items-center gap-2">
-                      {item.streak > 1 && (
-                        <span className="text-[10px] font-black text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Flame className="w-3 h-3" />
-                          {item.streak}x
-                        </span>
-                      )}
-
-                      <span className="font-mono font-black text-xs sm:text-sm text-brand-400">
-                        +{(item.score || 0).toLocaleString()} pts
-                      </span>
+                  <div>
+                    <div className="font-bold text-white flex items-center gap-1.5">
+                      <span>{item.mode === 'multiplayer' ? 'Live Arena Battle' : 'Solo Challenge'}</span>
+                      {item.isWinner && <span className="text-[10px] text-emerald-300 font-black">WIN</span>}
                     </div>
-
-                    {/* Outcome Badge */}
-                    {isMulti ? (
-                      item.rank === 1 ? (
-                        <span className="text-[10px] font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                          <Crown className="w-3 h-3 text-amber-400" />
-                          Winner (#1)
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-semibold text-cinema-muted bg-cinema-dark px-2 py-0.5 rounded-full border border-cinema-border">
-                          Rank #{item.rank || 2} of {item.totalPlayers || 2}
-                        </span>
-                      )
-                    ) : (
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Completed
-                      </span>
-                    )}
+                    <span className="text-[10px] text-slate-500">{formatDate(item.timestamp)}</span>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="text-right">
+                  <div className="font-mono font-bold text-cyan-300">+{item.score} pts</div>
+                  {item.streak ? <div className="text-[10px] text-orange-400">🔥 {item.streak}x streak</div> : null}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Action Footer */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3">
+      {/* Quick Play CTA */}
+      <div className="flex justify-center">
         <button
           onClick={onStartSolo}
-          className="py-3.5 px-6 rounded-2xl btn-cinema-primary text-black font-black text-sm shadow-xl active:scale-95 transition-all inline-flex items-center justify-center gap-2"
+          className="w-full sm:max-w-md py-4 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black font-black text-sm tracking-wider uppercase shadow-[0_0_35px_rgba(6,182,212,0.7)] flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          <Play className="w-4 h-4 fill-black" />
-          <span>PLAY SOLO CHALLENGE</span>
+          <Play className="w-4 h-4 fill-black text-black" />
+          <span>START NEW CINEMA CHALLENGE</span>
         </button>
-
-        {user?.isGuest ? (
-          <>
-            <button
-              onClick={() => openAuthModal('signup')}
-              className="py-3.5 px-6 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-white text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-4 h-4 text-brand-400" />
-              <span>SAVE PROGRESS (SIGN UP)</span>
-            </button>
-            <button
-              onClick={signOut}
-              className="py-3.5 px-6 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>EXIT TO LOGIN</span>
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={signOut}
-            className="py-3.5 px-6 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition-colors inline-flex items-center justify-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>SIGN OUT</span>
-          </button>
-        )}
       </div>
 
       {/* Avatar Picker Modal */}
       {isAvatarPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-sm glass-card border border-cinema-border/90 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-cinema-border/50 pb-3">
-              <h3 className="text-base font-bold text-white">Choose Your Avatar</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl bg-[#0c101a] border border-slate-800 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <h3 className="text-base font-bold text-white font-display uppercase tracking-wider">
+                Select Cinephile Avatar
+              </h3>
               <button
                 onClick={() => setIsAvatarPickerOpen(false)}
-                className="text-cinema-muted hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-2.5 py-2">
+            <div className="grid grid-cols-5 gap-3 mb-6">
               {AVATAR_SEEDS.map((seed) => {
                 const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-                const isSelected = selectedAvatar === url;
+                const isCurrent = selectedAvatar === url;
                 return (
                   <button
                     key={seed}
                     onClick={() => handleSelectAvatar(url)}
-                    className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all p-0.5 ${isSelected
-                        ? 'border-brand-400 scale-105 shadow-md shadow-brand-500/30 bg-brand-500/20'
-                        : 'border-cinema-border/60 hover:border-brand-500/50 bg-cinema-dark'
-                      }`}
+                    className={`p-1 rounded-2xl border transition-all cursor-pointer ${
+                      isCurrent
+                        ? 'border-2 border-cyan-400 bg-cyan-950/40 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                        : 'border-slate-800 bg-[#070a12] hover:border-slate-700'
+                    }`}
                   >
-                    <img src={url} alt={seed} className="w-full h-full object-cover rounded-xl" />
+                    <img src={url} alt={seed} className="w-full h-auto rounded-xl object-cover" />
                   </button>
                 );
               })}
             </div>
 
-            <p className="text-[11px] text-cinema-muted text-center">
-              Select your favorite avatar representation for solo and live matches.
-            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsAvatarPickerOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#070a12] hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 };
-

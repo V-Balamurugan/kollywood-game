@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, KeyRound, ArrowRight, Clipboard, AlertCircle, HelpCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, KeyRound, ArrowRight, Clipboard, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { joinRoom } from '../services/firebase';
 
@@ -57,43 +57,64 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onRoomJoined, onBack }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-3.5 sm:px-4 py-4 sm:py-8">
+    <div className="relative min-h-[calc(100vh-140px)] flex flex-col justify-center px-4 sm:px-6 py-8 max-w-xl mx-auto overflow-hidden animate-fade-in font-sans">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[550px] h-[350px] bg-cyan-600/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[10%] left-[10%] w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[150px] pointer-events-none" />
+
+      {/* Back Button */}
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-bold text-cinema-muted hover:text-white mb-4 sm:mb-6 transition-colors group"
+        className="self-start flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-cyan-300 mb-6 transition-colors group cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Arena</span>
+        <span>Back to Lobby</span>
       </button>
 
-      <div className="glass-card rounded-3xl p-5 sm:p-8 border border-cinema-border shadow-2xl relative overflow-hidden">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cinema-border/60">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10 flex-shrink-0">
-            <KeyRound className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-2xl font-display font-black text-white">Join Match Room</h2>
-            <p className="text-[11px] sm:text-xs text-cinema-muted">Enter the 6-character room invite code</p>
+      {/* Main Card */}
+      <div className="relative rounded-3xl bg-[#0c101a]/90 border border-slate-800/90 backdrop-blur-xl p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(6,182,212,0.08)]">
+        
+        {/* Top Centered Glowing Icon Badge */}
+        <div className="flex justify-center mb-5">
+          <div className="w-14 h-14 rounded-full border-2 border-cyan-400 bg-[#070a12] flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.6)]">
+            <KeyRound className="w-7 h-7 text-cyan-400 stroke-[2.2]" />
           </div>
         </div>
 
+        {/* Title & Subtitle */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-200 drop-shadow-[0_0_20px_rgba(6,182,212,0.85)]">
+            Join Cinema Room
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
+            Enter the 6-character room access pass code shared by the room host.
+          </p>
+        </div>
+
+        {/* Error Notice */}
         {error && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-1.5 leading-relaxed">
-            <div className="flex items-center gap-2 font-bold">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-            <p className="text-[11px] text-slate-300 pl-6">
-              Make sure the room host is in the lobby and your room code is typed correctly.
-            </p>
+          <div className="mb-6 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs leading-relaxed flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleJoin} className="space-y-6">
           <div>
-            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-300 mb-2.5">
-              🎟️ 6-Digit Room Code
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                Room Pass Code
+              </label>
+              <button
+                type="button"
+                onClick={handlePaste}
+                className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <Clipboard className="w-3.5 h-3.5" />
+                <span>Paste Code</span>
+              </button>
+            </div>
+
             <div className="relative">
               <input
                 type="text"
@@ -104,39 +125,33 @@ export const JoinRoom: React.FC<JoinRoomProps> = ({ onRoomJoined, onBack }) => {
                   setError(null);
                 }}
                 placeholder="e.g. K7X2QP"
-                className="w-full bg-cinema-dark border-2 border-cinema-border focus:border-brand-500 rounded-2xl px-4 py-3.5 text-center font-mono font-black text-2xl sm:text-3xl tracking-widest text-amber-300 uppercase placeholder:text-slate-700 focus:outline-none transition-colors"
+                className="w-full bg-[#070a12] border-2 border-slate-800 focus:border-cyan-400 rounded-2xl px-4 py-4 text-center font-mono font-black text-2xl sm:text-3xl tracking-[0.25em] text-cyan-300 uppercase placeholder:text-slate-700 placeholder:tracking-normal focus:outline-none transition-colors shadow-inner"
               />
-              <button
-                type="button"
-                onClick={handlePaste}
-                title="Paste from clipboard"
-                className="absolute right-3 top-3.5 p-2 rounded-xl bg-cinema-surface hover:bg-cinema-cardHover text-cinema-muted hover:text-brand-300 border border-cinema-border/60 transition-colors"
-              >
-                <Clipboard className="w-4 h-4" />
-              </button>
             </div>
-            <p className="text-[11px] text-cinema-muted text-center mt-2">
-              Ask the room host for their 6-character code.
+            <p className="text-[11px] text-slate-500 text-center mt-2">
+              Ask your host for the 6-digit room code.
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || !code.trim()}
-            className="w-full py-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            {loading ? (
-              <span className="animate-pulse">Connecting to Room...</span>
-            ) : (
-              <>
-                <span>ENTER ROOM ARENA</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          <div className="pt-2 flex justify-center">
+            <button
+              type="submit"
+              disabled={loading || !code.trim()}
+              className="w-full py-4 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black font-black text-sm tracking-wider uppercase shadow-[0_0_35px_rgba(6,182,212,0.65)] hover:shadow-[0_0_45px_rgba(6,182,212,0.9)] flex items-center justify-center gap-2.5 transition-all duration-300 cursor-pointer disabled:opacity-50"
+            >
+              {loading ? (
+                <span className="animate-pulse">AUTHENTICATING PASS...</span>
+              ) : (
+                <>
+                  <ArrowRight className="w-4 h-4 text-black stroke-[3]" />
+                  <span>ENTER CINEMA ROOM</span>
+                </>
+              )}
+            </button>
+          </div>
         </form>
+
       </div>
     </div>
   );
 };
-

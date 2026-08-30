@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Film, Sparkles, X, Play, Music, Heart, User, Clapperboard,
-  Database, Search, Check, AlertCircle, Eye, RefreshCw, Wand2, Info,
+  Film, Sparkles, X, Music, Heart, User, Clapperboard,
+  Database, Search, AlertCircle, Eye, Wand2, Info,
   Star, ChevronRight, Layers, ExternalLink, Image as ImageIcon,
-  CheckCircle2, ArrowRight
+  CheckCircle2
 } from 'lucide-react';
 import { Puzzle } from '../types/game';
 import { getAllPuzzles } from '../services/puzzleManager';
@@ -124,277 +124,216 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
         setHeroineQid('');
         setSongTitle('');
         setYoutubeId('');
-        setFetchedDetails(null);
       }
     }
   }, [isOpen, initialPuzzle]);
 
   if (!isOpen) return null;
 
-  // Handle Quick Clone from Database
-  const handleSelectDbMovie = (id: string) => {
-    setSelectedDbMovieId(id);
-    if (!id) return;
-
-    const chosen = existingDbPuzzles.find((p) => p.id === id);
-    if (chosen) {
-      setMovieTitle(chosen.movie.name);
-      setMovieYear(chosen.year || 2024);
-      setMoviePoster(chosen.movie.imageUrl || '');
-      setDirector(chosen.director || '');
-      setMusicDirector(chosen.musicDirector || '');
-      setGenre(chosen.genre || 'Action / Drama');
-      setOverview(chosen.trivia || '');
-
-      setHeroCanonicalName(chosen.hero.canonicalName || chosen.hero.name);
-      setHeroDisplayName(chosen.hero.displayName || chosen.hero.name);
-      setHeroImageUrl(chosen.hero.imageUrl || '');
-      setHeroQid(chosen.hero.wikidataId || '');
-
-      setHeroineCanonicalName(chosen.heroine.canonicalName || chosen.heroine.name);
-      setHeroineDisplayName(chosen.heroine.displayName || chosen.heroine.name);
-      setHeroineImageUrl(chosen.heroine.imageUrl || '');
-      setHeroineQid(chosen.heroine.wikidataId || '');
-
-      setSongTitle(chosen.song.name);
-      setYoutubeId(chosen.song.youtubeId || '');
-      setDifficulty(chosen.difficulty || 'medium');
-
-      setFetchedDetails({
-        qid: chosen.wikidataId || 'Q-custom',
-        movieTitle: chosen.movie.name,
-        suggestedDisplayTitle: chosen.movie.name,
-        year: chosen.year,
-        director: chosen.director,
-        musicDirector: chosen.musicDirector,
-        genre: chosen.genre,
-        overview: chosen.trivia,
-        posterUrl: chosen.movie.imageUrl,
-        hero: {
-          id: chosen.hero.wikidataId || 'hero',
-          canonicalName: chosen.hero.canonicalName || chosen.hero.name,
-          suggestedDisplayName: chosen.hero.displayName || chosen.hero.name,
-          imageUrl: chosen.hero.imageUrl,
-          gender: 'male',
-          wikidataUrl: `${WIKIDATA_WEB_URL}/${chosen.hero.wikidataId || ''}`
-        },
-        heroine: {
-          id: chosen.heroine.wikidataId || 'heroine',
-          canonicalName: chosen.heroine.canonicalName || chosen.heroine.name,
-          suggestedDisplayName: chosen.heroine.displayName || chosen.heroine.name,
-          imageUrl: chosen.heroine.imageUrl,
-          gender: 'female',
-          wikidataUrl: `${WIKIDATA_WEB_URL}/${chosen.heroine.wikidataId || ''}`
-        },
-        cast: [],
-        source: 'database'
-      });
-
+  const handleSelectDbMovie = (puzzleId: string) => {
+    setSelectedDbMovieId(puzzleId);
+    if (!puzzleId) return;
+    const found = existingDbPuzzles.find((p) => p.id === puzzleId);
+    if (found) {
+      setMovieTitle(found.movie.displayName || found.movie.name);
+      setMovieYear(found.year || 2024);
+      setMoviePoster(found.posterUrl || found.movie.imageUrl || '');
+      setDirector(found.director || '');
+      setMusicDirector(found.musicDirector || '');
+      setGenre(found.genre || 'Action / Drama');
+      setOverview(found.trivia || '');
+      setDifficulty(found.difficulty || 'medium');
+      setHeroCanonicalName(found.hero.canonicalName || found.hero.name);
+      setHeroDisplayName(found.hero.displayName || found.hero.name);
+      setHeroImageUrl(found.hero.imageUrl || '');
+      setHeroineCanonicalName(found.heroine.canonicalName || found.heroine.name);
+      setHeroineDisplayName(found.heroine.displayName || found.heroine.name);
+      setHeroineImageUrl(found.heroine.imageUrl || '');
+      setSongTitle(found.song.displayName || found.song.name);
+      setYoutubeId(found.song.youtubeId || '');
       setStatusNotice({
-        text: `✓ Loaded "${chosen.movie.name}" from Database! Customize display names below.`,
-        type: 'success'
+        text: `Loaded "${found.movie.name}" from curated library. You can customize any field!`,
+        type: 'info'
       });
     }
   };
 
-  // Step 1: Search Wikidata for movie candidates
   const handleSearchMovie = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const query = (searchQuery || movieTitle).trim();
-    if (!query) {
-      setStatusNotice({ text: 'Please enter a movie title (e.g. Leo, Vikram, Master, 96)', type: 'error' });
-      return;
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
 
     setIsSearching(true);
-    setCandidates([]);
+    setLoadingStep('Searching Wikidata cinema database...');
     setStatusNotice(null);
-    setLoadingStep('🎬 Searching Wikidata for Tamil cinema matches...');
+    setCandidates([]);
 
     try {
       const results = await searchMovieCandidates(query);
-
       if (results.length === 0) {
-        setLoadingStep(null);
         setStatusNotice({
-          text: `No exact matches found for "${query}". You can enter movie and cast details manually.`,
-          type: 'info'
+          text: `No movie matches found on Wikidata for "${query}". You can fill in the fields manually.`,
+          type: 'error'
         });
-        setMovieTitle(query);
-      } else if (results.length === 1) {
-        await handleSelectCandidate(results[0]);
+        return;
+      }
+
+      if (results.length === 1) {
+        await handleFetchFullDetails(results[0].qid, results[0].cleanTitle);
       } else {
         setCandidates(results);
-        setLoadingStep(null);
         setStatusNotice({
-          text: `Found ${results.length} movie matches. Please select the specific film version below:`,
+          text: `Found ${results.length} movie versions on Wikidata. Please select the correct version below.`,
           type: 'info'
         });
       }
     } catch (err: any) {
-      setLoadingStep(null);
       setStatusNotice({
-        text: 'Wikidata search failed. You can enter details manually below.',
+        text: `Search error: ${err?.message || 'Failed to query Wikidata.'}`,
         type: 'error'
       });
     } finally {
       setIsSearching(false);
+      setLoadingStep(null);
     }
   };
 
-  // Step 2: Fetch full details for a chosen QID
-  const handleSelectCandidate = async (candidate: MovieCandidate) => {
+  const handleFetchFullDetails = async (qid: string, defaultTitle: string) => {
     setIsSearching(true);
-    setCandidates([]);
-    setLoadingStep('🔎 Resolving film metadata, director & music composer...');
-
+    setLoadingStep('Auto-fetching movie cast, director, poster and photos from Wikimedia...');
     try {
-      setLoadingStep('👥 Finding main cast & extracting character roles...');
-      const details = await fetchFullMovieDetailsByQid(candidate.qid, candidate.cleanTitle);
-
-      setLoadingStep('🖼️ Retrieving Wikimedia Commons profile pictures...');
-
-      if (details) {
-        setFetchedDetails(details);
-        setMovieTitle(details.movieTitle);
-        setMovieYear(details.year || candidate.year || 2024);
-        if (details.director) setDirector(details.director);
-        if (details.musicDirector) setMusicDirector(details.musicDirector);
-        if (details.genre) setGenre(details.genre);
-        if (details.overview || candidate.snippet) setOverview(details.overview || candidate.snippet);
-        if (details.posterUrl) setMoviePoster(details.posterUrl);
-
-        if (details.hero) {
-          setHeroCanonicalName(details.hero.canonicalName);
-          setHeroDisplayName(details.hero.suggestedDisplayName);
-          setHeroImageUrl(details.hero.imageUrl || '');
-          setHeroQid(details.hero.id);
-        }
-
-        if (details.heroine) {
-          setHeroineCanonicalName(details.heroine.canonicalName);
-          setHeroineDisplayName(details.heroine.suggestedDisplayName);
-          setHeroineImageUrl(details.heroine.imageUrl || '');
-          setHeroineQid(details.heroine.id);
-        }
-
+      const details = await fetchFullMovieDetailsByQid(qid, defaultTitle);
+      if (!details) {
         setStatusNotice({
-          text: `✨ Loaded "${details.movieTitle}" (${details.year}) from Wikidata & Wikimedia Commons!`,
-          type: 'success'
+          text: `Could not fetch details for "${defaultTitle}".`,
+          type: 'error'
         });
-      } else {
-        setMovieTitle(candidate.cleanTitle);
-        if (candidate.year) setMovieYear(candidate.year);
-        if (candidate.snippet) setOverview(candidate.snippet);
+        return;
       }
-    } catch (err) {
+      setFetchedDetails(details);
+      setCandidates([]);
+
+      setMovieTitle(details.suggestedDisplayTitle || details.movieTitle);
+      if (details.year) setMovieYear(details.year);
+      if (details.director) setDirector(details.director);
+      if (details.musicDirector) setMusicDirector(details.musicDirector);
+      if (details.genre) setGenre(details.genre);
+      if (details.overview) setOverview(details.overview);
+      if (details.posterUrl) setMoviePoster(details.posterUrl);
+
+      if (details.hero) {
+        setHeroCanonicalName(details.hero.canonicalName);
+        setHeroDisplayName(details.hero.suggestedDisplayName);
+        setHeroImageUrl(details.hero.imageUrl || '');
+        setHeroQid(details.hero.id);
+      }
+
+      if (details.heroine) {
+        setHeroineCanonicalName(details.heroine.canonicalName);
+        setHeroineDisplayName(details.heroine.suggestedDisplayName);
+        setHeroineImageUrl(details.heroine.imageUrl || '');
+        setHeroineQid(details.heroine.id);
+      }
+
       setStatusNotice({
-        text: 'Failed to fetch detailed cast. You can input display names manually.',
+        text: `✓ Auto-fetched data for "${details.movieTitle}"! Review & customize display names.`,
+        type: 'success'
+      });
+    } catch (err: any) {
+      setStatusNotice({
+        text: `Error fetching details: ${err?.message || 'Could not fetch cast details.'}`,
         type: 'error'
       });
     } finally {
-      setLoadingStep(null);
       setIsSearching(false);
+      setLoadingStep(null);
     }
   };
 
-  // Set Hero from Cast Candidate
+  const handleSelectCandidate = (candidate: MovieCandidate) => {
+    handleFetchFullDetails(candidate.qid, candidate.cleanTitle);
+  };
+
   const handleSetHeroFromCast = (person: FullCastPerson) => {
     setHeroCanonicalName(person.canonicalName);
-    setHeroDisplayName(person.suggestedDisplayName || person.canonicalName);
+    setHeroDisplayName(person.suggestedDisplayName);
     setHeroImageUrl(person.imageUrl || '');
     setHeroQid(person.id);
+    setStatusNotice({
+      text: `Hero updated to: ${person.suggestedDisplayName} (${person.canonicalName})`,
+      type: 'info'
+    });
   };
 
-  // Set Heroine from Cast Candidate
   const handleSetHeroineFromCast = (person: FullCastPerson) => {
     setHeroineCanonicalName(person.canonicalName);
-    setHeroineDisplayName(person.suggestedDisplayName || person.canonicalName);
+    setHeroineDisplayName(person.suggestedDisplayName);
     setHeroineImageUrl(person.imageUrl || '');
     setHeroineQid(person.id);
+    setStatusNotice({
+      text: `Heroine updated to: ${person.suggestedDisplayName} (${person.canonicalName})`,
+      type: 'info'
+    });
   };
 
-  // Final Form Submission & Save
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!movieTitle.trim()) {
-      setStatusNotice({ text: 'Please enter or select a Movie Title.', type: 'error' });
+      setStatusNotice({ text: 'Please provide a movie title.', type: 'error' });
+      return;
+    }
+    if (!heroDisplayName.trim()) {
+      setStatusNotice({ text: 'Please provide the Hero display name.', type: 'error' });
+      return;
+    }
+    if (!heroineDisplayName.trim()) {
+      setStatusNotice({ text: 'Please provide the Heroine display name.', type: 'error' });
+      return;
+    }
+    if (!songTitle.trim()) {
+      setStatusNotice({ text: 'Please provide a hit song title.', type: 'error' });
       return;
     }
 
-    const normalizedNewTitle = movieTitle.toLowerCase().trim();
-    // Check if creating a movie that already exists in the database
-    const existingMatch = existingDbPuzzles.find(
-      p => (!initialPuzzle || p.id !== initialPuzzle.id) && (
-        p.movie.name.toLowerCase().trim() === normalizedNewTitle ||
-        p.movie.canonicalName?.toLowerCase().trim() === normalizedNewTitle ||
-        (fetchedDetails?.qid && p.wikidataId && p.wikidataId === fetchedDetails.qid)
-      )
-    );
-
-    // If movie already exists in the database, launch with existing data (do NOT duplicate in database)
-    if (existingMatch && !initialPuzzle) {
-      const launchPuzzle: Puzzle = {
-        ...existingMatch,
-        createdBy: creatorName,
-        creatorUid: creatorUid
-      };
-      onSubmit(launchPuzzle);
-      return;
-    }
-
-    if (!heroDisplayName.trim() || !heroineDisplayName.trim() || !songTitle.trim()) {
-      setStatusNotice({
-        text: 'Please fill in all required game answers: Hero, Heroine, and Song.',
-        type: 'error'
-      });
-      return;
-    }
-
-    const rawSlug = movieTitle.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-    const cleanId =
-      initialPuzzle?.id ||
-      ('custom-' + (rawSlug || 'film') + '-' + Math.random().toString(36).substring(2, 7) + '-' + Date.now());
+    const puzzleId = initialPuzzle?.id || `custom-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
 
     const puzzle: Puzzle = {
-      id: cleanId,
-      year: Number(movieYear) || 2024,
-      difficulty: difficulty || 'medium',
-      director: director.trim() || 'Kollywood Cinema',
-      musicDirector: musicDirector.trim() || 'Tamil Music',
-      genre: genre.trim() || 'Kollywood Blockbuster',
-      trivia: overview.trim() || `Iconic Tamil film crafted by ${creatorName}`,
-      wikidataId: fetchedDetails?.qid || initialPuzzle?.wikidataId || '',
-      posterUrl: moviePoster.trim() || undefined,
-      createdBy: creatorName || 'Director',
+      id: puzzleId,
+      year: movieYear || 2024,
+      director: director.trim() || undefined,
+      musicDirector: musicDirector.trim() || undefined,
+      genre: genre.trim() || 'Action / Drama',
+      trivia: overview.trim() || undefined,
+      difficulty,
+      createdBy: creatorName,
       creatorUid: creatorUid || undefined,
+      posterUrl: moviePoster.trim() || undefined,
+      wikidataId: fetchedDetails?.qid || undefined,
       movie: {
         name: movieTitle.trim(),
         displayName: movieTitle.trim(),
-        canonicalName: fetchedDetails?.movieTitle || initialPuzzle?.movie.canonicalName || movieTitle.trim(),
-        wikidataId: fetchedDetails?.qid || initialPuzzle?.movie.wikidataId || '',
         firstLetter: (movieTitle.trim().charAt(0) || 'M').toUpperCase(),
-        imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(movieTitle.trim())}`,
-        aliases: [movieTitle.trim(), fetchedDetails?.movieTitle].filter(Boolean) as string[]
+        imageUrl: moviePoster.trim() || `https://api.dicebear.com/7.x/shapes/svg?seed=${movieTitle.trim()}`,
+        aliases: [movieTitle.trim()]
       },
       hero: {
         name: heroDisplayName.trim(),
         displayName: heroDisplayName.trim(),
-        canonicalName: heroCanonicalName || heroDisplayName.trim(),
-        wikidataId: heroQid || '',
+        canonicalName: heroCanonicalName.trim() || heroDisplayName.trim(),
+        wikidataId: heroQid || undefined,
         firstLetter: (heroDisplayName.trim().charAt(0) || 'H').toUpperCase(),
-        imageUrl: heroImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(heroDisplayName.trim())}`,
-        aliases: [heroDisplayName.trim(), heroCanonicalName].filter(Boolean) as string[]
+        imageUrl: heroImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroDisplayName.trim()}`,
+        aliases: [heroDisplayName.trim(), heroCanonicalName.trim()].filter(Boolean)
       },
       heroine: {
         name: heroineDisplayName.trim(),
         displayName: heroineDisplayName.trim(),
-        canonicalName: heroineCanonicalName || heroineDisplayName.trim(),
-        wikidataId: heroineQid || '',
+        canonicalName: heroineCanonicalName.trim() || heroineDisplayName.trim(),
+        wikidataId: heroineQid || undefined,
         firstLetter: (heroineDisplayName.trim().charAt(0) || 'H').toUpperCase(),
-        imageUrl: heroineImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(heroineDisplayName.trim())}`,
-        aliases: [heroineDisplayName.trim(), heroineCanonicalName].filter(Boolean) as string[]
+        imageUrl: heroineImageUrl.trim() || `https://api.dicebear.com/7.x/initials/svg?seed=${heroineDisplayName.trim()}`,
+        aliases: [heroineDisplayName.trim(), heroineCanonicalName.trim()].filter(Boolean)
       },
       song: {
         name: songTitle.trim(),
@@ -409,46 +348,48 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl glass-card border border-cinema-border/90 rounded-3xl p-5 sm:p-7 md:p-8 shadow-2xl my-auto max-h-[94vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto font-sans">
+      <div className="relative w-full max-w-2xl rounded-3xl bg-[#0c101a] border border-slate-800 p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] my-auto max-h-[94vh] overflow-y-auto">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2 rounded-xl bg-cinema-surface hover:bg-cinema-cardHover text-slate-400 hover:text-white border border-cinema-border/60 transition-colors shadow-sm"
+          className="absolute top-5 right-5 p-2 rounded-xl bg-[#070a12] hover:bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-colors z-10 cursor-pointer"
           title="Close modal"
         >
-          <X className="w-4 h-4 sm:w-5 sm:h-5" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3.5 mb-5 pr-8">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex items-center justify-center shadow-lg shadow-brand-500/10 flex-shrink-0">
-            <Clapperboard className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-[#070a12] border-2 border-cyan-400 text-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] flex-shrink-0">
+            <Clapperboard className="w-6 h-6 text-cyan-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xl sm:text-2xl font-display font-black text-white tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-200 uppercase tracking-tight">
                 {modalTitle || "Director's Movie Crafting"}
               </h3>
-              <span className="text-[10px] bg-brand-500/15 text-brand-300 border border-brand-500/30 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="text-[10px] bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 font-black px-2.5 py-0.5 rounded-full uppercase">
                 Auto-Fetch
               </span>
             </div>
-            <p className="text-xs text-cinema-muted mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               {modalSubtitle || "Enter movie title to auto-fetch info & photos. You control the exact display names!"}
             </p>
           </div>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-cinema-dark border border-cinema-border/70 mb-5">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#070a12] border border-slate-800 mb-5">
           <button
             type="button"
             onClick={() => setActiveTab('review')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === 'review'
-                ? 'btn-cinema-primary text-black shadow-md'
-                : 'text-cinema-muted hover:text-white'
+                ? 'bg-cyan-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <Wand2 className="w-3.5 h-3.5" />
@@ -457,14 +398,14 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('preview')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === 'preview'
-                ? 'btn-cinema-primary text-black shadow-md'
-                : 'text-cinema-muted hover:text-white'
+                ? 'bg-cyan-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>2. Live Contestant 2x2 Preview</span>
+            <span>2. Live Contestant 2×2 Preview</span>
           </button>
         </div>
 
@@ -473,10 +414,10 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
           <div
             className={`p-3.5 rounded-2xl text-xs flex items-center gap-2.5 mb-4 border transition-all animate-fade-in ${
               statusNotice.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
                 : statusNotice.type === 'error'
-                ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                : 'bg-brand-500/10 text-brand-300 border-brand-500/30'
+                ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
             }`}
           >
             {statusNotice.type === 'success' ? (
@@ -484,35 +425,35 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
             ) : statusNotice.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
             ) : (
-              <Info className="w-4 h-4 text-brand-400 flex-shrink-0" />
+              <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
             )}
             <span className="font-semibold">{statusNotice.text}</span>
           </div>
         )}
 
-        {/* Step-by-Step Loading Progress Bar */}
+        {/* Loading Progress */}
         {loadingStep && (
-          <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 mb-4 space-y-2 animate-pulse">
-            <div className="flex items-center gap-2 text-brand-300 text-xs font-black">
-              <Sparkles className="w-4 h-4 text-brand-400 animate-spin" />
+          <div className="p-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 mb-4 space-y-2 animate-pulse">
+            <div className="flex items-center gap-2 text-cyan-300 text-xs font-bold">
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
               <span>{loadingStep}</span>
             </div>
-            <div className="w-full bg-cinema-dark rounded-full h-1.5 overflow-hidden">
-              <div className="bg-gradient-to-r from-amber-400 via-brand-500 to-amber-300 h-full w-3/4 rounded-full animate-indeterminate" />
+            <div className="w-full bg-[#070a12] rounded-full h-1.5 overflow-hidden">
+              <div className="bg-gradient-to-r from-cyan-400 to-teal-300 h-full w-3/4 rounded-full animate-indeterminate shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
             </div>
           </div>
         )}
 
         {activeTab === 'review' ? (
           <div className="space-y-4">
-            {/* STEP 1: AUTO-FETCH SEARCH BAR */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-cinema-surface border border-cinema-border/80 space-y-2.5 shadow-sm">
-              <label className="block text-xs font-black text-slate-200 uppercase tracking-wider flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-brand-400">
+            {/* SEARCH BAR */}
+            <div className="p-4 rounded-2xl bg-[#070a12] border border-slate-800 space-y-2.5">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-cyan-400">
                   <Search className="w-4 h-4" />
                   Enter Movie Title to Auto-Fetch:
                 </span>
-                <span className="text-[10px] text-cinema-muted font-bold lowercase">e.g. Leo, Vikram, Master, 96, Ghilli</span>
+                <span className="text-[10px] text-slate-500 font-bold lowercase">e.g. Leo, Vikram, Master, 96, Ghilli</span>
               </label>
 
               <form onSubmit={handleSearchMovie} className="flex gap-2">
@@ -521,12 +462,12 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                   placeholder="Type Tamil movie title..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none font-semibold placeholder:text-cinema-muted/60"
+                  className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none placeholder-slate-600"
                 />
                 <button
                   type="submit"
                   disabled={isSearching || !searchQuery.trim()}
-                  className="py-2.5 px-4 sm:px-5 rounded-xl btn-cinema-primary text-black text-xs font-black flex items-center justify-center gap-1.5 shadow-md flex-shrink-0 disabled:opacity-50 active:scale-95 transition-all"
+                  className="py-2.5 px-4 sm:px-5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.5)] flex-shrink-0 disabled:opacity-40 transition-all cursor-pointer"
                 >
                   <Sparkles className={`w-4 h-4 ${isSearching ? 'animate-spin' : ''}`} />
                   <span>{isSearching ? 'Fetching...' : '⚡ Auto-Fetch'}</span>
@@ -534,15 +475,15 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
               </form>
             </div>
 
-            {/* DISAMBIGUATION CANDIDATE PICKER */}
+            {/* CANDIDATES */}
             {candidates.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5 animate-scale-in shadow-sm">
+              <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 space-y-2.5 animate-scale-in">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-amber-300 uppercase flex items-center gap-1.5">
-                    <Layers className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-bold text-cyan-300 uppercase flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-cyan-400" />
                     Multiple Versions Found — Select One:
                   </span>
-                  <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
+                  <span className="text-[10px] bg-cyan-950/80 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
                     {candidates.length} versions
                   </span>
                 </div>
@@ -551,24 +492,24 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                   {candidates.map((c) => (
                     <div
                       key={c.qid}
-                      className="p-2.5 rounded-xl bg-cinema-dark border border-cinema-border/80 hover:border-brand-500/60 flex items-center justify-between gap-3 transition-all"
+                      className="p-2.5 rounded-xl bg-[#070a12] border border-slate-800 hover:border-cyan-500/60 flex items-center justify-between gap-3 transition-all"
                     >
                       <div className="truncate flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-white">{c.cleanTitle}</span>
                           {c.year && (
-                            <span className="text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-black border border-brand-500/30">
+                            <span className="text-[10px] bg-cyan-950/80 text-cyan-300 px-1.5 py-0.5 rounded font-black border border-cyan-500/30">
                               {c.year}
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-cinema-muted truncate mt-0.5">{c.snippet}</p>
+                        <p className="text-[11px] text-slate-400 truncate mt-0.5">{c.snippet}</p>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleSelectCandidate(c)}
-                        className="py-1.5 px-3 rounded-xl btn-cinema-primary text-black text-xs font-black flex items-center gap-1 shadow-sm flex-shrink-0 transition-all active:scale-95"
+                        className="py-1.5 px-3 rounded-xl bg-cyan-400 text-black text-xs font-bold flex items-center gap-1 flex-shrink-0 cursor-pointer hover:bg-cyan-300 transition-all"
                       >
                         <span>Select</span>
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -580,15 +521,15 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
             )}
 
             {/* Quick Preset Selector */}
-            <div className="p-3 rounded-2xl bg-cinema-surface border border-cinema-border/70 flex items-center justify-between gap-2.5 text-xs">
-              <span className="font-bold text-cinema-muted flex items-center gap-1.5 flex-shrink-0">
-                <Database className="w-3.5 h-3.5 text-brand-400" />
+            <div className="p-3 rounded-2xl bg-[#070a12] border border-slate-800 flex items-center justify-between gap-2.5 text-xs">
+              <span className="font-bold text-slate-400 flex items-center gap-1.5 flex-shrink-0">
+                <Database className="w-3.5 h-3.5 text-cyan-400" />
                 Pick Existing Movie:
               </span>
               <select
                 value={selectedDbMovieId}
                 onChange={(e) => handleSelectDbMovie(e.target.value)}
-                className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none shadow-xs font-medium"
+                className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
               >
                 <option value="">-- Choose from Curated Library --</option>
                 {existingDbPuzzles.map((p) => (
@@ -601,10 +542,10 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
               {/* SECTION A: MOVIE METADATA */}
-              <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 space-y-3">
-                <div className="flex items-center justify-between pb-1.5 border-b border-cinema-border/60">
-                  <h4 className="text-xs font-black font-display text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Film className="w-3.5 h-3.5 text-brand-400" />
+              <div className="p-4 rounded-2xl bg-[#070a12] border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Film className="w-3.5 h-3.5 text-cyan-400" />
                     <span>🎬 Movie Information</span>
                   </h4>
                   {fetchedDetails?.qid && (
@@ -612,7 +553,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                       href={`${WIKIDATA_WEB_URL}/${fetchedDetails.qid}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-brand-400 hover:text-brand-300 font-bold flex items-center gap-1"
+                      className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1"
                     >
                       <span>Wikidata: {fetchedDetails.qid}</span>
                       <ExternalLink className="w-2.5 h-2.5" />
@@ -622,67 +563,67 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Movie Title *</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Movie Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Leo, Master, Vikram"
                       value={movieTitle}
                       onChange={(e) => setMovieTitle(e.target.value)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-bold"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Release Year</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Release Year</label>
                     <input
                       type="number"
                       value={movieYear}
                       onChange={(e) => setMovieYear(parseInt(e.target.value, 10) || 2024)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-semibold"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-semibold"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Film Director (Clue)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Film Director (Clue)</label>
                     <input
                       type="text"
                       placeholder="e.g. Lokesh Kanagaraj, Nelson, Shankar"
                       value={director}
                       onChange={(e) => setDirector(e.target.value)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Music Composer (Clue)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Music Composer (Clue)</label>
                     <input
                       type="text"
                       placeholder="e.g. Anirudh, AR Rahman, Yuvan"
                       value={musicDirector}
                       onChange={(e) => setMusicDirector(e.target.value)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Genre</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Genre</label>
                     <input
                       type="text"
                       placeholder="e.g. Action Thriller, Rom-Com"
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Difficulty Level</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Difficulty Level</label>
                     <select
                       value={difficulty}
                       onChange={(e) => setDifficulty(e.target.value as any)}
-                      className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                      className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                     >
                       <option value="easy">Easy (Blockbusters & Mass Hits)</option>
                       <option value="medium">Medium (Standard Popular Hits)</option>
@@ -691,15 +632,15 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                   </div>
                 </div>
 
-                {/* Movie Poster Banner (Wikidata / Wikimedia Commons Auto-Fetched) */}
-                <div className="p-3 rounded-xl bg-cinema-dark border border-cinema-border/80 space-y-2">
+                {/* Movie Poster Banner */}
+                <div className="p-3 rounded-xl bg-[#0c101a] border border-slate-800 space-y-2">
                   <div className="flex items-start gap-3">
-                    <div className="w-14 h-20 rounded-lg overflow-hidden bg-cinema-surface border border-cinema-border flex-shrink-0 shadow-inner">
+                    <div className="w-14 h-20 rounded-lg overflow-hidden bg-[#070a12] border border-slate-800 flex-shrink-0 shadow-inner">
                       {moviePoster ? (
                         <img src={moviePoster} alt={movieTitle} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center text-cinema-muted">
-                          <ImageIcon className="w-5 h-5 mb-1 text-brand-400" />
+                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center text-slate-500">
+                          <ImageIcon className="w-5 h-5 mb-1 text-cyan-400" />
                           <span className="text-[8px] font-bold">No Poster</span>
                         </div>
                       )}
@@ -707,30 +648,27 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                     <div className="flex-1 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-300">
-                          🎬 Movie Poster Banner (Wikidata & Wikimedia Commons)
+                          🎬 Movie Poster URL (Auto-fetched or custom)
                         </label>
                         {moviePoster && (
-                          <span className="text-[9px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-full border border-brand-500/30">
+                          <span className="text-[9px] bg-cyan-950/80 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
                             Poster Active
                           </span>
                         )}
                       </div>
                       <input
                         type="url"
-                        placeholder="https://... (Auto-populated from Wikidata or paste custom URL)"
+                        placeholder="https://..."
                         value={moviePoster}
                         onChange={(e) => setMoviePoster(e.target.value)}
-                        className="w-full bg-cinema-surface border border-cinema-border focus:border-brand-500 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none placeholder:text-cinema-muted/60"
+                        className="w-full bg-[#070a12] border border-slate-800 focus:border-cyan-400 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                       />
-                      <p className="text-[10px] text-cinema-muted">
-                        Automatically fetched from Wikidata & Wikimedia Commons.
-                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-400 mb-1">
                     Plot Overview / Trivia Clue
                   </label>
                   <textarea
@@ -738,30 +676,29 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                     placeholder="Storyline synopsis..."
                     value={overview}
                     onChange={(e) => setOverview(e.target.value)}
-                    className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none resize-none font-normal"
+                    className="w-full bg-[#0c101a] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none resize-none"
                   />
                 </div>
               </div>
 
-              {/* SECTION B: MAIN CAST & DIRECTOR-CONTROLLED DISPLAY NAMES */}
-              <div className="glass-panel p-4 rounded-2xl border border-cinema-border/70 space-y-4">
-                <div className="pb-1.5 border-b border-cinema-border/60 flex items-center justify-between">
+              {/* SECTION B: MAIN CAST */}
+              <div className="p-4 rounded-2xl bg-[#070a12] border border-slate-800 space-y-4">
+                <div className="pb-1.5 border-b border-slate-800 flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-black font-display text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <Star className="w-4 h-4 text-amber-400" />
-                      <span>⭐ Main Cast & Director-Controlled Display Names</span>
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <Star className="w-4 h-4 text-cyan-400" />
+                      <span>⭐ Main Cast & Display Names</span>
                     </h4>
-                    <p className="text-[11px] text-cinema-muted">
+                    <p className="text-[11px] text-slate-400">
                       Players see ONLY the Display Name you specify below!
                     </p>
                   </div>
                 </div>
 
-                {/* 1. HERO (LEAD ACTOR) SECTION */}
-                <div className="p-3.5 rounded-2xl card-category-hero border border-amber-500/35 space-y-3">
+                {/* 1. HERO */}
+                <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-cyan-500/30 space-y-3">
                   <div className="flex items-start gap-3.5">
-                    {/* Hero Profile Picture (Auto-populated from Wikimedia) */}
-                    <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-cinema-dark border border-amber-500/40 flex-shrink-0 shadow-inner">
+                    <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-[#070a12] border border-cyan-500/40 flex-shrink-0 shadow-inner">
                       {heroImageUrl ? (
                         <img
                           src={heroImageUrl}
@@ -769,41 +706,37 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center bg-amber-500/10 text-amber-300">
-                          <User className="w-6 h-6 mb-1 text-amber-400" />
+                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center bg-cyan-950/40 text-cyan-300">
+                          <User className="w-6 h-6 mb-1 text-cyan-400" />
                           <span className="text-[8px] font-bold">No Image</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Hero Names: Canonical API Name vs Director Display Name */}
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-amber-300 uppercase flex items-center gap-1">
-                          <User className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-xs font-bold text-cyan-300 uppercase flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-cyan-400" />
                           <span>Hero (Lead Actor) *</span>
                         </span>
                         {heroDisplayName && (
-                          <span className="text-xs font-mono font-black px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-lg border border-amber-500/40">
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 bg-cyan-950/80 text-cyan-300 rounded-lg border border-cyan-500/40">
                             Starts: {heroDisplayName.charAt(0).toUpperCase()}
                           </span>
                         )}
                       </div>
 
-                      {/* Canonical Name Reference Badge */}
                       {heroCanonicalName && (
-                        <div className="text-[11px] text-amber-200 bg-amber-500/15 px-2.5 py-1 rounded-lg border border-amber-500/30 flex items-center justify-between">
+                        <div className="text-[11px] text-cyan-200 bg-cyan-950/40 px-2.5 py-1 rounded-lg border border-cyan-500/30 flex items-center justify-between">
                           <span>
-                            <strong>API Canonical:</strong> {heroCanonicalName}
+                            <strong>Wikidata API:</strong> {heroCanonicalName}
                           </span>
-                          <span className="text-[9px] text-amber-400 font-semibold">(Internal)</span>
                         </div>
                       )}
 
-                      {/* EDITABLE DIRECTOR DISPLAY NAME */}
                       <div>
-                        <label className="block text-[11px] font-bold text-amber-300 mb-0.5">
-                          Player-Facing Display Name (What Players Guess):
+                        <label className="block text-[11px] font-bold text-cyan-300 mb-0.5">
+                          Player Guess Display Name:
                         </label>
                         <input
                           type="text"
@@ -811,17 +744,16 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                           placeholder="e.g. Vijay, Rajinikanth, Kamal Haasan"
                           value={heroDisplayName}
                           onChange={(e) => setHeroDisplayName(e.target.value)}
-                          className="w-full bg-cinema-dark border-2 border-amber-500/50 focus:border-amber-400 rounded-xl px-3 py-2 text-xs font-black text-white focus:outline-none"
+                          className="w-full bg-[#070a12] border-2 border-cyan-500/50 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Quick Select Alternative Hero from Detected Cast */}
                   {fetchedDetails?.cast && fetchedDetails.cast.length > 0 && (
-                    <div className="pt-2 border-t border-amber-500/20 space-y-1">
-                      <span className="text-[10px] font-bold text-amber-300 block">
-                        Switch Hero to Another Discovered Actor:
+                    <div className="pt-2 border-t border-cyan-500/20 space-y-1">
+                      <span className="text-[10px] font-bold text-cyan-300 block">
+                        Switch Hero to Discovered Cast:
                       </span>
                       <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
                         {fetchedDetails.cast
@@ -831,7 +763,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                               key={person.id}
                               type="button"
                               onClick={() => handleSetHeroFromCast(person)}
-                              className="px-2 py-0.5 rounded-lg bg-cinema-surface hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold transition-colors shadow-2xs"
+                              className="px-2 py-0.5 rounded-lg bg-[#070a12] hover:bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold transition-colors cursor-pointer"
                             >
                               + Set: {person.suggestedDisplayName || person.canonicalName}
                             </button>
@@ -841,11 +773,10 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                   )}
                 </div>
 
-                {/* 2. HEROINE (LEAD ACTRESS) SECTION */}
-                <div className="p-3.5 rounded-2xl card-category-heroine border border-rose-500/35 space-y-3">
+                {/* 2. HEROINE */}
+                <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-pink-500/30 space-y-3">
                   <div className="flex items-start gap-3.5">
-                    {/* Heroine Profile Picture */}
-                    <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-cinema-dark border border-rose-500/40 flex-shrink-0 shadow-inner">
+                    <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-[#070a12] border border-pink-500/40 flex-shrink-0 shadow-inner">
                       {heroineImageUrl ? (
                         <img
                           src={heroineImageUrl}
@@ -853,41 +784,37 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center bg-rose-500/10 text-rose-300">
-                          <Heart className="w-6 h-6 mb-1 text-rose-400" />
+                        <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center bg-pink-950/40 text-pink-300">
+                          <Heart className="w-6 h-6 mb-1 text-pink-400" />
                           <span className="text-[8px] font-bold">No Image</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Heroine Names: Canonical API Name vs Director Display Name */}
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-rose-300 uppercase flex items-center gap-1">
-                          <Heart className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="text-xs font-bold text-pink-300 uppercase flex items-center gap-1">
+                          <Heart className="w-3.5 h-3.5 text-pink-400" />
                           <span>Heroine (Lead Actress) *</span>
                         </span>
                         {heroineDisplayName && (
-                          <span className="text-xs font-mono font-black px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded-lg border border-rose-500/40">
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 bg-pink-950/80 text-pink-300 rounded-lg border border-pink-500/40">
                             Starts: {heroineDisplayName.charAt(0).toUpperCase()}
                           </span>
                         )}
                       </div>
 
-                      {/* Canonical Name Reference Badge */}
                       {heroineCanonicalName && (
-                        <div className="text-[11px] text-rose-200 bg-rose-500/15 px-2.5 py-1 rounded-lg border border-rose-500/30 flex items-center justify-between">
+                        <div className="text-[11px] text-pink-200 bg-pink-950/40 px-2.5 py-1 rounded-lg border border-pink-500/30 flex items-center justify-between">
                           <span>
-                            <strong>API Canonical:</strong> {heroineCanonicalName}
+                            <strong>Wikidata API:</strong> {heroineCanonicalName}
                           </span>
-                          <span className="text-[9px] text-rose-400 font-semibold">(Internal)</span>
                         </div>
                       )}
 
-                      {/* EDITABLE DIRECTOR DISPLAY NAME */}
                       <div>
-                        <label className="block text-[11px] font-bold text-rose-300 mb-0.5">
-                          Player-Facing Display Name (What Players Guess):
+                        <label className="block text-[11px] font-bold text-pink-300 mb-0.5">
+                          Player Guess Display Name:
                         </label>
                         <input
                           type="text"
@@ -895,17 +822,16 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                           placeholder="e.g. Trisha, Nayanthara, Samantha"
                           value={heroineDisplayName}
                           onChange={(e) => setHeroineDisplayName(e.target.value)}
-                          className="w-full bg-cinema-dark border-2 border-rose-500/50 focus:border-rose-400 rounded-xl px-3 py-2 text-xs font-black text-white focus:outline-none"
+                          className="w-full bg-[#070a12] border-2 border-pink-500/50 focus:border-pink-400 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Quick Select Alternative Heroine from Detected Cast */}
                   {fetchedDetails?.cast && fetchedDetails.cast.length > 0 && (
-                    <div className="pt-2 border-t border-rose-500/20 space-y-1">
-                      <span className="text-[10px] font-bold text-rose-300 block">
-                        Switch Heroine to Another Discovered Actress:
+                    <div className="pt-2 border-t border-pink-500/20 space-y-1">
+                      <span className="text-[10px] font-bold text-pink-300 block">
+                        Switch Heroine to Discovered Cast:
                       </span>
                       <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
                         {fetchedDetails.cast
@@ -915,7 +841,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                               key={person.id}
                               type="button"
                               onClick={() => handleSetHeroineFromCast(person)}
-                              className="px-2 py-0.5 rounded-lg bg-cinema-surface hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] font-bold transition-colors shadow-2xs"
+                              className="px-2 py-0.5 rounded-lg bg-[#070a12] hover:bg-pink-950/40 border border-pink-500/30 text-pink-300 text-[10px] font-bold transition-colors cursor-pointer"
                             >
                               + Set: {person.suggestedDisplayName || person.canonicalName}
                             </button>
@@ -925,15 +851,15 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                   )}
                 </div>
 
-                {/* 3. SONG & YOUTUBE AUDIO SECTION */}
-                <div className="p-3.5 rounded-2xl card-category-song border border-purple-500/35 space-y-2.5">
+                {/* 3. SONG */}
+                <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-purple-500/30 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
                       <Music className="w-3.5 h-3.5 text-purple-400" />
                       <span>Hit Song Title *</span>
                     </span>
                     {songTitle && (
-                      <span className="text-xs font-mono font-black px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/40">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 bg-purple-950/80 text-purple-300 rounded-lg border border-purple-500/40">
                         Starts: {songTitle.charAt(0).toUpperCase()}
                       </span>
                     )}
@@ -947,7 +873,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                         placeholder="e.g. Naa Ready, Hukum, Arabic Kuthu"
                         value={songTitle}
                         onChange={(e) => setSongTitle(e.target.value)}
-                        className="w-full bg-cinema-dark border-2 border-purple-500/50 focus:border-purple-400 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none"
+                        className="w-full bg-[#070a12] border-2 border-purple-500/50 focus:border-purple-400 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none"
                       />
                     </div>
                     <div>
@@ -956,7 +882,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                         placeholder="YouTube ID (e.g. szvt1vD0Uug)"
                         value={youtubeId}
                         onChange={(e) => setYoutubeId(e.target.value)}
-                        className="w-full bg-cinema-dark border border-cinema-border focus:border-purple-400 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                        className="w-full bg-[#070a12] border border-slate-800 focus:border-purple-400 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                       />
                     </div>
                   </div>
@@ -968,16 +894,16 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3.5 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-slate-300 hover:text-white text-xs font-bold transition-all active:scale-95"
+                  className="flex-1 py-3.5 rounded-full bg-[#070a12] hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3.5 rounded-2xl btn-cinema-primary text-black text-xs sm:text-sm font-black shadow-xl shadow-brand-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black text-xs sm:text-sm font-black uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.6)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Clapperboard className="w-4 h-4 fill-black" />
-                  <span>💾 Save & Launch Movie</span>
+                  <Clapperboard className="w-4 h-4 fill-black text-black" />
+                  <span>Save & Launch Movie</span>
                 </button>
               </div>
             </form>
@@ -985,16 +911,16 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
         ) : (
           /* STEP 2: LIVE CONTESTANT 2x2 PREVIEW */
           <div className="space-y-4 animate-fade-in">
-            <div className="p-3.5 rounded-2xl bg-cinema-surface border border-cinema-border/70 flex items-center justify-between">
+            <div className="p-3.5 rounded-2xl bg-[#070a12] border border-slate-800 flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
                   Contestant Game View Preview
                 </h4>
-                <p className="text-[11px] text-cinema-muted">
+                <p className="text-[11px] text-slate-400">
                   Players see only the photos, first letters, and director-approved display names!
                 </p>
               </div>
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 uppercase">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 uppercase">
                 {difficulty}
               </span>
             </div>
@@ -1002,93 +928,93 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
             {/* 2x2 Grid View */}
             <div className="grid grid-cols-2 gap-3">
               {/* Hero Card */}
-              <div className="p-3.5 rounded-2xl card-category-hero border border-amber-500/40 shadow-sm space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-cyan-500/40 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-amber-400">Hero</span>
-                  <span className="text-xs font-mono font-black px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30">
+                  <span className="text-[10px] uppercase font-bold text-cyan-400">Hero</span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 bg-cyan-950/80 text-cyan-300 rounded-md border border-cyan-500/30">
                     {heroDisplayName ? heroDisplayName.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
-                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-cinema-dark border border-amber-500/30">
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-[#070a12] border border-cyan-500/30">
                   {heroImageUrl ? (
                     <img src={heroImageUrl} alt={heroDisplayName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-amber-400 font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-xs text-cyan-400 font-bold">
                       Avatar
                     </div>
                   )}
                 </div>
-                <div className="font-black text-white text-sm truncate">
-                  {heroDisplayName || <span className="text-cinema-muted italic">Enter Hero Name</span>}
+                <div className="font-bold text-white text-sm truncate">
+                  {heroDisplayName || <span className="text-slate-500 italic">Enter Hero Name</span>}
                 </div>
               </div>
 
               {/* Heroine Card */}
-              <div className="p-3.5 rounded-2xl card-category-heroine border border-rose-500/40 shadow-sm space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-pink-500/40 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-rose-400">Heroine</span>
-                  <span className="text-xs font-mono font-black px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded-md border border-rose-500/30">
+                  <span className="text-[10px] uppercase font-bold text-pink-400">Heroine</span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 bg-pink-950/80 text-pink-300 rounded-md border border-pink-500/30">
                     {heroineDisplayName ? heroineDisplayName.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
-                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-cinema-dark border border-rose-500/30">
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-[#070a12] border border-pink-500/30">
                   {heroineImageUrl ? (
                     <img src={heroineImageUrl} alt={heroineDisplayName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-rose-400 font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-xs text-pink-400 font-bold">
                       Avatar
                     </div>
                   )}
                 </div>
-                <div className="font-black text-white text-sm truncate">
-                  {heroineDisplayName || <span className="text-cinema-muted italic">Enter Heroine Name</span>}
+                <div className="font-bold text-white text-sm truncate">
+                  {heroineDisplayName || <span className="text-slate-500 italic">Enter Heroine Name</span>}
                 </div>
               </div>
 
               {/* Movie Card */}
-              <div className="p-3.5 rounded-2xl card-category-movie border border-blue-500/40 shadow-sm space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-teal-500/40 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-blue-400">Movie</span>
-                  <span className="text-xs font-mono font-black px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-md border border-blue-500/30">
+                  <span className="text-[10px] uppercase font-bold text-teal-400">Movie</span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 bg-teal-950/80 text-teal-300 rounded-md border border-teal-500/30">
                     {movieTitle ? movieTitle.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
-                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-cinema-dark border border-blue-500/30">
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-[#070a12] border border-teal-500/30">
                   {moviePoster ? (
                     <img src={moviePoster} alt={movieTitle} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-blue-400 font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-xs text-teal-400 font-bold">
                       Poster
                     </div>
                   )}
                 </div>
-                <div className="font-black text-white text-sm truncate">
-                  {movieTitle || <span className="text-cinema-muted italic">Enter Movie Title</span>}
+                <div className="font-bold text-white text-sm truncate">
+                  {movieTitle || <span className="text-slate-500 italic">Enter Movie Title</span>}
                 </div>
-                <div className="text-[10px] text-cinema-muted font-bold">
+                <div className="text-[10px] text-slate-400 font-bold">
                   {movieYear} • {genre}
                 </div>
               </div>
 
               {/* Song Card */}
-              <div className="p-3.5 rounded-2xl card-category-song border border-purple-500/40 shadow-sm space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#0c101a] border border-purple-500/40 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-black text-purple-400">Song</span>
-                  <span className="text-xs font-mono font-black px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-md border border-purple-500/30">
+                  <span className="text-[10px] uppercase font-bold text-purple-400">Song</span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 bg-purple-950/80 text-purple-300 rounded-md border border-purple-500/30">
                     {songTitle ? songTitle.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
-                <div className="font-black text-white text-sm truncate">
-                  {songTitle || <span className="text-cinema-muted italic">Enter Song Title</span>}
+                <div className="font-bold text-white text-sm truncate">
+                  {songTitle || <span className="text-slate-500 italic">Enter Song Title</span>}
                 </div>
-                <div className="text-[10px] text-cinema-muted font-semibold">
+                <div className="text-[10px] text-slate-400 font-semibold">
                   {youtubeId ? '🎵 Audio Clue Attached' : 'Audio Clue Optional'}
                 </div>
               </div>
             </div>
 
             {/* Clue Summary */}
-            <div className="p-3.5 rounded-2xl bg-cinema-surface border border-cinema-border/70 space-y-1 text-xs text-slate-300">
+            <div className="p-3.5 rounded-2xl bg-[#070a12] border border-slate-800 space-y-1 text-xs text-slate-300">
               <div className="flex items-center justify-between">
                 <span>
                   <strong className="text-white">Director:</strong> {director || 'Not specified'}
@@ -1098,7 +1024,7 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
                 </span>
               </div>
               {overview && (
-                <p className="text-[11px] text-cinema-muted italic pt-1 border-t border-cinema-border/40">
+                <p className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-800">
                   "{overview}"
                 </p>
               )}
@@ -1109,17 +1035,17 @@ export const CreatePuzzleModal: React.FC<CreatePuzzleModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('review')}
-                className="flex-1 py-3.5 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-slate-300 hover:text-white text-xs font-bold transition-all active:scale-95"
+                className="flex-1 py-3.5 rounded-full bg-[#070a12] hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer"
               >
                 ✏️ Return to Edit Display Names
               </button>
               <button
                 type="button"
                 onClick={handleFormSubmit}
-                className="flex-1 py-3.5 rounded-2xl btn-cinema-primary text-black text-xs sm:text-sm font-black shadow-xl shadow-brand-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black text-xs sm:text-sm font-black uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.6)] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Clapperboard className="w-4 h-4 fill-black" />
-                <span>💾 Save & Launch Movie</span>
+                <Clapperboard className="w-4 h-4 fill-black text-black" />
+                <span>Save & Launch Movie</span>
               </button>
             </div>
           </div>

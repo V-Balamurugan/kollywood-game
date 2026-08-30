@@ -595,7 +595,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
   const roomCode = code.toUpperCase().trim();
   const cleanPuzzle = cleanForFirebase(puzzle);
   
-  // Persist to local & global database if not exists
+  // Persist to local & global database immediately so it is never lost on network disconnects
   addPuzzleIfNotExists(cleanPuzzle);
 
   const updates: any = {
@@ -603,6 +603,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
     currentCreatorUid: puzzle.creatorUid || null,
     status: 'in-progress' as const,
     roundStartTime: Date.now(),
+    currentPuzzleIndex: 0,
     sharedAnswers: {},
     answers: {},
     nextRoundVotes: {},
@@ -615,6 +616,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
     Object.assign(room, updates);
     room.customPuzzle = cleanPuzzle;
     room.currentCreatorUid = puzzle.creatorUid || undefined;
+    room.puzzleIds = [cleanPuzzle.id, ...(room.puzzleIds || []).filter(id => id !== cleanPuzzle.id)];
     room.sharedAnswers = {};
     room.answers = {};
     room.nextRoundVotes = {};
@@ -634,7 +636,7 @@ export async function setCustomPuzzleAndStart(code: string, puzzle: Puzzle): Pro
       await set(ref(db, `rooms/${roomCode}/directorHints`), []);
       await set(ref(db, `rooms/${roomCode}/hintRequests`), []);
     } catch (err: any) {
-      console.warn('Firebase setCustomPuzzleAndStart notice:', err?.message);
+      console.warn('Firebase network notice during custom puzzle start, preserved locally:', err?.message);
     }
   }
 }

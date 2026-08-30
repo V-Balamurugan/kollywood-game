@@ -9,7 +9,7 @@ import { CellCategory, Puzzle, CellAnswer, Room, DirectorHint, HintRequest } fro
 import { subscribeToRoom, submitSharedCellAnswer, advanceRound, updateUserStats, setCustomPuzzleAndStart, awardCreatorHintBounty, requestDirectorHint, sendDirectorHint, kickPlayerFromRoom, leaveRoom, voteNextRound } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { getAllPuzzles } from '../services/puzzleManager';
-import { PlusCircle, LogOut, AlertTriangle, UserMinus, Home } from 'lucide-react';
+import { PlusCircle, LogOut, AlertTriangle, UserMinus, Home, Shield, Users } from 'lucide-react';
 
 interface MultiplayerGameProps {
   roomCode: string;
@@ -47,7 +47,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         return;
       }
 
-      // Check if current user was kicked/removed from room
       if (user && updatedRoom.players && !updatedRoom.players[user.uid]) {
         if (!hasHandledExit.current) {
           hasHandledExit.current = true;
@@ -70,7 +69,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   useEffect(() => {
     if (!room || !user) return;
 
-    // A. If 2-player game and one player left (or room marked player-left)
     if (room.status === 'finished' && room.closedReason === 'player-left') {
       if (!hasHandledExit.current) {
         hasHandledExit.current = true;
@@ -84,7 +82,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
       return;
     }
 
-    // B. If host left the room
     if (room.status === 'finished' && room.closedReason === 'host-left') {
       if (!hasHandledExit.current) {
         hasHandledExit.current = true;
@@ -97,7 +94,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
       return;
     }
 
-    // C. If 3+ players and a player left: show live notification toast to Host and players
     if (room.lastLeftPlayer && room.lastLeftPlayer.uid !== user.uid) {
       if (room.lastLeftPlayer.timestamp !== lastNotifiedLeftTimestamp.current) {
         lastNotifiedLeftTimestamp.current = room.lastLeftPlayer.timestamp;
@@ -121,12 +117,12 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     return () => clearTimeout(timer);
   }, [autoExitModal, onExitHome]);
 
-  // 2. Synchronized countdown timer based on room.roundStartTime (Skipped if roundTimeSeconds is 0)
+  // Synchronized countdown timer
   useEffect(() => {
     if (!room || room.status === 'finished') return;
 
     const roundDuration = room.settings?.roundTimeSeconds ?? 60;
-    if (roundDuration === 0) return; // Untimed Chill Mode
+    if (roundDuration === 0) return;
 
     const startTime = room.roundStartTime || room.createdAt || Date.now();
 
@@ -148,12 +144,10 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     };
   }, [room?.roundStartTime, room?.currentPuzzleIndex, room?.status, room?.settings?.roundTimeSeconds, isRoundEnded]);
 
-  // 3. Reset round local state when puzzle index or custom puzzle changes
   useEffect(() => {
     setIsRoundEnded(false);
   }, [room?.currentPuzzleIndex, room?.customPuzzle?.id]);
 
-  // 4. Watch for all 4 cells solved in shared answers
   const sharedAnswers = room?.sharedAnswers || {};
   const solvedCount = Object.values(sharedAnswers).filter(a => a && a.correct).length;
   const isRoundClear = solvedCount === 4;
@@ -164,198 +158,173 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     }
   }, [isRoundClear, isRoundEnded]);
 
-  // Conditional early return AFTER all hooks
   if (!room || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-cinema-muted">Connecting to game arena...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 font-sans">
+        <div className="w-10 h-10 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(6,182,212,0.4)]" />
+        <p className="text-sm text-slate-400">Connecting to game arena...</p>
       </div>
     );
   }
 
-  // Determine current puzzle: custom puzzle created in room OR sequential from dataset
   const allPuzzles = getAllPuzzles();
   const currentIdx = room.currentPuzzleIndex || 0;
   const currentPuzzleId = room.puzzleIds && room.puzzleIds.length > 0
     ? room.puzzleIds[currentIdx % room.puzzleIds.length]
-    : (allPuzzles[0]?.id || 'leo-2023');
+    : null;
 
-  const currentPuzzle: Puzzle = room.customPuzzle || allPuzzles.find(p => p.id === currentPuzzleId) || allPuzzles[0];
+  // Resolve exact active puzzle without ever falling back to a random puzzle if custom was chosen
+  let currentPuzzle: Puzzle;
+  if (room.customPuzzle && room.customPuzzle.movie?.name) {
+    currentPuzzle = room.customPuzzle;
+  } else if (currentPuzzleId) {
+    const found = allPuzzles.find(p => p.id === currentPuzzleId);
+    if (found) {
+      currentPuzzle = found;
+    } else {
+      // Check stored custom puzzle library
+      const localCustom = getAllPuzzles();
+      currentPuzzle = localCustom.find(p => p.id === currentPuzzleId) || allPuzzles[0];
+    }
+  } else if (room.currentCreatorUid) {
+    // If creator is set but network delayed the customPuzzle object, find creator's puzzle
+    const creatorPuzzles = allPuzzles.filter(p => p.creatorUid === room.currentCreatorUid);
+    currentPuzzle = creatorPuzzles[creatorPuzzles.length - 1] || allPuzzles[0];
+  } else {
+    currentPuzzle = allPuzzles[0];
+  }
 
-  const isHost = user.uid === room.hostUid;
-  const isCreatorOfMovie = Boolean(
-    currentPuzzle.creatorUid
-      ? currentPuzzle.creatorUid === user.uid
-      : (currentPuzzle.createdBy && currentPuzzle.createdBy === user.displayName)
-  );
-
-  const totalPlayersCount = Object.keys(room.players || {}).length;
-  // If director is the only player, or if they choose Play Along mode, allow interactive play; otherwise act as director
-  const isSpectator = isCreatorOfMovie && totalPlayersCount > 1 && directorRole === 'director';
-
-  const safeDirectorHints: DirectorHint[] = Array.isArray(room.directorHints)
-    ? room.directorHints
-    : (room.directorHints && typeof room.directorHints === 'object' ? (Object.values(room.directorHints) as DirectorHint[]) : []);
-
-  const safeHintRequests: HintRequest[] = Array.isArray(room.hintRequests)
-    ? room.hintRequests
-    : (room.hintRequests && typeof room.hintRequests === 'object' ? (Object.values(room.hintRequests) as HintRequest[]) : []);
-
-  const myPlayer = (room.players && room.players[user.uid]) || {
+  const myPlayer = room.players?.[user.uid] || {
     uid: user.uid,
-    name: user.displayName || 'Player',
-    avatar: user.photoURL,
+    name: user.displayName || 'Contestant',
     score: 0,
     ready: true
   };
 
-  const isFinal = room.status === 'finished';
+  const isHost = room.hostUid === user.uid;
+  const isCreatorOfMovie = currentPuzzle.creatorUid === user.uid;
+  const isSpectator = isCreatorOfMovie && directorRole === 'director';
+  const totalPlayersCount = Object.keys(room.players || {}).length;
+  const isFinal = room.settings?.totalRounds ? (room.currentPuzzleIndex + 1) >= room.settings.totalRounds : false;
 
   const handleCellSolved = async (category: CellCategory, answer: CellAnswer) => {
-    // If user is in spectator mode, they cannot submit guesses
-    if (isSpectator) return;
+    if (isSpectator || !user) return;
+    const speedBonus = (room.settings?.roundTimeSeconds ?? 60) > 0 ? Math.floor((timeLeft / (room.settings?.roundTimeSeconds ?? 60)) * 200) : 0;
+    const cellScore = 250 + speedBonus;
+    const currentScore = myPlayer.score || 0;
 
-    const points = Math.max(50, 250 - answer.hintsUsed * 50);
-    await submitSharedCellAnswer(
-      roomCode,
-      category,
-      answer,
-      {
-        uid: user.uid,
-        name: user.displayName || 'Player',
-        avatar: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`
-      },
-      points,
-      myPlayer.score || 0
-    );
+    setStreak(s => s + 1);
 
-    setStreak(prev => prev + 1);
+    await submitSharedCellAnswer(roomCode, category, answer, {
+      uid: user.uid,
+      name: user.displayName || 'Player',
+      avatar: user.photoURL || undefined
+    }, cellScore, currentScore);
   };
 
-  const handleUnlockHint = async (_newLevel: number) => {
-    // Deduct 50 pts potential from contestant and award +50 pts to creator
-    const creatorUid = currentPuzzle.creatorUid || room.currentCreatorUid;
-    if (creatorUid && creatorUid !== user.uid) {
-      await awardCreatorHintBounty(roomCode, creatorUid, 50);
+  const handleUnlockHint = async (_hintLevel: number) => {
+    if (user && !user.isGuest) {
+      updateUserStats(user.uid, user.displayName || 'Player', 0, false, streak, {
+        mode: 'multiplayer',
+        roundsPlayed: 1
+      });
     }
   };
 
   const handleAskDirector = async () => {
+    if (!user || isCreatorOfMovie) return;
     await requestDirectorHint(roomCode, {
       uid: user.uid,
-      name: user.displayName || 'Contestant'
+      name: user.displayName || 'Player'
     });
   };
 
   const handleSendDirectorHint = async (message: string) => {
-    await sendDirectorHint(
-      roomCode,
-      user.displayName || 'Director',
-      user.uid,
-      message,
-      50
-    );
+    if (!user || !isCreatorOfMovie) return;
+    await sendDirectorHint(roomCode, user.displayName || 'Director', user.uid, message, 100);
+    await awardCreatorHintBounty(roomCode, user.uid, 100);
   };
 
   const handleNextRound = async () => {
     if (!isHost) return;
     const nextIdx = (room.currentPuzzleIndex || 0) + 1;
-    await advanceRound(roomCode, nextIdx, false);
+    const isFinished = room.settings?.totalRounds ? nextIdx >= room.settings.totalRounds : false;
+    await advanceRound(roomCode, nextIdx, isFinished);
   };
 
-  const recordMatchStats = () => {
-    if (!user || !myPlayer) return;
-    const playersList = Object.values(room?.players || {});
-    const sorted = playersList.sort((a, b) => (b.score || 0) - (a.score || 0));
-    const rank = sorted.findIndex(p => p.uid === user.uid) + 1 || 1;
-    const isWinner = rank === 1;
-    const roundsPlayed = (room?.currentPuzzleIndex || 0) + 1;
-    const movieNames = currentPuzzle?.movie?.name ? [currentPuzzle.movie.name] : [];
+  const handleVoteNext = async () => {
+    if (!user) return;
+    await voteNextRound(roomCode, user.uid);
+  };
 
-    updateUserStats(user.uid, user.displayName || 'Player', myPlayer.score || 0, isWinner, streak, {
-      mode: 'multiplayer',
-      roundsPlayed,
-      movieNames,
-      rank,
-      totalPlayers: Math.max(1, playersList.length),
-      roomCode
-    });
+  const handleCustomNextRound = async (customPuzzle: Puzzle) => {
+    setIsCreateNextModalOpen(false);
+    const directorPuzzle: Puzzle = {
+      ...customPuzzle,
+      createdBy: user.displayName || 'Director',
+      creatorUid: user.uid
+    };
+    await setCustomPuzzleAndStart(roomCode, directorPuzzle);
   };
 
   const handleStopGame = async () => {
-    if (isHost) {
-      const currentIdx = room.currentPuzzleIndex || 0;
-      await advanceRound(roomCode, currentIdx, true);
-      recordMatchStats();
-    } else {
-      recordMatchStats();
-      await leaveRoom(roomCode, user.uid);
-      onExitHome();
-    }
-  };
-
-  const handleExitMatch = async () => {
-    if (myPlayer.score > 0) {
-      recordMatchStats();
-    }
-    await leaveRoom(roomCode, user.uid);
-    onExitHome();
+    if (!isHost) return;
+    const currentIdx = room.currentPuzzleIndex || 0;
+    await advanceRound(roomCode, currentIdx, true);
   };
 
   const handleKickPlayer = async (targetUid: string, targetName: string) => {
     if (!isHost || targetUid === user.uid) return;
-    if (window.confirm(`Kick "${targetName}" from this match?`)) {
+    if (window.confirm(`Kick ${targetName} from the match?`)) {
       await kickPlayerFromRoom(roomCode, targetUid);
     }
   };
 
-  const handleVoteNext = async () => {
+  const handleExitMatch = async () => {
+    setIsConfirmLeaveOpen(false);
     if (user) {
-      await voteNextRound(roomCode, user.uid);
+      await leaveRoom(roomCode, user.uid);
     }
+    onExitHome();
   };
 
-  const handleCustomNextRound = async (puzzle: Puzzle) => {
-    setIsCreateNextModalOpen(false);
-    await setCustomPuzzleAndStart(roomCode, puzzle);
-  };
+  const safeDirectorHints: DirectorHint[] = room.directorHints || [];
+  const safeHintRequests: HintRequest[] = room.hintRequests || [];
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-6 relative">
-      {/* Toast Alert for 3+ players when someone leaves */}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 font-sans animate-fade-in relative">
+      {/* Toast Alert */}
       {playerLeftToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-cinema-card border-2 border-amber-500/60 shadow-2xl shadow-amber-500/20 text-white text-xs sm:text-sm font-bold">
-          <UserMinus className="w-4 h-4 text-amber-400 flex-shrink-0 animate-bounce" />
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-[#0c101a] border-2 border-cyan-500/60 shadow-2xl text-white text-xs sm:text-sm font-bold">
+          <UserMinus className="w-4 h-4 text-cyan-400 flex-shrink-0" />
           <span>{playerLeftToast}</span>
         </div>
       )}
 
-      {/* Top Notice: Live Shared Board / Custom Creator & Leave Game Action */}
-      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-[11px] sm:text-xs">
-        <div className="flex items-center gap-2 text-brand-300">
-          <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
-          <span>
-            <strong>Live Shared Board:</strong> Any clue solved by ANY contestant immediately updates for everyone!
-          </span>
+      {/* Top Match Arena Bar */}
+      <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="bg-cyan-950/80 text-cyan-400 border border-cyan-500/40 px-3 py-1 rounded-xl text-xs font-mono font-black flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+            <Shield className="w-3.5 h-3.5" />
+            <span>ARENA: {roomCode}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
+            <Users className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{totalPlayersCount} Players</span>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3 flex-wrap">
-          {currentPuzzle.createdBy && (
-            <span className="text-cinema-muted">
-              Director: <strong className="text-amber-400">{currentPuzzle.createdBy}</strong>
-            </span>
-          )}
-
+        <div className="flex items-center gap-2">
           {isCreatorOfMovie && totalPlayersCount > 1 && (
-            <div className="flex items-center gap-1 bg-cinema-dark/80 p-0.5 rounded-lg border border-cinema-border/70">
+            <div className="flex items-center gap-1 bg-[#0c101a] p-1 rounded-xl border border-slate-800 text-xs">
               <button
                 type="button"
                 onClick={() => setDirectorRole('director')}
-                className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   directorRole === 'director'
-                    ? 'bg-amber-500 text-black shadow'
-                    : 'text-cinema-muted hover:text-white'
+                    ? 'bg-cyan-400 text-black shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 👑 Director Mode
@@ -363,10 +332,10 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
               <button
                 type="button"
                 onClick={() => setDirectorRole('player')}
-                className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   directorRole === 'player'
-                    ? 'bg-emerald-500 text-black shadow'
-                    : 'text-cinema-muted hover:text-white'
+                    ? 'bg-cyan-400 text-black shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 🎮 Play Along
@@ -374,11 +343,10 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
           )}
 
-          {/* In-Game Stop / Leave Button */}
           <button
             onClick={() => setIsConfirmLeaveOpen(true)}
             title="Leave Match"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-[11px] font-bold transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-bold transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Leave Match</span>
@@ -398,9 +366,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Main Board Area (3 Columns on Desktop, Full Width on Mobile) */}
-        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
-          {/* If current user is the Director, show Director Console */}
+        {/* Main 2x2 Board Area */}
+        <div className="lg:col-span-3 space-y-4">
           {isCreatorOfMovie && !isRoundEnded && !isFinal && (
             <DirectorConsole
               puzzle={currentPuzzle}
@@ -425,8 +392,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           />
         </div>
 
-        {/* Live Scoreboard Sidebar (1 Column on Desktop, Full Width on Mobile) */}
-        <div className="lg:col-span-1 space-y-3 sm:space-y-4">
+        {/* Live Scoreboard Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
           <LiveScoreboard
             players={room.players || {}}
             answers={room.answers || {}}
@@ -435,11 +402,10 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             onKickPlayer={handleKickPlayer}
           />
 
-          {/* Host / Player Next Puzzle Creator Trigger */}
           {isRoundEnded && !isFinal && (
             <button
               onClick={() => setIsCreateNextModalOpen(true)}
-              className="w-full py-2.5 px-3 rounded-xl bg-cinema-cardHover hover:bg-brand-500/20 border border-cinema-border hover:border-brand-500/40 text-brand-400 text-xs font-bold transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-2xl bg-[#0c101a] hover:bg-cyan-950 border border-slate-800 hover:border-cyan-500/40 text-cyan-400 text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>🎨 Create Next Movie Clue</span>
@@ -448,7 +414,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         </div>
       </div>
 
-      {/* Round & Game Result Modal with Synchronized Next Voting */}
+      {/* Game Result Modal */}
       {(isRoundEnded || room.status === 'finished') && (
         <GameResultModal
           isFinal={room.status === 'finished'}
@@ -478,27 +444,27 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
       {/* Confirm In-Game Leave Modal */}
       {isConfirmLeaveOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm bg-cinema-card border border-cinema-border rounded-3xl p-6 shadow-2xl space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="w-full max-w-sm bg-[#0c101a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-950/60 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-white">Leave Match?</h3>
-              <p className="text-xs sm:text-sm text-cinema-muted mt-1">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Leave Match?</h3>
+              <p className="text-xs text-slate-400 mt-1">
                 Are you sure you want to stop playing and exit to the Home page?
               </p>
             </div>
             <div className="flex gap-2.5 pt-2">
               <button
                 onClick={() => setIsConfirmLeaveOpen(false)}
-                className="flex-1 py-2.5 rounded-xl bg-cinema-cardHover hover:bg-cinema-border border border-cinema-border text-white text-xs font-semibold transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-[#070a12] border border-slate-800 text-slate-300 text-xs font-semibold hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExitMatch}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition-colors shadow-lg shadow-red-500/20"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
               >
                 Yes, Leave
               </button>
@@ -507,23 +473,23 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         </div>
       )}
 
-      {/* 2-Player Match Ended Auto-Exit Modal */}
+      {/* 2-Player Auto Exit Modal */}
       {autoExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-md bg-cinema-card border-2 border-brand-500/50 rounded-3xl p-6 shadow-2xl text-center space-y-4">
-            <div className="w-14 h-14 rounded-3xl bg-brand-500/15 border border-brand-500/30 text-brand-400 flex items-center justify-center mx-auto animate-pulse">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in font-sans">
+          <div className="w-full max-w-md bg-[#0c101a] border-2 border-cyan-400/80 rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div className="w-14 h-14 rounded-3xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(6,182,212,0.4)]">
               <LogOut className="w-7 h-7" />
             </div>
             <div>
               <h3 className="text-lg font-display font-black text-white">{autoExitModal.title}</h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
                 {autoExitModal.message}
               </p>
             </div>
             <div className="pt-2">
               <button
                 onClick={onExitHome}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-400 to-brand-500 text-black font-bold text-sm shadow-lg shadow-brand-500/25 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-full bg-cyan-400 text-black font-black text-sm shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:bg-cyan-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Home className="w-4 h-4" />
                 <span>Return to Home ({autoExitModal.countdown}s)</span>
@@ -535,4 +501,3 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     </div>
   );
 };
-

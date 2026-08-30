@@ -1,11 +1,20 @@
-# Dependencies
+# ==========================================
+# KOLLYWOOD GAME — GIT IGNORE CONFIGURATION
+# ==========================================
+
+# 1. Dependencies & Package Managers
 node_modules/
-.pnp
+.pnp/
 .pnp.js
 jspm_packages/
 web_modules/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnpm-store/
 
-# Production Build Output
+# 2. Production & Build Outputs
 dist/
 dist-ssr/
 out/
@@ -15,11 +24,21 @@ build/
 .vuepress/dist/
 storybook-static/
 
-# Vite Cache & Build Artifacts
+# 3. Vite & Bundler Caches
 .vite/
-*.vite
+*.vite/
+.cache/
+.parcel-cache/
+.eslintcache/
+.stylelintcache/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
-# Environment and Confidential Configuration Files
+# 4. Environment & Secret Configs
 .env
 .env.*
 .env.local
@@ -31,34 +50,30 @@ storybook-static/
 *.pem
 *.key
 *.crt
+*.cert
+secrets.json
 
-# Local Scratch / Test Scripts
-scratch/
-*.scratch.*
-
-# Logs and Debug Output
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
+# 5. Firebase & Cloud Deployment Artifacts
+.firebase/
 firebase-debug.log*
 firestore-debug.log*
+database-debug.log*
 ui-debug.log*
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+.vercel/
+.netlify/
+.wrangler/
 
-# Runtime, Process & Temp Data
-pids/
-*.pid
-*.seed
-*.pid.lock
+# 6. Scratch, Temporary & Test Files
+scratch/
+*.scratch.*
 tmp/
 temp/
 .tmp/
 *.tmp
 *.temp
+src/test_suite.ts
 
-# Test Coverage & Reports
+# 7. Testing, Coverage & Playwright Reports
 coverage/
 *.lcov
 .nyc_output/
@@ -67,19 +82,16 @@ playwright-report/
 cypress/videos/
 cypress/screenshots/
 
-# Cache Directories
-.cache/
-.parcel-cache/
-.npm/
-.eslintcache/
-.stylelintcache/
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-.tsbuildinfo
+# 8. Logs & Diagnostic Dumps
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# IDE & Editor Directories
+# 9. IDEs & Code Editors
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
@@ -89,8 +101,12 @@ cypress/screenshots/
 *.njsproj
 *.sln
 *.sw?
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
 
-# OS Generated Files
+# 10. OS & Filesystem Metadata
 .DS_Store
 .DS_Store?
 ._*
@@ -99,10 +115,15 @@ cypress/screenshots/
 ehthumbs.db
 Thumbs.db
 [Dd]esktop.ini
+$RECYCLE.BIN/
 
-# Archives
+# 11. Archives & Compressed Bundles
 *.zip
 *.tar.gz
 *.tgz
 *.rar
 *.7z
+
+# 12. Local AI & IDE State Directories
+.gemini/
+.system_generated/

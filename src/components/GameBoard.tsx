@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2, Lightbulb, Play, Music, Film, User, Heart,
-  AlertCircle, Lock, Clapperboard, Sparkles, HelpCircle, Eye,
-  Crown, MessageSquare, Megaphone, Send, ArrowRight, Star
+  AlertCircle, Lock, Clapperboard, HelpCircle, Eye,
+  Crown, Megaphone, ArrowRight
 } from 'lucide-react';
 import { CellCategory, Puzzle, CellAnswer, SharedCellAnswer, DirectorHint } from '../types/game';
 import { checkAnswer } from '../utils/fuzzyMatch';
@@ -35,37 +35,37 @@ const CATEGORIES: CellConfig[] = [
     key: 'hero',
     label: 'Hero',
     sublabel: 'Protagonist',
-    icon: <User className="w-4 h-4 text-amber-400" />,
-    borderAccent: 'border-amber-500/40 hover:border-amber-400',
-    textAccent: 'text-amber-400',
-    bgAccent: 'bg-amber-500/10'
+    icon: <User className="w-4 h-4 text-cyan-400" />,
+    borderAccent: 'border-cyan-500/40 hover:border-cyan-400',
+    textAccent: 'text-cyan-400',
+    bgAccent: 'bg-cyan-950/60'
   },
   {
     key: 'heroine',
     label: 'Heroine',
     sublabel: 'Leading Lady',
-    icon: <Heart className="w-4 h-4 text-rose-400" />,
-    borderAccent: 'border-rose-500/40 hover:border-rose-400',
-    textAccent: 'text-rose-400',
-    bgAccent: 'bg-rose-500/10'
+    icon: <Heart className="w-4 h-4 text-pink-400" />,
+    borderAccent: 'border-pink-500/40 hover:border-pink-400',
+    textAccent: 'text-pink-400',
+    bgAccent: 'bg-pink-950/60'
   },
   {
     key: 'movie',
     label: 'Movie',
     sublabel: 'Blockbuster Title',
-    icon: <Film className="w-4 h-4 text-blue-400" />,
-    borderAccent: 'border-blue-500/40 hover:border-blue-400',
-    textAccent: 'text-blue-400',
-    bgAccent: 'bg-blue-500/10'
+    icon: <Film className="w-4 h-4 text-teal-400" />,
+    borderAccent: 'border-teal-500/40 hover:border-teal-400',
+    textAccent: 'text-teal-400',
+    bgAccent: 'bg-teal-950/60'
   },
   {
     key: 'song',
     label: 'Song',
-    sublabel: 'Hit Chartbuster',
+    sublabel: 'Chartbuster Hit',
     icon: <Music className="w-4 h-4 text-purple-400" />,
     borderAccent: 'border-purple-500/40 hover:border-purple-400',
     textAccent: 'text-purple-400',
-    bgAccent: 'bg-purple-500/10'
+    bgAccent: 'bg-purple-950/60'
   }
 ];
 
@@ -87,7 +87,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     song: ''
   });
 
-  // Cinema Clue Level: 0 = All Locked, 1 = Year/Genre, 2 = Director/Music, 3 = Plot Clue / Trivia
   const [clueLevel, setClueLevel] = useState<number>(0);
   const [hasRequestedDirector, setHasRequestedDirector] = useState(false);
   const [directorRevealedCards, setDirectorRevealedCards] = useState<Record<CellCategory, boolean>>({
@@ -111,7 +110,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     song: null
   });
 
-  // Reset state when movie puzzle changes (new round)
   useEffect(() => {
     setInputs({ hero: '', heroine: '', movie: '', song: '' });
     setClueLevel(0);
@@ -121,12 +119,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     setLastFeedback({ hero: null, heroine: null, movie: null, song: null });
   }, [puzzle?.id, puzzle?.movie?.name]);
 
-  // Safe director hints normalization
   const safeDirectorHints: DirectorHint[] = Array.isArray(directorHints)
     ? directorHints
     : (directorHints && typeof directorHints === 'object' ? Object.values(directorHints) : []);
 
-  // Audio cue when new hint arrives and reset request state so player can request again if needed
   useEffect(() => {
     if (safeDirectorHints.length > 0) {
       sound.playHint();
@@ -178,25 +174,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         guess,
         correct: true,
         timeMs,
-        hintsUsed,
-        revealedAt: Date.now()
+        hintsUsed
       };
       onCellSolved(category, answerData);
-      setLastFeedback(prev => ({ ...prev, [category]: 'Correct! 🔥' }));
+      setInputs(prev => ({ ...prev, [category]: '' }));
     } else {
       sound.playWrong();
       setShakingCells(prev => ({ ...prev, [category]: true }));
-      setLastFeedback(prev => ({ ...prev, [category]: 'Try again!' }));
+      setLastFeedback(prev => ({ ...prev, [category]: 'Not quite right. Try another name!' }));
       setTimeout(() => {
         setShakingCells(prev => ({ ...prev, [category]: false }));
-      }, 500);
+      }, 600);
     }
   };
 
-  const solvedCount = ['hero', 'heroine', 'movie', 'song'].filter(cat => answers?.[cat as CellCategory]?.correct).length;
-  const isAllCardsSolved = solvedCount === 4;
+  const isAllCardsSolved =
+    answers?.hero?.correct &&
+    answers?.heroine?.correct &&
+    answers?.movie?.correct &&
+    answers?.song?.correct;
 
   const isAnyDirectorCardRevealed = Object.values(directorRevealedCards).some(Boolean);
+
   const toggleAllDirectorCards = () => {
     const nextState = !isAnyDirectorCardRevealed;
     setDirectorRevealedCards({
@@ -208,64 +207,59 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-3.5 sm:space-y-5">
+    <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 font-sans">
       {/* 👑 MOVIE CREATOR / SPECTATOR BANNER */}
       {isSpectator && (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-cinema-surface border-2 border-amber-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl animate-fade-in">
+        <div className="p-4 rounded-3xl bg-[#0c101a]/95 border-2 border-cyan-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xl animate-fade-in">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500 text-black shadow-md flex-shrink-0">
+            <div className="p-2 rounded-xl bg-cyan-400 text-black shadow-md flex-shrink-0">
               <Crown className="w-4 h-4 fill-black" />
             </div>
             <div>
-              <span className="text-xs font-display font-black text-amber-300 block">
+              <span className="text-xs font-display font-black text-cyan-300 block">
                 Director's Chair (Spectator Mode)
               </span>
-              <p className="text-[11px] text-cinema-muted">
+              <p className="text-[11px] text-slate-400">
                 {isAllCardsSolved
-                  ? '🎉 All 4 answers have been discovered by contestants!'
-                  : 'You can click "Show Answer" on any unsolved section below to preview answers.'}
+                  ? '🎉 All 4 clues have been solved by contestants!'
+                  : 'You can reveal answers for any category below.'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Toggle All Answers in 2x2 Grid Button (Removed when all 4 are solved) */}
             {!isAllCardsSolved ? (
               <button
                 type="button"
                 onClick={toggleAllDirectorCards}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-md ${isAnyDirectorCardRevealed
-                  ? 'bg-amber-500 text-black border-amber-400 font-black shadow-amber-500/25'
-                  : 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/40 text-amber-300'
-                  }`}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isAnyDirectorCardRevealed
+                    ? 'bg-cyan-400 text-black border-cyan-300 font-black shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                    : 'bg-cyan-950/60 hover:bg-cyan-900 border-cyan-500/40 text-cyan-300'
+                }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>{isAnyDirectorCardRevealed ? '🙈 Hide Unsolved Answers' : '👁️ Show Unsolved Answers'}</span>
+                <span>{isAnyDirectorCardRevealed ? 'Hide Answers' : 'Preview All Answers'}</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black shadow-sm">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-black shadow-sm">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>All Solved (4/4)</span>
               </div>
             )}
-
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cinema-dark border border-cinema-border text-amber-400 text-xs font-bold flex-shrink-0">
-              <Crown className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Director View</span>
-            </div>
           </div>
         </div>
       )}
 
       {/* 🎬 DIRECTOR'S BROADCAST CLUES */}
       {safeDirectorHints.length > 0 && (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-cinema-surface border border-brand-500/60 shadow-xl shadow-brand-500/15 space-y-2.5 animate-fade-in">
+        <div className="p-4 rounded-3xl bg-[#0c101a]/95 border border-cyan-500/60 shadow-xl space-y-2.5 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-1">
-            <div className="flex items-center gap-2 text-xs font-display font-black text-amber-300">
-              <Megaphone className="w-4 h-4 text-amber-400 animate-bounce" />
+            <div className="flex items-center gap-2 text-xs font-display font-black text-cyan-300">
+              <Megaphone className="w-4 h-4 text-cyan-400 animate-bounce" />
               <span>DIRECTOR'S LIVE BROADCAST</span>
             </div>
-            <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               From {safeDirectorHints[safeDirectorHints.length - 1]?.fromName || 'Director'}
             </span>
           </div>
@@ -274,9 +268,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {safeDirectorHints.map((dh) => (
               <div
                 key={dh.id || `hint-${dh.timestamp}`}
-                className="p-2.5 rounded-xl bg-cinema-dark/90 border border-brand-500/40 text-xs text-white font-semibold flex items-start gap-2 shadow-sm"
+                className="p-3 rounded-2xl bg-[#070a12] border border-cyan-500/30 text-xs text-white font-semibold flex items-start gap-2 shadow-sm"
               >
-                <span className="text-amber-400 font-bold">🎬</span>
+                <span className="text-cyan-400 font-bold">🎬</span>
                 <span>"{dh.message}"</span>
               </div>
             ))}
@@ -285,23 +279,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* 🎬 CINEMA CLUES STATION */}
-      <div className="glass-card rounded-3xl p-3.5 sm:p-5 border border-cinema-border/80 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-3.5 border-b border-cinema-border/60">
+      <div className="rounded-3xl bg-[#0c101a]/90 p-4 sm:p-5 border border-slate-800/90 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-brand-500/15 text-brand-400 border border-brand-500/30 flex-shrink-0">
+            <div className="p-2 rounded-xl bg-cyan-950/80 text-cyan-400 border border-cyan-500/30 flex-shrink-0">
               <Clapperboard className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-wider flex items-center gap-1.5">
                 <span>Cinema Clues Station</span>
                 {clueLevel > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-mono font-bold">
                     {clueLevel}/3 Unlocked
                   </span>
                 )}
               </h4>
-              <span className="text-[10px] sm:text-[11px] text-cinema-muted block">
-                {clueLevel === 0 && '🔒 Clues locked • Guess with 1st letters or reveal clues'}
+              <span className="text-[10px] sm:text-[11px] text-slate-400 block">
+                {clueLevel === 0 && '🔒 Clues locked • Guess with first letter or reveal clues'}
                 {clueLevel === 1 && 'Release Year & Genre revealed (-50 pts)'}
                 {clueLevel === 2 && 'Director & Music Maestro revealed (-50 pts)'}
                 {clueLevel >= 3 && 'Full Plot & Story Clue revealed! (-50 pts)'}
@@ -310,30 +304,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Contestant: Ask Director for Hint */}
             {onRequestDirectorHint && !disabled && !revealAll && !isSpectator && (
               <button
                 onClick={handleAskDirector}
                 disabled={hasRequestedDirector}
-                className={`py-1.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm ${hasRequestedDirector
-                  ? 'bg-cinema-surface text-emerald-400 border-emerald-500/40 cursor-default'
-                  : 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border-pink-500/40 text-pink-300'
-                  }`}
-                title="Ask the movie creator / director to provide 1 hint (-25 pts penalty, minimum 0)"
+                className={`py-1.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  hasRequestedDirector
+                    ? 'bg-[#070a12] text-emerald-400 border-emerald-500/40 cursor-default'
+                    : 'bg-pink-950/60 hover:bg-pink-900 border-pink-500/40 text-pink-300'
+                }`}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>{hasRequestedDirector ? '✓ Hint Requested (-25 pts)' : '🙋‍♂️ Ask Director (-25 pts)'}</span>
+                <span>{hasRequestedDirector ? '✓ Hint Requested (-25 pts)' : '🙋 Ask Director (-25 pts)'}</span>
               </button>
             )}
 
-            {/* Unlock Next Cinema Clue */}
             {clueLevel < 3 && !disabled && !revealAll && !isSpectator && (
               <button
                 onClick={handleUnlockNextCinemaClue}
-                className="py-1.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 hover:border-amber-400 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-                title="Unlock next cinema clue (-50 pts penalty, minimum 0)"
+                className="py-1.5 px-3 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               >
-                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                <Lightbulb className="w-3.5 h-3.5 text-cyan-400" />
                 <span>
                   {clueLevel === 0 && 'Unlock Year & Genre (-50 pts)'}
                   {clueLevel === 1 && 'Unlock Dir & Music (-50 pts)'}
@@ -347,53 +338,56 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* Revealed / Locked Clue Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3">
           {/* Clue 1: Year & Genre */}
-          <div className={`p-3 rounded-2xl border transition-all ${clueLevel >= 1 || revealAll
-            ? 'bg-cinema-surface border-cinema-border/70 shadow-sm'
-            : 'bg-cinema-dark/50 border-cinema-border/40 opacity-70'
-            }`}>
-            <span className="text-[10px] uppercase font-black text-amber-400 block mb-0.5 tracking-wider">
+          <div className={`p-3 rounded-2xl border transition-all ${
+            clueLevel >= 1 || revealAll
+              ? 'bg-[#070a12] border-slate-800'
+              : 'bg-[#070a12]/50 border-slate-900 opacity-60'
+          }`}>
+            <span className="text-[10px] uppercase font-black text-cyan-400 block mb-0.5 tracking-wider">
               📅 Year & Genre
             </span>
             {clueLevel >= 1 || revealAll ? (
               <div className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
                 <span className="font-mono">{puzzle?.year || 2024}</span>
-                <span className="text-cinema-muted">•</span>
-                <span className="text-slate-300 truncate">{puzzle?.genre || 'Kollywood Cinema'}</span>
+                <span className="text-slate-500">•</span>
+                <span className="truncate">{puzzle?.genre || 'Commercial Blockbuster'}</span>
               </div>
             ) : (
-              <div className="text-xs text-cinema-muted italic flex items-center gap-1">
-                <Lock className="w-3 h-3 text-amber-400/60" />
+              <div className="text-xs text-slate-500 italic flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-600" />
                 <span>Locked Clue</span>
               </div>
             )}
           </div>
 
           {/* Clue 2: Director & Music */}
-          <div className={`p-3 rounded-2xl border transition-all ${clueLevel >= 2 || revealAll
-            ? 'bg-cinema-surface border-cinema-border/70 shadow-sm'
-            : 'bg-cinema-dark/50 border-cinema-border/40 opacity-70'
-            }`}>
-            <span className="text-[10px] uppercase font-black text-pink-400 block mb-0.5 tracking-wider">
+          <div className={`p-3 rounded-2xl border transition-all ${
+            clueLevel >= 2 || revealAll
+              ? 'bg-[#070a12] border-slate-800'
+              : 'bg-[#070a12]/50 border-slate-900 opacity-60'
+          }`}>
+            <span className="text-[10px] uppercase font-black text-teal-400 block mb-0.5 tracking-wider">
               🎬 Director & Music
             </span>
             {clueLevel >= 2 || revealAll ? (
               <div className="text-xs font-bold text-slate-200 truncate">
                 Dir: <strong className="text-white">{puzzle?.director || 'Tamil Director'}</strong>
-                {puzzle?.musicDirector && <span className="text-slate-300"> • 🎵 {puzzle.musicDirector}</span>}
+                {puzzle?.musicDirector && <span className="text-slate-400"> • 🎵 {puzzle.musicDirector}</span>}
               </div>
             ) : (
-              <div className="text-xs text-cinema-muted italic flex items-center gap-1">
-                <Lock className="w-3 h-3 text-amber-400/60" />
+              <div className="text-xs text-slate-500 italic flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-600" />
                 <span>Locked Clue</span>
               </div>
             )}
           </div>
 
           {/* Clue 3: Plot / Trivia Clue */}
-          <div className={`p-3 rounded-2xl border transition-all ${clueLevel >= 3 || revealAll
-            ? 'bg-cinema-surface border-cinema-border/70 shadow-sm'
-            : 'bg-cinema-dark/50 border-cinema-border/40 opacity-70'
-            }`}>
+          <div className={`p-3 rounded-2xl border transition-all ${
+            clueLevel >= 3 || revealAll
+              ? 'bg-[#070a12] border-slate-800'
+              : 'bg-[#070a12]/50 border-slate-900 opacity-60'
+          }`}>
             <span className="text-[10px] uppercase font-black text-purple-400 block mb-0.5 tracking-wider">
               💡 Plot / Story Hook
             </span>
@@ -402,8 +396,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 "{puzzle?.trivia || 'Blockbuster Tamil Cinema Masterpiece.'}"
               </div>
             ) : (
-              <div className="text-xs text-cinema-muted italic flex items-center gap-1">
-                <Lock className="w-3 h-3 text-amber-400/60" />
+              <div className="text-xs text-slate-500 italic flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-600" />
                 <span>Locked Clue</span>
               </div>
             )}
@@ -412,7 +406,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       {/* 2x2 CINEMA GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
         {CATEGORIES.map(category => {
           const key = category.key;
           const entity = (puzzle && puzzle[key]) || {
@@ -429,7 +423,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           const shouldReveal = isSolved || revealAll || isDirectorRevealed;
           const isShaking = shakingCells[key] || false;
 
-          // Determine Image URL
           let imageUrl = entity.imageUrl;
           if (key === 'song' && entity.youtubeId) {
             imageUrl = `https://img.youtube.com/vi/${entity.youtubeId}/hqdefault.jpg`;
@@ -438,50 +431,41 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             imageUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${entity.name}`;
           }
 
-          // Pick category class
-          const categoryClass =
-            key === 'hero' ? 'card-category-hero' :
-              key === 'heroine' ? 'card-category-heroine' :
-                key === 'movie' ? 'card-category-movie' : 'card-category-song';
-
           return (
             <div
               key={key}
-              className={`relative rounded-3xl transition-all duration-300 ${isShaking ? 'animate-shake' : ''
-                }`}
+              className={`relative rounded-3xl transition-all duration-300 ${isShaking ? 'animate-shake' : ''}`}
             >
               {/* Card Container */}
               <div
-                className={`relative min-h-[285px] sm:min-h-[325px] rounded-3xl p-4 sm:p-5 border flex flex-col justify-between overflow-hidden transition-all duration-300 ${shouldReveal
-                  ? isSolved
-                    ? 'glass-card correct-border-glow bg-emerald-950/20'
+                className={`relative min-h-[290px] sm:min-h-[330px] rounded-3xl p-5 border flex flex-col justify-between overflow-hidden transition-all duration-300 ${
+                  isSolved
+                    ? 'bg-[#0c101a]/95 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
                     : isDirectorRevealed
-                      ? 'glass-card border-2 border-amber-500/70 bg-amber-950/25 shadow-xl shadow-amber-500/10'
-                      : 'glass-card border-amber-500/50 bg-amber-950/20'
-                  : `glass-card ${categoryClass}`
-                  }`}
+                    ? 'bg-[#0c101a]/95 border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.25)]'
+                    : shouldReveal
+                    ? 'bg-[#0c101a]/95 border-slate-700 shadow-xl'
+                    : 'bg-[#0c101a]/90 border-slate-800/90 hover:border-slate-700 shadow-xl'
+                }`}
               >
-                {/* Background Ambient Glow */}
-                <div className="absolute top-0 right-0 w-36 h-36 bg-brand-500/5 rounded-full blur-2xl pointer-events-none" />
-
                 {/* Top Category Header */}
                 <div className="flex items-center justify-between z-10">
                   <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-xl ${category.bgAccent} border border-cinema-border/60 flex-shrink-0 shadow-sm`}>
+                    <div className={`p-2 rounded-xl ${category.bgAccent} border border-slate-800 flex-shrink-0 shadow-sm`}>
                       {category.icon}
                     </div>
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider text-slate-100">
                         {category.label}
                       </span>
-                      <p className="text-[10px] text-cinema-muted -mt-0.5 font-medium">
+                      <p className="text-[10px] text-slate-400 -mt-0.5 font-medium">
                         {category.sublabel}
                       </p>
                     </div>
                   </div>
 
                   {isSolved ? (
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border bg-emerald-950/80 text-emerald-300 border-emerald-500/40">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       <span>{sharedAnswer ? sharedAnswer.solvedByName : 'Solved'}</span>
                     </div>
@@ -489,22 +473,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     <button
                       type="button"
                       onClick={() => setDirectorRevealedCards(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className={`flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border transition-all active:scale-95 ${isDirectorRevealed
-                        ? 'bg-amber-500 text-black border-amber-400 font-black shadow-sm'
-                        : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border-amber-500/40'
-                        }`}
-                      title={`Show or hide ${category.label} answer`}
+                      className={`flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border transition-all cursor-pointer ${
+                        isDirectorRevealed
+                          ? 'bg-cyan-400 text-black border-cyan-300 font-black shadow-sm'
+                          : 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40'
+                      }`}
                     >
                       <Eye className="w-3 h-3" />
-                      <span>{isDirectorRevealed ? '🙈 Hide' : '👁️ Show'}</span>
+                      <span>{isDirectorRevealed ? 'Hide' : 'Show'}</span>
                     </button>
                   ) : shouldReveal ? (
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border bg-amber-500/20 text-amber-300 border-amber-500/40">
-                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full animate-fade-in border bg-slate-900 text-slate-400 border-slate-800">
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
                       <span>Locked</span>
                     </div>
                   ) : (
-                    <span className="text-[10px] font-black uppercase tracking-wider text-cinema-muted bg-cinema-dark px-2.5 py-1 rounded-lg border border-cinema-border/60">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-[#070a12] px-2.5 py-1 rounded-lg border border-slate-800">
                       Starts: <span className={category.textAccent}>{entity.firstLetter || entity.name.charAt(0) || '?'}</span>
                     </span>
                   )}
@@ -514,12 +498,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 <div className="my-auto py-2 z-10 flex flex-col items-center justify-center text-center">
                   {shouldReveal ? (
                     <div className="space-y-2.5 w-full flex flex-col items-center animate-fade-in">
-                      {/* Image Thumbnail with Category Glow */}
                       <div className="relative group">
                         <img
                           src={imageUrl}
                           alt={entity.name}
-                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-brand-500/60 shadow-xl shadow-brand-500/20 group-hover:scale-105 transition-transform"
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-cyan-400/80 shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover:scale-105 transition-transform"
                           onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${entity.name}`;
                           }}
@@ -529,21 +512,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                             href={`https://www.youtube.com/watch?v=${entity.youtubeId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/40 hover:scale-110 transition-transform"
+                            className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black shadow-lg shadow-cyan-400/40 hover:scale-110 transition-transform"
                             title="Play Song on YouTube"
                           >
-                            <Play className="w-3 h-3 fill-white" />
+                            <Play className="w-3 h-3 fill-black text-black" />
                           </a>
                         )}
                       </div>
 
-                      {/* Revealed Entity Name */}
                       <div className="space-y-0.5 max-w-full px-2">
                         <h4 className="font-display font-black text-sm sm:text-base text-white truncate max-w-xs">
                           {entity.name}
                         </h4>
                         {entity.aliases && entity.aliases.length > 0 && (
-                          <p className="text-[10px] text-cinema-muted truncate max-w-xs">
+                          <p className="text-[10px] text-slate-400 truncate max-w-xs">
                             aka {entity.aliases.join(', ')}
                           </p>
                         )}
@@ -551,20 +533,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      {/* Giant First Letter Badge with tactile depth */}
-                      <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-cinema-surface to-cinema-dark border-2 ${category.borderAccent} flex items-center justify-center shadow-2xl mb-2 transition-transform group-hover:scale-105`}>
+                      <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#070a12] border-2 ${category.borderAccent} flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.15)] mb-2 transition-transform group-hover:scale-105`}>
                         <span className={`font-display font-black text-4xl sm:text-5xl ${category.textAccent}`}>
                           {entity.firstLetter || entity.name.charAt(0) || '?'}
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-[11px] text-cinema-muted uppercase font-bold tracking-wider">
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-bold tracking-wider">
                         Starts with "{entity.firstLetter || entity.name.charAt(0)}"
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Bottom Input Area or Director / Solver State */}
+                {/* Bottom Input Area or Solved State */}
                 <div className="z-10 mt-1 sm:mt-2">
                   {isSolved ? (
                     <div className="text-center py-1 flex items-center justify-center gap-2 text-xs font-semibold">
@@ -585,13 +566,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     <button
                       type="button"
                       onClick={() => setDirectorRevealedCards(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className={`w-full py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm ${isDirectorRevealed
-                        ? 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/40 text-amber-300'
-                        : 'bg-amber-500 text-black hover:bg-amber-400 border-amber-400 font-black shadow-amber-500/20'
-                        }`}
+                      className={`w-full py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        isDirectorRevealed
+                          ? 'bg-cyan-950/60 border-cyan-500/40 text-cyan-300'
+                          : 'bg-cyan-400 text-black hover:bg-cyan-300 border-cyan-300 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                      }`}
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>{isDirectorRevealed ? `🙈 Hide ${category.label} Answer` : `👁️ Show ${category.label} Answer`}</span>
+                      <span>{isDirectorRevealed ? `Hide ${category.label} Answer` : `Show ${category.label} Answer`}</span>
                     </button>
                   ) : !shouldReveal ? (
                     <form
@@ -608,12 +590,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           value={inputs[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
                           placeholder={`Guess the ${category.label.toLowerCase()}...`}
-                          className="w-full bg-cinema-dark border border-cinema-border focus:border-brand-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition-colors disabled:opacity-50"
+                          className="w-full bg-[#070a12] border border-slate-800 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors disabled:opacity-50"
                         />
                         <button
                           type="submit"
                           disabled={isLocked || !inputs[key]?.trim()}
-                          className="px-4 py-2.5 rounded-xl btn-cinema-primary text-black font-black text-xs shadow-md disabled:opacity-40 disabled:pointer-events-none flex-shrink-0 flex items-center gap-1"
+                          className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-black text-xs uppercase shadow-[0_0_15px_rgba(6,182,212,0.5)] disabled:opacity-40 disabled:pointer-events-none flex-shrink-0 flex items-center gap-1 transition-all cursor-pointer"
                         >
                           <span>Guess</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -629,7 +611,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </form>
                   ) : (
                     <div className="text-center py-1 flex items-center justify-center gap-2 text-xs font-semibold">
-                      <span className="text-amber-400/90 text-xs font-bold">
+                      <span className="text-slate-400 text-xs font-semibold">
                         🔒 Round Finished • Solution Revealed
                       </span>
                     </div>

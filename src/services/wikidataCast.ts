@@ -286,7 +286,52 @@ export async function searchMovieCandidates(
       }
     }
   } catch (err) {
-    console.warn('Candidate search failed:', err);
+    console.warn('Candidate search online failed, checking offline & local database:', err);
+  }
+
+  // Robust Network Fallback: If online search returned no candidates or network failed,
+  // check pre-seeded and curated database movies matching the query
+  if (candidates.length === 0) {
+    const qLower = query.toLowerCase().trim();
+    
+    // Check pre-seeded casts (e.g. Leo, Vikram)
+    for (const [key, castList] of Object.entries(PRE_SEEDED_CASTS)) {
+      if (key.includes(qLower) || qLower.includes(key)) {
+        const cleanTitle = key.charAt(0).toUpperCase() + key.slice(1);
+        candidates.push({
+          qid: `local-${key}`,
+          title: `${cleanTitle} (Tamil Film)`,
+          cleanTitle,
+          year: key === 'leo' ? 2023 : key === 'vikram' ? 2022 : 2024,
+          snippet: `Pre-seeded Kollywood blockbuster starring ${castList[0]?.name || 'Tamil Star'}`
+        });
+      }
+    }
+
+    // Check local storage / curated puzzles
+    if (typeof window !== 'undefined') {
+      try {
+        const localStored = localStorage.getItem('kollywood_custom_puzzles');
+        if (localStored) {
+          const parsed = JSON.parse(localStored) as any[];
+          for (const p of parsed) {
+            if (p?.movie?.name && p.movie.name.toLowerCase().includes(qLower)) {
+              if (!candidates.some(c => c.cleanTitle.toLowerCase() === p.movie.name.toLowerCase())) {
+                candidates.push({
+                  qid: p.wikidataId || p.id || `local-${p.movie.name.toLowerCase()}`,
+                  title: `${p.movie.name} (${p.year || 2024} Film)`,
+                  cleanTitle: p.movie.name,
+                  year: p.year || 2024,
+                  snippet: `Curated Tamil Cinema puzzle starring ${p.hero?.name || 'Hero'} & ${p.heroine?.name || 'Heroine'}`
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error querying local storage fallback:', e);
+      }
+    }
   }
 
   return candidates;
@@ -300,6 +345,51 @@ export async function fetchFullMovieDetailsByQid(
   titleHint?: string,
   signal?: AbortSignal
 ): Promise<FullMovieDetails | null> {
+  // 1. Direct local / pre-seeded check for offline capability
+  if (qid.startsWith('local-')) {
+    const key = qid.replace('local-', '').toLowerCase();
+    if (PRE_SEEDED_CASTS[key]) {
+      const castMembers = PRE_SEEDED_CASTS[key];
+      const hero = castMembers[0] ? {
+        id: castMembers[0].id,
+        canonicalName: castMembers[0].name,
+        suggestedDisplayName: castMembers[0].name,
+        character: castMembers[0].character,
+        imageUrl: castMembers[0].image,
+        gender: 'male' as const,
+        wikidataUrl: castMembers[0].wikidataUrl || `${WIKIDATA_WEB_URL}/${castMembers[0].id}`
+      } : null;
+
+      const heroine = castMembers[1] ? {
+        id: castMembers[1].id,
+        canonicalName: castMembers[1].name,
+        suggestedDisplayName: castMembers[1].name,
+        character: castMembers[1].character,
+        imageUrl: castMembers[1].image,
+        gender: 'female' as const,
+        wikidataUrl: castMembers[1].wikidataUrl || `${WIKIDATA_WEB_URL}/${castMembers[1].id}`
+      } : null;
+
+      const cleanTitle = titleHint || (key.charAt(0).toUpperCase() + key.slice(1));
+      return {
+        qid,
+        movieTitle: cleanTitle,
+        suggestedDisplayTitle: cleanTitle,
+        year: key === 'leo' ? 2023 : key === 'vikram' ? 2022 : 2024,
+        director: key === 'leo' ? 'Lokesh Kanagaraj' : key === 'vikram' ? 'Lokesh Kanagaraj' : undefined,
+        musicDirector: 'Anirudh Ravichander',
+        genre: 'Action / Thriller',
+        overview: `${cleanTitle} blockbuster Tamil cinema match.`,
+        posterUrl: hero?.imageUrl,
+        backdropUrl: hero?.imageUrl,
+        hero,
+        heroine,
+        cast: [hero, heroine].filter(Boolean) as FullCastPerson[],
+        source: 'database'
+      };
+    }
+  }
+
   try {
     const entityUrl = `${WIKIDATA_API_URL}?action=wbgetentities&ids=${qid}&props=claims|labels|sitelinks&languages=en&format=json&origin=*`;
     const res = await fetch(entityUrl, {
@@ -307,10 +397,10 @@ export async function fetchFullMovieDetailsByQid(
       headers: { 'User-Agent': 'KollywoodGame/1.0 (contact@kollywoodgame.com)' }
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const entity = data.entities?.[qid];
-    if (!entity) return null;
+    if (!entity) throw new Error('Entity not found');
 
     const movieTitle = entity.labels?.en?.value || titleHint || 'Kollywood Film';
     const enwikiTitle = entity.sitelinks?.enwiki?.title;

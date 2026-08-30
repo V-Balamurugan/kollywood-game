@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, Crown, ArrowRight, RotateCcw, Home, Sparkles, PlusCircle, Play, StopCircle, Award, Medal, Check, Clock } from 'lucide-react';
+import { Trophy, Crown, RotateCcw, Home, PlusCircle, Play, StopCircle, Check, Clock } from 'lucide-react';
 import { Player, Puzzle, CellAnswer } from '../types/game';
 import { sound } from '../services/sound';
 
@@ -29,7 +29,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   userAnswers = {},
   players,
   currentUid,
-  isHost = true,
+  isHost: _isHost = true,
   nextRoundVotes = {},
   onNextRound,
   onVoteNextRound,
@@ -53,7 +53,6 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   useEffect(() => {
     sound.playVictory();
     if (isFinal) {
-      // Fire celebration confetti bursts
       confetti({
         particleCount: 100,
         spread: 80,
@@ -85,160 +84,122 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg glass-card border border-cinema-border/90 rounded-3xl p-5 sm:p-7 md:p-8 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-        {/* Background Ambient Lights */}
-        <div className="absolute -top-20 -right-20 w-48 h-48 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto font-sans">
+      <div className="relative w-full max-w-lg rounded-3xl bg-[#0c101a] border border-slate-800 p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] my-auto max-h-[92vh] overflow-y-auto">
+        <div className="absolute -top-20 -right-20 w-48 h-48 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="text-center mb-5 sm:mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-3xl btn-cinema-primary text-black shadow-xl shadow-brand-500/30 mb-3 animate-fade-in">
-            {isFinal ? <Crown className="w-7 h-7 sm:w-8 sm:h-8 fill-black" /> : <Trophy className="w-7 h-7 sm:w-8 sm:h-8 fill-black" />}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-cyan-400 text-black shadow-[0_0_25px_rgba(6,182,212,0.6)] mb-3 animate-fade-in">
+            {isFinal ? <Crown className="w-8 h-8 fill-black" /> : <Trophy className="w-8 h-8 fill-black" />}
           </div>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-200 uppercase tracking-tight">
             {isFinal ? '🏆 Arena Champion Decided!' : `Movie #${roundNumber} Complete!`}
           </h2>
-          <p className="text-xs sm:text-sm text-cinema-muted mt-1">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             {isFinal
-              ? winner
-                ? `${winner.name} finished at the top with ${(winner.score || 0).toLocaleString()} points!`
-                : 'Match concluded! Final scoreboard below.'
-              : `Solved ${solvedCount} of 4 clues for "${puzzle?.movie?.name || 'Kollywood Film'}" (${puzzle?.year || 2024})`}
+              ? isCurrentWinner
+                ? '🌟 Incredible! You took 1st place in the cinema arena showdown!'
+                : `👑 ${winner?.name || 'Top Contestant'} conquered the leaderboard!`
+              : solvedCount === 4
+              ? '🎉 Perfect round! All 4 interconnected cinema clues were identified.'
+              : `Round concluded! You solved ${solvedCount}/4 movie clues.`}
           </p>
         </div>
 
-        {/* FINAL WINNER HERO CARD */}
-        {isFinal && winner && (
-          <div className="mb-6 p-4 rounded-3xl bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-cinema-dark border-2 border-brand-500 shadow-2xl text-center relative overflow-hidden animate-fade-in">
-            <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-[10px] uppercase tracking-widest px-4 py-1 rounded-full shadow mb-3">
-              <Crown className="w-3.5 h-3.5 fill-black" />
-              <span>Match Champion</span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="relative mb-2">
-                <img
-                  src={winner.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${winner.uid}`}
-                  alt={winner.name}
-                  className="w-16 h-16 rounded-2xl bg-cinema-dark border-2 border-brand-400 shadow-xl object-cover"
-                />
-                <div className="absolute -bottom-2 -right-2 p-1 rounded-full bg-amber-400 text-black shadow">
-                  <Medal className="w-4 h-4 fill-black" />
-                </div>
-              </div>
-
-              <h3 className="text-lg font-display font-black text-white">
-                {winner.name} {isCurrentWinner && '(You)'}
+        {/* 2x2 Movie Clue Overview */}
+        <div className="rounded-2xl bg-[#070a12] border border-slate-800 p-4 mb-5 space-y-3">
+          <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+            <img
+              src={puzzle?.movie?.imageUrl || `https://api.dicebear.com/7.x/shapes/svg?seed=${puzzle?.movie?.name}`}
+              alt={puzzle?.movie?.name}
+              className="w-12 h-16 rounded-xl object-cover border border-slate-800 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <h3 className="font-display font-black text-white text-base truncate">
+                {puzzle?.movie?.name}
               </h3>
-
-              <span className="text-xs font-black text-amber-400 font-mono mt-0.5">
-                {(winner.score || 0).toLocaleString()} PTS 👑
+              <span className="text-xs font-bold text-cyan-400 block">
+                {puzzle?.year} • {puzzle?.genre || 'Tamil Cinema'}
               </span>
-
-              {isCurrentWinner && (
-                <div className="mt-2 text-xs font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 px-3.5 py-1 rounded-full">
-                  🎉 Congratulations! You won this Kollywood arena battle!
-                </div>
-              )}
+              <span className="text-[11px] text-slate-400 block truncate">
+                Dir: <strong className="text-slate-200">{puzzle?.director || 'Tamil Director'}</strong>
+              </span>
             </div>
           </div>
-        )}
 
-        {/* Film Card Solution Recap (During round recap) */}
-        {!isFinal && (
-          <div className="glass-panel rounded-2xl p-3.5 sm:p-4 border border-cinema-border/80 mb-5 space-y-2.5">
-            <div className="flex items-center justify-between border-b border-cinema-border/50 pb-2">
-              <span className="text-xs font-black uppercase tracking-wider text-brand-400">
-                Movie Clue Recap
-              </span>
-              <span className="text-xs text-cinema-muted">
-                Dir: {puzzle?.director || 'Kollywood'}
-              </span>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2 rounded-xl bg-[#0c101a] border border-slate-800">
+              <span className="text-[9px] uppercase font-bold text-cyan-400 block">Hero</span>
+              <span className="font-bold text-white truncate block">{puzzle?.hero?.name}</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-cinema-surface border border-cinema-border/60">
-                <span className="text-[10px] text-amber-400 uppercase font-black block">Hero</span>
-                <span className="font-bold text-white truncate block text-xs">{puzzle?.hero?.name}</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-cinema-surface border border-cinema-border/60">
-                <span className="text-[10px] text-rose-400 uppercase font-black block">Heroine</span>
-                <span className="font-bold text-white truncate block text-xs">{puzzle?.heroine?.name}</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-cinema-surface border border-cinema-border/60">
-                <span className="text-[10px] text-blue-400 uppercase font-black block">Movie</span>
-                <span className="font-bold text-white truncate block text-xs">{puzzle?.movie?.name}</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-cinema-surface border border-cinema-border/60">
-                <span className="text-[10px] text-purple-400 uppercase font-black block">Song</span>
-                <span className="font-bold text-white truncate block text-xs">{puzzle?.song?.name}</span>
+            <div className="p-2 rounded-xl bg-[#0c101a] border border-slate-800">
+              <span className="text-[9px] uppercase font-bold text-pink-400 block">Heroine</span>
+              <span className="font-bold text-white truncate block">{puzzle?.heroine?.name}</span>
+            </div>
+            <div className="p-2 rounded-xl bg-[#0c101a] border border-slate-800 col-span-2 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] uppercase font-bold text-purple-400 block">Song</span>
+                <span className="font-bold text-white truncate block">{puzzle?.song?.name}</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Multiplayer Standings Table with Live "Next Vote" Status */}
-        {sortedPlayers.length > 0 && (
-          <div className="mb-5 space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">
-                {isFinal ? 'Final Leaderboard Standings' : 'Live Arena Standings & Readiness'}
-              </h4>
-              {!isFinal && totalPlayersCount > 1 && (
-                <span className="text-xs font-mono font-bold text-brand-400">
-                  {readyVotesCount} / {totalPlayersCount} Ready
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+        {/* Multiplayer Standings (if applicable) */}
+        {sortedPlayers.length > 1 && (
+          <div className="rounded-2xl bg-[#070a12] border border-slate-800 p-4 mb-5 space-y-2">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Arena Leaderboard
+            </h4>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
               {sortedPlayers.map((player, idx) => {
-                const isCurrent = player.uid === currentUid;
                 const isRank1 = idx === 0;
-                const playerReadyNext = Boolean(nextRoundVotes?.[player.uid]);
+                const isCurrent = player.uid === currentUid;
+                const playerReadyNext = nextRoundVotes?.[player.uid];
 
                 return (
                   <div
                     key={player.uid}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${isRank1
-                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-sm'
-                      : isCurrent
-                        ? 'bg-brand-500/10 border-brand-500/30 text-white'
-                        : 'bg-cinema-surface border-cinema-border/60 text-slate-300'
-                      }`}
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
+                      isRank1
+                        ? 'bg-amber-950/30 border-amber-500/40 text-amber-300'
+                        : isCurrent
+                        ? 'bg-cyan-950/30 border-cyan-500/30 text-white'
+                        : 'bg-[#0c101a] border-slate-800 text-slate-300'
+                    }`}
                   >
-                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 mr-2">
-                      <span className="w-5 text-center font-mono font-black text-xs text-cinema-muted flex-shrink-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                      <span className="w-5 text-center font-mono font-bold text-slate-500">
                         {isRank1 ? '👑' : `#${idx + 1}`}
                       </span>
                       <img
                         src={player.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${player.uid}`}
                         alt={player.name}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cinema-dark border border-cinema-border object-cover flex-shrink-0"
+                        className="w-7 h-7 rounded-lg bg-black border border-slate-800 object-cover flex-shrink-0"
                       />
-                      <span className="text-xs font-bold truncate max-w-[100px] sm:max-w-[180px] text-white">
-                        {player.name} {isCurrent && <span className="text-brand-400 text-[10px] font-normal">(You)</span>}
+                      <span className="font-bold truncate text-white">
+                        {player.name} {isCurrent && <span className="text-cyan-400 text-[10px]">(You)</span>}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
                       {!isFinal && totalPlayersCount > 1 && (
                         playerReadyNext ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                             <Check className="w-3 h-3" />
-                            <span className="hidden xs:inline">Ready</span>
+                            <span>Ready</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cinema-muted bg-cinema-dark/80 px-2 py-0.5 rounded-full border border-cinema-border/50">
-                            <Clock className="w-3 h-3 text-amber-400/80" />
-                            <span className="hidden xs:inline">Reviewing</span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
+                            <Clock className="w-3 h-3 text-amber-400" />
+                            <span>Reviewing</span>
                           </span>
                         )
                       )}
 
-                      <span className="font-mono font-black text-xs sm:text-sm text-brand-400">
-                        {(player.score || 0).toLocaleString()} <span className="text-[10px] text-cinema-muted font-normal">pts</span>
+                      <span className="font-mono font-black text-cyan-300">
+                        {(player.score || 0).toLocaleString()} pts
                       </span>
                     </div>
                   </div>
@@ -248,40 +209,25 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           </div>
         )}
 
-        {/* Synchronized Next Waiting Message */}
-        {!isFinal && totalPlayersCount > 1 && (
-          <div className="p-3 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-center mb-4 space-y-0.5">
-            <span className="text-xs font-bold text-white block">
-              {readyVotesCount === totalPlayersCount
-                ? '✓ All players ready! Starting next movie...'
-                : `Waiting for all players to press Next (${readyVotesCount}/${totalPlayersCount} ready)`}
-            </span>
-            <p className="text-[11px] text-cinema-muted">
-              Review your answers below. Next round starts once all players click Ready.
-            </p>
-          </div>
-        )}
-
         {/* Action Controls */}
-        <div className="space-y-2.5 pt-1">
-          {/* Creator Clue Trigger */}
+        <div className="space-y-3">
           {!isFinal && onCreateCustomClue && (
             <button
               onClick={onCreateCustomClue}
-              className="w-full py-2.5 px-4 rounded-xl bg-cinema-surface hover:bg-brand-500/15 border border-cinema-border hover:border-brand-500/40 text-brand-300 font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>🎨 Create Next Movie Clue</span>
+              <span>CREATE CUSTOM DIRECTOR CLUE</span>
             </button>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-col sm:flex-row gap-3">
             {isFinal ? (
               <>
                 {onPlayAgain && (
                   <button
                     onClick={onPlayAgain}
-                    className="flex-1 py-3.5 px-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 px-4 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>PLAY AGAIN</span>
@@ -290,7 +236,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 {onExit && (
                   <button
                     onClick={onExit}
-                    className="flex-1 py-3.5 px-4 rounded-2xl bg-cinema-surface hover:bg-cinema-cardHover border border-cinema-border text-white text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 px-4 rounded-full bg-[#070a12] hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <Home className="w-4 h-4" />
                     <span>RETURN TO ARENA</span>
@@ -299,45 +245,45 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               </>
             ) : (
               <>
-                {/* Synchronized Continue / Vote Ready Button */}
                 {totalPlayersCount > 1 ? (
                   <button
                     onClick={handleVoteOrNext}
                     disabled={hasCurrentVoted}
-                    className={`flex-1 py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 ${hasCurrentVoted
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
-                      : 'btn-cinema-primary text-black'
-                      }`}
+                    className={`flex-1 py-3.5 px-4 rounded-full font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                      hasCurrentVoted
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 cursor-default'
+                        : 'bg-cyan-400 hover:bg-cyan-300 text-black'
+                    }`}
                   >
                     {hasCurrentVoted ? (
                       <>
-                        <Check className="w-4 h-4 text-emerald-400" />
-                        <span>✓ Ready! (Waiting for others...)</span>
+                        <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+                        <span>Ready ({readyVotesCount}/{totalPlayersCount})</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-4 h-4 fill-black" />
-                        <span>▶️ READY FOR NEXT ({readyVotesCount}/${totalPlayersCount})</span>
+                        <Play className="w-4 h-4 fill-black text-black" />
+                        <span>READY FOR NEXT ({readyVotesCount}/${totalPlayersCount})</span>
                       </>
                     )}
                   </button>
                 ) : (
                   <button
                     onClick={handleVoteOrNext}
-                    className="flex-1 py-3.5 px-4 rounded-2xl btn-cinema-primary text-black font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 px-4 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.6)] flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
-                    <Play className="w-4 h-4 fill-black" />
-                    <span>▶️ NEXT MOVIE</span>
+                    <Play className="w-4 h-4 fill-black text-black" />
+                    <span>NEXT MOVIE</span>
                   </button>
                 )}
 
                 {(onStopGame || onExit) && (
                   <button
                     onClick={onStopGame || onExit}
-                    className="py-3 px-4 rounded-2xl bg-cinema-surface hover:bg-rose-500/20 border border-cinema-border hover:border-rose-500/40 text-slate-300 hover:text-rose-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                    className="py-3.5 px-5 rounded-full bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <StopCircle className="w-4 h-4 text-rose-400" />
-                    <span>Stop & Leave</span>
+                    <StopCircle className="w-4 h-4" />
+                    <span>Exit</span>
                   </button>
                 )}
               </>
@@ -348,4 +294,3 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
     </div>
   );
 };
-

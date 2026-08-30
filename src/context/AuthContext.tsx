@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { 
   auth, 
   hasValidFirebaseConfig 
@@ -25,12 +25,17 @@ export interface AuthUser {
   isGuest?: boolean;
 }
 
+// 2 Hours = 2 * 60 * 60 * 1000 ms
+export const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   hasEntered: boolean;
   isAuthModalOpen: boolean;
   authModalMode: AuthModalMode;
+  sessionExpiredNotice: boolean;
+  dismissSessionExpiredNotice: () => void;
   openAuthModal: (mode?: AuthModalMode) => void;
   closeAuthModal: () => void;
   setAuthModalMode: (mode: AuthModalMode) => void;
@@ -40,6 +45,7 @@ interface AuthContextType {
   playAsGuest: (guestName?: string) => void;
   signOut: () => Promise<void>;
   updateName: (name: string) => Promise<void>;
+  touchSessionActivity: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,17 +53,83 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [hasEntered, setHasEntered] = useState<boolean>(() => {
-    // Only registered users or users who entered in current browser tab stay entered
-    return sessionStorage.getItem('kollywood_session_entered') === 'true';
-  });
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState<boolean>(false);
+
+  // Check 2-hour session validity on mount
+  const checkInitialSession = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const sessionEntered = sessionStorage.getItem('kollywood_session_entered') === 'true';
+    const lastActiveStr = sessionStorage.getItem('kollywood_session_last_active');
+    
+    if (sessionEntered && lastActiveStr) {
+      const lastActive = parseInt(lastActiveStr, 10);
+      if (Date.now() - lastActive > SESSION_TIMEOUT_MS) {
+        // Expired after 2 hours
+        sessionStorage.removeItem('kollywood_session_entered');
+        sessionStorage.removeItem('kollywood_session_last_active');
+        sessionStorage.removeItem('kollywood_admin_auth_active');
+        return false;
+      }
+    }
+    return sessionEntered;
+  };
+
+  const [hasEntered, setHasEntered] = useState<boolean>(checkInitialSession);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('signin');
+  const lastTouchTimeRef = useRef<number>(Date.now());
+
+  const touchSessionActivity = () => {
+    const now = Date.now();
+    lastTouchTimeRef.current = now;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('kollywood_session_last_active', String(now));
+    }
+  };
+
+  // 2-Hour Inactivity Heartbeat Monitor
+  useEffect(() => {
+    if (!hasEntered) return;
+
+    touchSessionActivity();
+
+    const handleUserActivity = () => {
+      const now = Date.now();
+      // Throttle writes to once every 10 seconds
+      if (now - lastTouchTimeRef.current > 10000) {
+        touchSessionActivity();
+      }
+    };
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'pointerdown'];
+    events.forEach(ev => window.addEventListener(ev, handleUserActivity, { passive: true }));
+
+    const heartbeat = setInterval(() => {
+      const lastActiveStr = sessionStorage.getItem('kollywood_session_last_active');
+      if (lastActiveStr) {
+        const lastActive = parseInt(lastActiveStr, 10);
+        if (Date.now() - lastActive >= SESSION_TIMEOUT_MS) {
+          // Trigger 2-hour timeout
+          sessionStorage.removeItem('kollywood_session_entered');
+          sessionStorage.removeItem('kollywood_session_last_active');
+          sessionStorage.removeItem('kollywood_admin_auth_active');
+          setHasEntered(false);
+          setSessionExpiredNotice(true);
+          window.location.hash = '#/';
+        }
+      }
+    }, 15000);
+
+    return () => {
+      clearInterval(heartbeat);
+      events.forEach(ev => window.removeEventListener(ev, handleUserActivity));
+    };
+  }, [hasEntered]);
 
   // Initialize or restore user
   useEffect(() => {
     const savedGuest = localStorage.getItem('kollywood_current_guest');
-    const sessionEntered = sessionStorage.getItem('kollywood_session_entered') === 'true';
+    const sessionEntered = checkInitialSession();
 
     if (hasValidFirebaseConfig && auth) {
       const currentAuth = auth;
@@ -74,13 +146,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           setUser(authedUser);
 
-          // ONLY actual logged-in users (Google/Email) bypass the login page automatically!
-          // Anonymous/Guests must see the login page unless already entered in this tab session
           if (!isAnon) {
-            setHasEntered(true);
-            sessionStorage.setItem('kollywood_session_entered', 'true');
+            if (sessionEntered) {
+              setHasEntered(true);
+              touchSessionActivity();
+            } else {
+              setHasEntered(true);
+              sessionStorage.setItem('kollywood_session_entered', 'true');
+              touchSessionActivity();
+            }
           } else if (sessionEntered) {
             setHasEntered(true);
+            touchSessionActivity();
           } else {
             setHasEntered(false);
           }
@@ -88,10 +165,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const parsed = JSON.parse(savedGuest);
           setUser(parsed);
           setHasEntered(sessionEntered);
+          if (sessionEntered) touchSessionActivity();
           try {
             await signInAnonymously(currentAuth);
           } catch (e) {
-            // Ignore if anonymous auth is not enabled
+            // Ignore
           }
         } else {
           const guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
@@ -104,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('kollywood_current_guest', JSON.stringify(defaultGuest));
           setUser(defaultGuest);
           setHasEntered(sessionEntered);
+          if (sessionEntered) touchSessionActivity();
 
           try {
             await signInAnonymously(currentAuth);
@@ -119,9 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (savedGuest) {
         const parsed = JSON.parse(savedGuest);
         setUser(parsed);
-        // If not guest (e.g. mock registered account), auto-enter
         if (!parsed.isGuest || sessionEntered) {
           setHasEntered(true);
+          touchSessionActivity();
         } else {
           setHasEntered(false);
         }
@@ -136,10 +215,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('kollywood_current_guest', JSON.stringify(defaultGuest));
         setUser(defaultGuest);
         setHasEntered(sessionEntered);
+        if (sessionEntered) touchSessionActivity();
       }
       setLoading(false);
     }
   }, []);
+
+  const dismissSessionExpiredNotice = () => {
+    setSessionExpiredNotice(false);
+  };
 
   const openAuthModal = (mode: AuthModalMode = 'welcome') => {
     setAuthModalMode(mode);
@@ -147,7 +231,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const closeAuthModal = () => {
-    // If closing for the first time, mark as chosen so it doesn't loop
     localStorage.setItem('kollywood_auth_chosen', 'true');
     setIsAuthModalOpen(false);
   };
@@ -173,6 +256,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     localStorage.setItem('kollywood_auth_chosen', 'true');
     sessionStorage.setItem('kollywood_session_entered', 'true');
+    touchSessionActivity();
     setHasEntered(true);
     setIsAuthModalOpen(false);
   };
@@ -195,6 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     localStorage.setItem('kollywood_auth_chosen', 'true');
     sessionStorage.setItem('kollywood_session_entered', 'true');
+    touchSessionActivity();
     setHasEntered(true);
     setIsAuthModalOpen(false);
   };
@@ -219,6 +304,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     localStorage.setItem('kollywood_auth_chosen', 'true');
     sessionStorage.setItem('kollywood_session_entered', 'true');
+    touchSessionActivity();
     setHasEntered(true);
     setIsAuthModalOpen(false);
   };
@@ -234,6 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('kollywood_current_guest', JSON.stringify(guestUser));
     localStorage.setItem('kollywood_auth_chosen', 'true');
     sessionStorage.setItem('kollywood_session_entered', 'true');
+    touchSessionActivity();
     setUser(guestUser);
     setHasEntered(true);
 
@@ -253,6 +340,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) {
       const updated = { ...user, displayName: name.trim() };
       setUser(updated);
+      touchSessionActivity();
       if (user.isGuest) {
         localStorage.setItem('kollywood_current_guest', JSON.stringify(updated));
       } else if (hasValidFirebaseConfig && auth && auth.currentUser) {
@@ -268,6 +356,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('kollywood_current_guest');
     localStorage.removeItem('kollywood_auth_chosen');
     sessionStorage.removeItem('kollywood_session_entered');
+    sessionStorage.removeItem('kollywood_session_last_active');
+    sessionStorage.removeItem('kollywood_admin_auth_active');
     const guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
     const defaultGuest: AuthUser = {
       uid: guestId,
@@ -288,6 +378,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasEntered,
         isAuthModalOpen,
         authModalMode,
+        sessionExpiredNotice,
+        dismissSessionExpiredNotice,
         openAuthModal,
         closeAuthModal,
         setAuthModalMode,
@@ -296,7 +388,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUpWithEmail,
         playAsGuest,
         signOut,
-        updateName
+        updateName,
+        touchSessionActivity
       }}
     >
       {children}
